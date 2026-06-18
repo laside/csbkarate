@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Le Club | CSB Karaté</title>
+    <title>Blog et Actualités | CSB Karaté</title>
     <link rel="stylesheet" href="./assets/css/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="./assets/js/tailwind.js"></script>
@@ -12,13 +12,46 @@
 <body class="bg-csb-washi text-csb-encre font-sans antialiased min-h-screen flex flex-col">
     <div id="header-placeholder"></div>
 
-    <main class="flex-grow flex items-center justify-center py-32 px-6">
-        <div class="bento-card max-w-2xl w-full text-center border-t-4 border-t-csb-corail">
-            <span class="text-6xl mb-6 block">🥋</span>
-            <h1 class="font-serif text-4xl md:text-5xl text-csb-encre mb-4">Découvrir le club</h1>
-            <p class="font-condensed uppercase tracking-widest text-csb-corail font-bold mb-8">Page en construction</p>
-            <p class="text-gray-600 mb-10">L'histoire du club, le bureau et les professeurs arriveront très bientôt dans cette section.</p>
-            <a href="./index.html" class="inline-block bg-csb-encre text-white px-8 py-3 rounded-full font-condensed uppercase tracking-wider hover:bg-opacity-90 transition">Retour au Dojo</a>
+    <main class="flex-grow pt-24 pb-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm mb-4 block">La vie du club</span>
+                <h1 class="font-serif text-5xl md:text-6xl text-csb-encre mb-6">Actualités & News</h1>
+                <p class="text-xl text-gray-500 max-w-2xl mx-auto font-sans">Restez informé des événements du club, des passages de grades et des informations importantes.</p>
+            </div>
+
+            <div class="bento-grid">
+                <!-- Article 1 -->
+                <article class="bento-card flex flex-col group border-t-4 border-t-csb-corail">
+                    <div class="flex-grow">
+                        <time class="font-condensed text-sm text-gray-400 uppercase tracking-widest mb-3 block">12 Nov 2025</time>
+                        <h3 class="font-serif text-2xl font-bold text-csb-encre mb-4 group-hover:text-csb-corail transition">Assemblée Générale 2025-2026</h3>
+                        <p class="text-gray-600 font-sans text-sm leading-relaxed mb-6">Convocation à l'assemblée générale ordinaire du CSB Karaté. Invitation à tous les membres du club.</p>
+                    </div>
+                </article>
+
+                <!-- Article 2 -->
+                <article class="bento-card flex flex-col group border-t-4 border-t-csb-dojo">
+                    <div class="flex-grow">
+                        <time class="font-condensed text-sm text-gray-400 uppercase tracking-widest mb-3 block">Sept 2025</time>
+                        <h3 class="font-serif text-2xl font-bold text-csb-encre mb-4 group-hover:text-csb-dojo transition">Reprise des cours saison 2025</h3>
+                        <div class="text-gray-600 font-sans text-sm leading-relaxed space-y-2 mb-6">
+                            <p><strong>6 Septembre :</strong> Forum des associations</p>
+                            <p><strong>7 Septembre :</strong> Début Self-défense</p>
+                            <p><strong>9 Septembre :</strong> Début Karaté</p>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Article 3 -->
+                <article class="bento-card flex flex-col group">
+                    <div class="flex-grow">
+                        <time class="font-condensed text-sm text-gray-400 uppercase tracking-widest mb-3 block">Vacances</time>
+                        <h3 class="font-serif text-2xl font-bold text-csb-encre mb-4">Vacances de Noël 2024</h3>
+                        <p class="text-gray-600 font-sans text-sm leading-relaxed mb-6">Reprise des Cours la semaine du 6 Janvier 2025.</p>
+                    </div>
+                </article>
+            </div>
         </div>
     </main>
 
