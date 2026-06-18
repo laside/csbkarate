@@ -52,10 +52,28 @@
                 </div>
                 
                 <!-- Menu Desktop -->
-                <nav class="hidden md:flex space-x-8 items-center">
+                <nav class="hidden lg:flex space-x-6 items-center">
                     <a href="#accueil" class="text-ffk-black hover:text-ffk-red font-medium transition duration-200">Accueil</a>
                     <a href="#disciplines" class="text-ffk-black hover:text-ffk-red font-medium transition duration-200">Disciplines</a>
-                    <a href="#infos" class="text-ffk-black hover:text-ffk-red font-medium transition duration-200">Horaires & Lieux</a>
+                    
+                    <!-- Menu Déroulant : Le club -->
+                    <div class="relative group">
+                        <button class="flex items-center gap-1 text-ffk-black hover:text-ffk-red font-medium transition duration-200 py-2">
+                            Le club
+                            <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <!-- Boîte du sous-menu -->
+                        <div class="absolute left-0 top-full pt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top translate-y-2 group-hover:translate-y-0 z-50">
+                            <div class="bg-white rounded-xl shadow-xl border border-gray-100 py-2 overflow-hidden">
+                                <a href="./club.html" class="block px-4 py-3 text-sm font-medium text-ffk-black hover:bg-gray-50 hover:text-ffk-red transition">Découvrir le club</a>
+                                <a href="./competitions.html" class="block px-4 py-3 text-sm font-medium text-ffk-black hover:bg-gray-50 hover:text-ffk-red transition">Compétitions</a>
+                                <a href="./grades.html" class="block px-4 py-3 text-sm font-medium text-ffk-black hover:bg-gray-50 hover:text-ffk-red transition">Passage de grade</a>
+                                <a href="./galerie.html" class="block px-4 py-3 text-sm font-medium text-ffk-black hover:bg-gray-50 hover:text-ffk-red transition">Galerie</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NOUVEAU BOUTON WADO-RYU -->
                     <a href="./wadoryu.html" class="flex items-center gap-1 text-ffk-blue hover:text-ffk-red font-bold transition duration-200">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                         Le Wado-Ryu
