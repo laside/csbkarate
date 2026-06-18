@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histoire du Karaté Wado-Ryu | CSB Karaté</title>
+    <meta name="description" content="Découvrez l'histoire, la philosophie et les origines du Karaté Wado-Ryu fondé par Maître Hironori Ōtsuka.">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Montserrat', 'Arial', 'sans-serif'],
+                    },
+                    colors: {
+                        ffk: {
+                            blue: '#1423A0',
+                            red: '#DC2D5A',
+                            gray: '#8C8C8C',
+                            black: '#000000'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-ffk-black font-sans antialiased">
+
+    <!-- En-tête / Menu de navigation (Identique à l'accueil) -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <a href="./index.html" class="flex-shrink-0 flex items-center gap-2 cursor-pointer">
+                    <div class="w-10 h-10 bg-ffk-blue rounded-full flex items-center justify-center">
+                        <div class="w-6 h-6 bg-ffk-red rounded-full"></div>
+                    </div>
+                    <span class="font-bold text-2xl tracking-wider">
+                        <span class="text-ffk-blue">CSB</span> <span class="text-ffk-red">KARATÉ</span>
+                    </span>
+                </a>
+                
+                <nav class="hidden lg:flex space-x-8 items-center">
+                    <a href="./index.html" class="text-ffk-black hover:text-ffk-red font-medium transition duration-200">Retour à l'accueil</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- En-tête du Dossier -->
+    <section class="relative bg-ffk-black py-24 border-b-8 border-ffk-red overflow-hidden">
+        <div class="absolute inset-0 opacity-40">
+            <!-- Image de fond illustrative (libre de droits d'Unsplash) -->
+            <img src="https://images.unsplash.com/photo-1548025253-ab02166f2c7a?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" alt="Dojo traditionnel" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-white">
+            <span class="text-ffk-red font-bold uppercase tracking-widest text-sm mb-2 block">Dossier Historique</span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-4">Le Karaté Wado-Ryu</h1>
+            <p class="text-xl text-gray-300 max-w-2xl">La Voie de la Paix et de l'Harmonie. Découvrez l'alliance subtile entre la percutance du Karaté d'Okinawa et la fluidité du Ju-Jitsu traditionnel japonais.</p>
+        </div>
+    </section>
+
+    <!-- Contenu Principal (Grid Layout avec Sommaire Latéral) -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="flex flex-col lg:flex-row gap-12">
+            
+            <!-- Colonne latérale (Sidebar) -->
+            <aside class="lg:w-1/3">
+                <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-ffk-blue sticky top-28">
+                    <div class="mb-6 text-center">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Hironori_Otsuka.png" alt="Portrait de Hironori Otsuka" class="w-48 h-auto mx-auto rounded-lg shadow-md mb-4 grayscale hover:grayscale-0 transition duration-500">
+                        <p class="font-bold text-lg">Maître Hironori Ōtsuka</p>
+                        <p class="text-sm text-ffk-gray">(1892 - 1982)</p>
+                    </div>
+                    <hr class="border-gray-200 mb-6">
+                    <h3 class="font-bold text-ffk-blue mb-4 uppercase tracking-wider text-sm">Signification (和道流)</h3>
+                    <ul class="space-y-3 text-sm mb-8">
+                        <li><span class="font-bold text-ffk-red">WA</span> (和) : L'harmonie, la paix.</li>
+                        <li><span class="font-bold text-ffk-red">DO</span> (道) : La voie, le chemin.</li>
+                        <li><span class="font-bold text-ffk-red">RYU</span> (流) : L'école, le style.</li>
+                    </ul>
+                    <div class="bg-blue-50 p-4 rounded-xl">
+                        <p class="text-sm italic text-ffk-blue font-medium leading-relaxed">
+                            "L'action violente peut être comprise comme la voie des arts martiaux, mais la véritable signification des arts martiaux est de chercher et d'atteindre la voie de la paix et de l'harmonie."
+                        </p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Colonne de texte principal -->
+            <article class="lg:w-2/3 prose prose-lg max-w-none text-gray-700">
+                
+                <h2 class="text-3xl font-bold text-ffk-black mt-0 mb-6 border-b-2 border-ffk-blue pb-2 inline-block">Les Origines du Style</h2>
+                <p>
+                    Le <strong>Wadō-ryū</strong> est considéré comme le tout premier style spécifiquement japonais de Karaté-Do, par opposition aux styles traditionnels nés sur l'île d'Okinawa (comme le Shotokan ou le Goju-Ryu). Il a été fondé en 1934 par <strong>Hironori Ōtsuka</strong>, l'un des rares maîtres à avoir reçu le titre de <em>Meijin</em> (Grand Maître de 10ème Dan).
+                </p>
+                <p>
+                    La genèse de ce style est unique. Avant même de découvrir le Karaté, Hironori Ōtsuka était déjà un grand maître de Ju-Jitsu traditionnel (le Shindō Yōshin-ryū). Lorsqu'il rencontre Gichin Funakoshi (le père du Karaté moderne), il étudie son art avec passion. Cependant, Ōtsuka trouve les mouvements d'Okinawa trop rigides et trop linéaires.
+                </p>
+                <p>
+                    Il décide alors de fusionner les techniques de frappes du Karaté avec les principes de fluidité, d'esquive et de projection de son école de Ju-Jitsu. Le Wadō-ryū était né.
+                </p>
+
+                <!-- Section Image pleine largeur -->
+                <figure class="my-10">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/af/Butokusai.jpg" alt="Démonstration historique de Karaté lors du Butokusai en 1938" class="w-full rounded-xl shadow-md grayscale">
+                    <figcaption class="text-sm text-center text-ffk-gray mt-3">Photographie historique prise au Dai Nippon Butokukai (1938), année de l'enregistrement officiel du style.</figcaption>
+                </figure>
+
+                <h2 class="text-3xl font-bold text-ffk-black mt-12 mb-6 border-b-2 border-ffk-red pb-2 inline-block">Les Principes Techniques Fondamentaux</h2>
+                <p>
+                    Le Wadō-ryū se distingue visuellement des autres styles par des positions souvent plus hautes et plus naturelles. L'objectif n'est pas de s'opposer à la force de l'adversaire par un blocage dur, mais de l'utiliser à son avantage.
+                </p>
+                <ul class="list-disc pl-6 space-y-2 mb-8">
+                    <li><strong>Tai Sabaki (L'esquive) :</strong> Au lieu de bloquer l'attaque frontalement, le pratiquant déplace son corps hors de la ligne d'attaque, se plaçant ainsi dans une position dominante pour contre-attaquer simultanément.</li>
+                    <li><strong>Nagashi (La fluidité) :</strong> Accompagner et dévier la force de l'adversaire sans créer de choc violent.</li>
+                    <li><strong>L'héritage du Ju-Jitsu :</strong> Le Wadō-ryū intègre de nombreuses clefs articulaires (<em>Kansetsu Waza</em>) et projections (<em>Nage Waza</em>), démontrant qu'il n'est pas qu'un art de percussion.</li>
+                </ul>
+
+                <h2 class="text-3xl font-bold text-ffk-black mt-12 mb-6 border-b-2 border-ffk-gray pb-2 inline-block">Les Katas du Wado-Ryu</h2>
+                <p>
+                    Dans le Wado-Ryu, les katas sont épurés de tout mouvement inutile. Le fondateur les considérait moins comme des moules rigides que comme des principes d'expression du combat réel. Parmi les plus emblématiques étudiés au club, on retrouve :
+                </p>
+                
+                <div class="grid sm:grid-cols-2 gap-6 mt-6">
+                    <div class="bg-gray-50 border border-gray-200 p-5 rounded-lg">
+                        <h4 class="font-bold text-ffk-blue text-lg">Les Pinan (平安)</h4>
+                        <p class="text-sm mt-2">Série de 5 katas fondamentaux (Shodan, Nidan, Sandan, Yodan, Godan). Ils constituent la base de l'apprentissage pour les ceintures de couleurs.</p>
+                    </div>
+                    <div class="bg-gray-50 border border-gray-200 p-5 rounded-lg">
+                        <h4 class="font-bold text-ffk-blue text-lg">Naihanchi (内畔戦)</h4>
+                        <p class="text-sm mt-2">Surnommé "Le Cavalier de fer". Il s'exécute entièrement sur un axe latéral (Kiba-dachi), travaillant l'enracinement et le combat au corps à corps.</p>
+                    </div>
+                    <div class="bg-gray-50 border border-gray-200 p-5 rounded-lg">
+                        <h4 class="font-bold text-ffk-blue text-lg">Kushanku (公相君)</h4>
+                        <p class="text-sm mt-2">Un kata majeur et très long. Il regroupe l'ensemble des principes martiaux que l'on retrouve distillés dans la série des Pinan.</p>
+                    </div>
+                    <div class="bg-gray-50 border border-gray-200 p-5 rounded-lg">
+                        <h4 class="font-bold text-ffk-blue text-lg">Chinto (鎮闘)</h4>
+                        <p class="text-sm mt-2">Signifiant "La grue sur un rocher". Sa spécificité réside dans l'utilisation répétée d'équilibres sur une jambe, développant la stabilité et les esquives hautes.</p>
+                    </div>
+                </div>
+
+            </article>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-ffk-black text-white py-12 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-ffk-gray">
+            <p>CSB Karaté - Brétigny-sur-Orge. Affilié à la Fédération Française de Karaté.</p>
+            <p class="mt-2">&copy; <script>document.write(new Date().getFullYear())</script> Tous droits réservés.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
