@@ -1,1 +1,29 @@
+/* Importation de la typographie officielle FFK */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
+/* Comportement global */
+html {
+scroll-behavior: smooth;
+}
+
+body {
+font-family: 'Montserrat', Arial, sans-serif;
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+}
+
+/*
+
+Utilitaires personnalisés
+
+(ex: pour cacher la barre de défilement du carrousel d'actualités)
+*/
+.hide-scrollbar::-webkit-scrollbar {
+display: none;
+}
+.hide-scrollbar {
+-ms-overflow-style: none;
+scrollbar-width: none;
+}
+
+/* Vous pourrez ajouter ici d'autres styles CSS purs si Tailwind ne suffit pas */
