@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSB Karaté - Brétigny-sur-Orge</title>
+    <meta name="description" content="Club Sportif de Brétigny Karaté. Cours de Karaté traditionnel pour enfants et adultes, et Self-défense féminine à Brétigny-sur-Orge.">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Montserrat', 'Arial', 'sans-serif'],
+                    },
+                    colors: {
+                        ffk: {
+                            blue: '#1423A0',
+                            red: '#DC2D5A',
+                            gray: '#8C8C8C',
+                            black: '#000000'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-ffk-black font-sans antialiased">
+
+    <!-- En-tête / Menu de navigation -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo textuel -->
+                <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer">
+                    <div class="w-10 h-10 bg-ffk-blue rounded-full flex items-center justify-center">
+                        <div class="w-6 h-6 bg-ffk-red rounded-full"></div>
+                    </div>
+                    <span class="font-bold text-2xl tracking-wider">
+                        <span class="text-ffk-blue">CSB</span> <span class="text-ffk-red">KARATÉ</span>
+                    </span>
+                </div>
+                
+                <!-- Menu Desktop -->
+                <nav class="hidden lg:flex space-x-6 items-center">
+                    <a href="#accueil" class="text-ffk-black hover:text-ffk-red font-medium transition duration-200">Accueil</a>
+                    <a href="#disciplines" class="text-ffk-black hover:text-ffk-red font-medium transition duration-200">Disciplines</a>
+                    <a href="#infos" class="text-ffk-black hover:text-ffk-red font-medium transition duration-200">Horaires & Lieux</a>
+                    <!-- NOUVEAU BOUTON WADO-RYU -->
+                    <a href="wadoryu.html" class="flex items-center gap-1 text-ffk-blue hover:text-ffk-red font-bold transition duration-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        Histoire du Wado-Ryu
+                    </a>
+                    <a href="#contact" class="text-ffk-black hover:text-ffk-red font-medium transition duration-200">Contact</a>
+                </nav>
+
+                <!-- Bouton d'action -->
+                <div class="hidden md:flex">
+                    <a href="#contact" class="bg-ffk-red hover:bg-opacity-90 text-white px-6 py-2 rounded-full font-bold transition duration-200 shadow-lg shadow-ffk-red/30">
+                        Nous rejoindre
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Section Héro (Accueil) -->
+    <section id="accueil" class="relative bg-white pt-20 pb-32 overflow-hidden">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center max-w-3xl mx-auto">
+                <p class="text-ffk-blue font-bold tracking-widest uppercase mb-4">Club Sportif de Brétigny-sur-Orge</p>
+                <h1 class="text-5xl md:text-6xl font-extrabold text-ffk-black leading-tight mb-6">
+                    L'esprit martial,<br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-ffk-blue to-ffk-red">l'énergie pour tous.</span>
+                </h1>
+                <p class="text-xl text-ffk-gray mb-10 leading-relaxed">
+                    Découvrez la pratique du Karaté traditionnel et de la Self-défense féminine au sein d'un club dynamique, affilié à la Fédération Française de Karaté.
+                </p>
+                <div class="flex justify-center gap-4">
+                    <a href="#infos" class="bg-ffk-blue hover:bg-opacity-90 text-white px-8 py-4 rounded-full font-bold transition duration-200 shadow-lg shadow-ffk-blue/30">
+                        Voir les horaires
+                    </a>
+                    <a href="#disciplines" class="bg-white border-2 border-ffk-gray/20 hover:border-ffk-blue text-ffk-black px-8 py-4 rounded-full font-bold transition duration-200">
+                        Découvrir
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Disciplines -->
+    <section id="disciplines" class="py-24 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-ffk-blue mb-4">Nos Disciplines</h2>
+                <div class="w-24 h-1 bg-ffk-red mx-auto"></div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Carte 1 -->
+                <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/50 overflow-hidden border-t-4 border-ffk-blue hover:-translate-y-2 transition duration-300">
+                    <div class="p-8">
+                        <div class="w-14 h-14 bg-blue-50 text-ffk-blue rounded-xl flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3">Karaté Enfants & Ados</h3>
+                        <p class="text-ffk-gray mb-4">Des pupilles aux benjamins. Développement de la motricité, du respect et de la concentration dans un cadre ludique et sécurisé.</p>
+                    </div>
+                </div>
+
+                <!-- Carte 2 -->
+                <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/50 overflow-hidden border-t-4 border-ffk-red hover:-translate-y-2 transition duration-300">
+                    <div class="p-8">
+                        <div class="w-14 h-14 bg-red-50 text-ffk-red rounded-xl flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3">Karaté Adultes</h3>
+                        <p class="text-ffk-gray mb-4">Étude des katas, travail technique (Kihon) et combat (Kumite). Amélioration de la condition physique et de la maîtrise de soi.</p>
+                    </div>
+                </div>
+
+                <!-- Carte 3 -->
+                <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/50 overflow-hidden border-t-4 border-ffk-black hover:-translate-y-2 transition duration-300">
+                    <div class="p-8">
+                        <div class="w-14 h-14 bg-gray-100 text-ffk-black rounded-xl flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3">Self-Défense Féminine</h3>
+                        <p class="text-ffk-gray mb-4">Apprentissage de techniques simples et efficaces pour se protéger et gagner en confiance en soi face aux situations du quotidien.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Infos Pratiques (Lieux) -->
+    <section id="infos" class="py-24 bg-white border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-ffk-blue mb-4">Informations Pratiques</h2>
+                <p class="text-ffk-gray">Nos lieux d'entraînement à Brétigny-sur-Orge</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12">
+                <!-- Lieu 1 -->
+                <div class="flex gap-6">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-ffk-blue">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-ffk-black mb-2">Gymnase Auguste Delaune</h3>
+                        <p class="text-ffk-gray mb-4">Rue Henri Douard, 91220 Brétigny-sur-Orge</p>
+                        <ul class="space-y-2 text-sm text-ffk-gray">
+                            <li><strong class="text-ffk-blue">Karaté Adultes :</strong> Lundi et Jeudi soirs</li>
+                            <li><strong class="text-ffk-red">Self-Défense :</strong> Créneaux spécifiques</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Lieu 2 -->
+                <div class="flex gap-6">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-ffk-blue">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-ffk-black mb-2">Salle Louise Michel</h3>
+                        <p class="text-ffk-gray mb-4">Avenue de la Commune de Paris, 91220 Brétigny-sur-Orge</p>
+                        <ul class="space-y-2 text-sm text-ffk-gray">
+                            <li><strong class="text-ffk-blue">Karaté Pupilles/Benjamins :</strong> Mercredi après-midi</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="bg-ffk-black text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6 border-b border-gray-800 pb-8 mb-8">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-2xl tracking-wider">
+                        CSB <span class="text-ffk-red">KARATÉ</span>
+                    </span>
+                </div>
+                <div class="text-ffk-gray text-sm text-center md:text-right">
+                    <p>Club Sportif de Brétigny-sur-Orge</p>
+                    <p>Affilié à la Fédération Française de Karaté</p>
+                </div>
+            </div>
+            <div class="text-center text-sm text-ffk-gray">
+                &copy; <script>document.write(new Date().getFullYear())</script> CSB Karaté. Tous droits réservés.
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
+```eof
+
+### 2. Création de la page `wadoryu.html`
+Créez ce nouveau fichier dans le même dossier que votre `index.html`. J'ai utilisé le design "Dossier Documentaire", avec un sommaire latéral et un texte bien aéré.
+
+http://googleusercontent.com/immersive_entry_chip/0
+
+### Qu'avons-nous accompli ici ?
+1. **La page d'accueil est mise à jour** avec un lien directement intégré dans la navigation pour orienter vers le dossier.
+2. **Le dossier respecte les couleurs** de la FFK et la police "Montserrat", créant une belle continuité visuelle.
+3. Les photos proviennent du **domaine public (Wikimedia Commons)** et la photo de couverture est une image d'illustration libre de droits, pour éviter tout problème légal.
+4. L'information est claire, avec un encart sur le fondateur qui rend la lecture agréable.
+
+Envoyez simplement ces deux fichiers sur votre dépôt GitHub pour que Vercel s'occupe de la mise en ligne instantanément ! Dites-moi si vous souhaitez ajouter d'autres éléments, comme un planning des cours sur la page principale.
