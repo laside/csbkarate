@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passage de grade | CSB Karaté</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Montserrat', 'Arial', 'sans-serif'] }, colors: { ffk: { blue: '#1423A0', red: '#DC2D5A', gray: '#8C8C8C', black: '#000000' } } } } }
+    </script>
+</head>
+<body class="bg-gray-50 text-ffk-black font-sans antialiased min-h-screen flex flex-col">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <a href="./index.html" class="flex-shrink-0 flex items-center gap-2 cursor-pointer">
+                    <div class="w-10 h-10 bg-ffk-blue rounded-full flex items-center justify-center">
+                        <div class="w-6 h-6 bg-ffk-red rounded-full"></div>
+                    </div>
+                    <span class="font-bold text-2xl tracking-wider"><span class="text-ffk-blue">CSB</span> <span class="text-ffk-red">KARATÉ</span></span>
+                </a>
+                <nav class="hidden lg:flex space-x-8 items-center">
+                    <a href="./index.html" class="text-ffk-black hover:text-ffk-red font-medium transition duration-200">Retour à l'accueil</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center py-20 px-4 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
+        <div class="max-w-2xl w-full bg-white rounded-3xl shadow-xl p-10 md:p-16 text-center relative z-10 border-t-4 border-ffk-blue">
+            <div class="w-24 h-24 bg-blue-50 text-ffk-blue rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+            </div>
+            
+            <h1 class="text-3xl md:text-4xl font-extrabold text-ffk-black mb-4">Passage de grade</h1>
+            <h2 class="text-xl text-ffk-red font-bold mb-6 uppercase tracking-wider">Page en construction</h2>
+            
+            <p class="text-ffk-gray mb-10 leading-relaxed text-lg">
+                Nous intégrons actuellement les documents requis. Cette page vous permettra de consulter les dates des examens au sein du club ainsi que le programme technique exigé pour chaque ceinture.
+            </p>
+            
+            <a href="./index.html" class="inline-flex items-center gap-2 bg-ffk-blue hover:bg-opacity-90 text-white px-8 py-3 rounded-full font-bold transition duration-200 shadow-lg shadow-ffk-blue/30">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>Retour à l'accueil
+            </a>
+        </div>
+    </main>
+
+    <footer class="bg-ffk-black text-white py-8 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-ffk-gray"><p>CSB Karaté - Brétigny-sur-Orge. Affilié à la FFK.</p></div>
+    </footer>
+</body>
+</html>
