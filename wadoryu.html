@@ -5,110 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Histoire du Karaté Wado-Ryu | CSB Karaté</title>
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
-    
+    <link rel="stylesheet" href="./assets/css/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Montserrat', 'Arial', 'sans-serif'] },
-                    colors: {
-                        ffk: { blue: '#1423A0', red: '#DC2D5A', gray: '#8C8C8C', black: '#000000' }
-                    }
-                }
-            }
-        }
-    </script>
+    <script src="./assets/js/tailwind.js"></script>
+    <script src="./assets/js/main.js" defer></script>
 </head>
 <body class="bg-gray-50 text-ffk-black font-sans antialiased min-h-screen flex flex-col">
 
-    <!-- En-tête / Menu de navigation -->
-    <header class="bg-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
-                <a href="./index.html" class="flex-shrink-0 flex items-center gap-3 cursor-pointer">
-                    <img src="./logo-wadoryu.png" alt="Logo CSB Wado-Ryu" class="w-14 h-14 object-contain hover:scale-105 transition-transform duration-300">
-                    <span class="font-bold text-2xl tracking-wider">
-                        <span class="text-ffk-blue">CSB</span> <span class="text-ffk-red">KARATÉ</span>
-                    </span>
-                </a>
-                
-                <nav class="hidden lg:flex space-x-8 items-center">
-                    <a href="./index.html" class="text-ffk-black hover:text-ffk-red font-medium transition duration-200">Retour à l'accueil</a>
-                </nav>
+    <div id="header-placeholder"></div>
+
+    <main class="flex-grow flex flex-col">
+        <section class="relative bg-ffk-black py-24 border-b-8 border-ffk-red overflow-hidden">
+            <div class="absolute inset-0 opacity-40">
+                <img src="https://images.unsplash.com/photo-1548025253-ab02166f2c7a?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" alt="Dojo" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
             </div>
-        </div>
-    </header>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-white">
+                <span class="text-ffk-red font-bold uppercase tracking-widest text-sm mb-2 block">Dossier Historique</span>
+                <h1 class="text-4xl md:text-6xl font-extrabold mb-4">Le Karaté Wado-Ryu</h1>
+                <p class="text-xl text-gray-300 max-w-2xl">La Voie de la Paix et de l'Harmonie. Découvrez l'alliance subtile entre la percutance du Karaté d'Okinawa et la fluidité du Ju-Jitsu traditionnel japonais.</p>
+            </div>
+        </section>
 
-    <section class="relative bg-ffk-black py-24 border-b-8 border-ffk-red overflow-hidden">
-        <div class="absolute inset-0 opacity-40">
-            <img src="https://images.unsplash.com/photo-1548025253-ab02166f2c7a?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" alt="Dojo" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
-        </div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-white">
-            <span class="text-ffk-red font-bold uppercase tracking-widest text-sm mb-2 block">Dossier Historique</span>
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-4">Le Karaté Wado-Ryu</h1>
-            <p class="text-xl text-gray-300 max-w-2xl">La Voie de la Paix et de l'Harmonie. Découvrez l'alliance subtile entre la percutance du Karaté d'Okinawa et la fluidité du Ju-Jitsu traditionnel japonais.</p>
-        </div>
-    </section>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
+            <div class="flex flex-col lg:flex-row gap-12">
+                <aside class="lg:w-1/3">
+                    <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-ffk-blue sticky top-28">
+                        <div class="flex justify-center mb-6">
+                            <!-- Remplacement par l'image icon-torii.png demandée précédemment -->
+                            <img src="./icon-torii.png" alt="Torii Japonais" class="w-24 h-24 object-contain opacity-90" onerror="this.src='https://placehold.co/100x100/1423A0/FFFFFF?text=Torii'">
+                        </div>
+                        <div class="mb-6 text-center">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/d/db/Hironori_Otsuka.png" alt="Portrait de Hironori Otsuka" class="w-40 h-auto mx-auto rounded-lg shadow-sm mb-4 grayscale hover:grayscale-0 transition duration-500">
+                            <p class="font-bold text-lg">Maître Hironori Ōtsuka</p>
+                            <p class="text-sm text-ffk-gray">(1892 - 1982)</p>
+                        </div>
+                        <hr class="border-gray-200 mb-6">
+                        <h3 class="font-bold text-ffk-blue mb-4 uppercase tracking-wider text-sm">Signification (和道流)</h3>
+                        <ul class="space-y-3 text-sm mb-8">
+                            <li><span class="font-bold text-ffk-red">WA</span> (和) : L'harmonie, la paix.</li>
+                            <li><span class="font-bold text-ffk-red">DO</span> (道) : La voie, le chemin.</li>
+                            <li><span class="font-bold text-ffk-red">RYU</span> (流) : L'école, le style.</li>
+                        </ul>
+                    </div>
+                </aside>
 
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div class="flex flex-col lg:flex-row gap-12">
-            
-            <aside class="lg:w-1/3">
-                <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-ffk-blue sticky top-28">
-                    <!-- Ajout de l'icône Torii en petite touche -->
-                    <div class="flex justify-center mb-6">
-                        <img src="./icon-torii.png" alt="Torii Japonais" class="w-24 h-24 object-contain opacity-90">
-                    </div>
-                    <div class="mb-6 text-center">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/d/db/Hironori_Otsuka.png" alt="Portrait de Hironori Otsuka" class="w-40 h-auto mx-auto rounded-lg shadow-sm mb-4 grayscale hover:grayscale-0 transition duration-500">
-                        <p class="font-bold text-lg">Maître Hironori Ōtsuka</p>
-                        <p class="text-sm text-ffk-gray">(1892 - 1982)</p>
-                    </div>
-                    <hr class="border-gray-200 mb-6">
-                    <h3 class="font-bold text-ffk-blue mb-4 uppercase tracking-wider text-sm">Signification (和道流)</h3>
-                    <ul class="space-y-3 text-sm mb-8">
-                        <li><span class="font-bold text-ffk-red">WA</span> (和) : L'harmonie, la paix.</li>
-                        <li><span class="font-bold text-ffk-red">DO</span> (道) : La voie, le chemin.</li>
-                        <li><span class="font-bold text-ffk-red">RYU</span> (流) : L'école, le style.</li>
+                <article class="lg:w-2/3 prose prose-lg max-w-none text-gray-700">
+                    <h2 class="text-3xl font-bold text-ffk-black mt-0 mb-6 border-b-2 border-ffk-blue pb-2 inline-block">Les Origines du Style</h2>
+                    <p>
+                        Le <strong>Wadō-ryū</strong> est considéré comme le tout premier style spécifiquement japonais de Karaté-Do, par opposition aux styles traditionnels nés sur l'île d'Okinawa. Il a été fondé en 1934 par <strong>Hironori Ōtsuka</strong>.
+                    </p>
+                    <p>
+                        La genèse de ce style est unique. Avant même de découvrir le Karaté, Hironori Ōtsuka était déjà un grand maître de Ju-Jitsu traditionnel (le Shindō Yōshin-ryū).
+                    </p>
+                    <p>
+                        Il décide alors de fusionner les techniques de frappes du Karaté avec les principes de fluidité, d'esquive et de projection de son école de Ju-Jitsu. Le Wadō-ryū était né.
+                    </p>
+
+                    <h2 class="text-3xl font-bold text-ffk-black mt-12 mb-6 border-b-2 border-ffk-red pb-2 inline-block">Les Principes Techniques Fondamentaux</h2>
+                    <p>
+                        Le Wadō-ryū se distingue visuellement des autres styles par des positions souvent plus hautes et plus naturelles. L'objectif n'est pas de s'opposer à la force de l'adversaire par un blocage dur, mais de l'utiliser à son avantage.
+                    </p>
+                    <ul class="list-disc pl-6 space-y-2 mb-8">
+                        <li><strong>Tai Sabaki (L'esquive) :</strong> Au lieu de bloquer l'attaque frontalement, le pratiquant déplace son corps hors de la ligne d'attaque.</li>
+                        <li><strong>Nagashi (La fluidité) :</strong> Accompagner et dévier la force de l'adversaire sans créer de choc violent.</li>
+                        <li><strong>L'héritage du Ju-Jitsu :</strong> Le Wadō-ryū intègre de nombreuses clefs articulaires (<em>Kansetsu Waza</em>) et projections (<em>Nage Waza</em>).</li>
                     </ul>
-                </div>
-            </aside>
-
-            <article class="lg:w-2/3 prose prose-lg max-w-none text-gray-700">
-                <h2 class="text-3xl font-bold text-ffk-black mt-0 mb-6 border-b-2 border-ffk-blue pb-2 inline-block">Les Origines du Style</h2>
-                <p>
-                    Le <strong>Wadō-ryū</strong> est considéré comme le tout premier style spécifiquement japonais de Karaté-Do, par opposition aux styles traditionnels nés sur l'île d'Okinawa. Il a été fondé en 1934 par <strong>Hironori Ōtsuka</strong>.
-                </p>
-                <p>
-                    La genèse de ce style est unique. Avant même de découvrir le Karaté, Hironori Ōtsuka était déjà un grand maître de Ju-Jitsu traditionnel (le Shindō Yōshin-ryū).
-                </p>
-                <p>
-                    Il décide alors de fusionner les techniques de frappes du Karaté avec les principes de fluidité, d'esquive et de projection de son école de Ju-Jitsu. Le Wadō-ryū était né.
-                </p>
-
-                <h2 class="text-3xl font-bold text-ffk-black mt-12 mb-6 border-b-2 border-ffk-red pb-2 inline-block">Les Principes Techniques Fondamentaux</h2>
-                <p>
-                    Le Wadō-ryū se distingue visuellement des autres styles par des positions souvent plus hautes et plus naturelles. L'objectif n'est pas de s'opposer à la force de l'adversaire par un blocage dur, mais de l'utiliser à son avantage.
-                </p>
-                <ul class="list-disc pl-6 space-y-2 mb-8">
-                    <li><strong>Tai Sabaki (L'esquive) :</strong> Au lieu de bloquer l'attaque frontalement, le pratiquant déplace son corps hors de la ligne d'attaque.</li>
-                    <li><strong>Nagashi (La fluidité) :</strong> Accompagner et dévier la force de l'adversaire sans créer de choc violent.</li>
-                    <li><strong>L'héritage du Ju-Jitsu :</strong> Le Wadō-ryū intègre de nombreuses clefs articulaires (<em>Kansetsu Waza</em>) et projections (<em>Nage Waza</em>).</li>
-                </ul>
-            </article>
+                </article>
+            </div>
         </div>
     </main>
 
-    <footer class="bg-ffk-black text-white py-8 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-ffk-gray">
-            <p>CSB Karaté - Brétigny-sur-Orge. Affilié à la FFK.</p>
-        </div>
-    </footer>
+    <div id="footer-placeholder"></div>
+
 </body>
 </html>

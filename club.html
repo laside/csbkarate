@@ -5,43 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Découvrir le club | CSB Karaté</title>
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
-    
+    <!-- Centralisation : Charte Graphique -->
+    <link rel="stylesheet" href="./assets/css/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Montserrat', 'Arial', 'sans-serif'] },
-                    colors: {
-                        ffk: { blue: '#1423A0', red: '#DC2D5A', gray: '#8C8C8C', black: '#000000' }
-                    }
-                }
-            }
-        }
-    </script>
+    <script src="./assets/js/tailwind.js"></script>
+
+    <!-- Centralisation : Injection du Header et Footer -->
+    <script src="./assets/js/main.js" defer></script>
 </head>
 <body class="bg-gray-50 text-ffk-black font-sans antialiased min-h-screen flex flex-col">
 
-    <header class="bg-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
-                <a href="./index.html" class="flex-shrink-0 flex items-center gap-2 cursor-pointer">
-                    <div class="w-10 h-10 bg-ffk-blue rounded-full flex items-center justify-center">
-                        <div class="w-6 h-6 bg-ffk-red rounded-full"></div>
-                    </div>
-                    <span class="font-bold text-2xl tracking-wider">
-                        <span class="text-ffk-blue">CSB</span> <span class="text-ffk-red">KARATÉ</span>
-                    </span>
-                </a>
-                <nav class="hidden lg:flex space-x-8 items-center">
-                    <a href="./index.html" class="text-ffk-black hover:text-ffk-red font-medium transition duration-200">Retour à l'accueil</a>
-                </nav>
-            </div>
-        </div>
-    </header>
+    <!-- Emplacement où le JavaScript va injecter l'en-tête -->
+    <div id="header-placeholder"></div>
 
     <main class="flex-grow flex items-center justify-center py-20 px-4 relative overflow-hidden">
         <!-- Fond décoratif -->
@@ -70,11 +45,8 @@
         </div>
     </main>
 
-    <footer class="bg-ffk-black text-white py-8 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-ffk-gray">
-            <p>CSB Karaté - Brétigny-sur-Orge. Affilié à la FFK.</p>
-        </div>
-    </footer>
+    <!-- Emplacement où le JavaScript va injecter le pied de page -->
+    <div id="footer-placeholder"></div>
 
 </body>
 </html>
