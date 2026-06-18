@@ -1,23 +1,69 @@
-/* Importation de la typographie officielle FFK */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+/* STREAMING_CHUNK:Importation des polices... */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Barlow+Condensed:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
 
-/* Comportement global */
 html {
 scroll-behavior: smooth;
 }
 
 body {
-font-family: 'Montserrat', Arial, sans-serif;
--webkit-font-smoothing: antialiased;
--moz-osx-font-smoothing: grayscale;
+background-color: #FAF9F6; /* Blanc Washi /
+color: #0D1B2A; / Bleu Encre */
 }
 
-/*
+/* STREAMING_CHUNK:Utilitaires typographiques et Bento... */
+.h1-style { font-family: 'Cormorant Garamond', serif; }
+.h2-style { font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; }
 
-Utilitaires personnalisés
+.bento-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+gap: 1.5rem;
+}
 
-(ex: pour cacher la barre de défilement du carrousel d'actualités)
-*/
+.bento-card {
+background: white;
+border: 1px solid #E0E1DD;
+border-radius: 12px;
+padding: 2rem;
+transition: all 0.3s ease;
+}
+
+.bento-card:hover {
+transform: translateY(-5px);
+box-shadow: 0 10px 25px rgba(13, 27, 42, 0.05);
+border-color: #E63946;
+}
+
+/* STREAMING_CHUNK:Animations et menus... */
+.nav-link {
+position: relative;
+transition: color 0.3s;
+}
+
+.nav-link::after {
+content: '';
+position: absolute;
+bottom: -4px;
+left: 0;
+width: 0;
+height: 2px;
+background: #E63946;
+transition: width 0.3s;
+}
+
+.nav-link:hover::after {
+width: 100%;
+}
+
+.fade-in {
+animation: fadeIn 0.8s ease-out forwards;
+}
+
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(20px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
 .hide-scrollbar::-webkit-scrollbar {
 display: none;
 }
@@ -25,5 +71,3 @@ display: none;
 -ms-overflow-style: none;
 scrollbar-width: none;
 }
-
-/* Vous pourrez ajouter ici d'autres styles CSS purs si Tailwind ne suffit pas */

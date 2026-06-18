@@ -4,56 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog et Actualités | CSB Karaté</title>
-    
     <link rel="stylesheet" href="./assets/css/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="./assets/js/tailwind.js"></script>
     <script src="./assets/js/main.js" defer></script>
 </head>
-<body class="bg-gray-50 text-ffk-black font-sans antialiased min-h-screen flex flex-col">
-
+<body class="bg-csb-washi text-csb-encre font-sans antialiased min-h-screen flex flex-col">
     <div id="header-placeholder"></div>
 
-    <main class="flex-grow flex flex-col w-full">
-        <section class="bg-white border-b border-gray-200 py-16">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h1 class="text-4xl md:text-5xl font-extrabold text-ffk-black mb-4">Blog et <span class="text-ffk-blue">Actualités</span></h1>
-                <p class="text-xl text-ffk-gray max-w-2xl mx-auto">Restez informé des événements du club, des passages de grades et des éventuelles modifications de planning.</p>
+    <main class="flex-grow pt-24 pb-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm mb-4 block">La vie du club</span>
+                <h1 class="font-serif text-5xl md:text-6xl text-csb-encre mb-6">Actualités & News</h1>
+                <p class="text-xl text-gray-500 max-w-2xl mx-auto font-sans">Restez informé des événements du club, des passages de grades et des informations importantes.</p>
             </div>
-        </section>
 
-        <!-- Conteneur qui accueillera bientôt les actualités dynamiques depuis data.json -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
-            <h2 class="text-2xl font-bold text-ffk-black mb-8 border-l-4 border-ffk-red pl-3">À la une</h2>
-            
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-                <!-- Article 1 (Statique pour l'instant) -->
-                <article class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition duration-300 flex flex-col">
-                    <div class="h-48 bg-gray-200 relative">
-                        <img src="https://images.unsplash.com/photo-1577805947697-89e18249d767?auto=format&fit=crop&w=800&q=80" alt="Assemblée Générale" class="w-full h-full object-cover">
-                        <div class="absolute top-4 left-4 bg-ffk-red text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">Événement</div>
-                    </div>
-                    <div class="p-6 flex flex-col flex-grow">
-                        <time class="text-sm text-ffk-gray font-medium mb-2 block">12 Novembre 2025</time>
-                        <h3 class="text-xl font-bold text-ffk-black mb-3">Convocation à l'Assemblée Générale 2025-2026</h3>
-                        <p class="text-gray-600 mb-4 flex-grow">L'Assemblée Générale Ordinaire du CSB Karaté se tiendra le 12 Novembre. Tous les membres du club y sont chaleureusement conviés pour faire le bilan de la saison et aborder les projets futurs.</p>
+            <div class="bento-grid">
+                <!-- Article 1 -->
+                <article class="bento-card flex flex-col group border-t-4 border-t-csb-corail">
+                    <div class="flex-grow">
+                        <time class="font-condensed text-sm text-gray-400 uppercase tracking-widest mb-3 block">12 Nov 2025</time>
+                        <h3 class="font-serif text-2xl font-bold text-csb-encre mb-4 group-hover:text-csb-corail transition">Assemblée Générale 2025-2026</h3>
+                        <p class="text-gray-600 font-sans text-sm leading-relaxed mb-6">Convocation à l'assemblée générale ordinaire du CSB Karaté. Invitation à tous les membres du club.</p>
                     </div>
                 </article>
-                
-                <!-- Article 2 (Statique pour l'instant) -->
-                <article class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition duration-300 flex flex-col">
-                    <div class="h-48 bg-gray-200 relative">
-                        <img src="https://images.unsplash.com/photo-1548025253-ab02166f2c7a?auto=format&fit=crop&w=800&q=80" alt="Reprise des cours" class="w-full h-full object-cover">
-                        <div class="absolute top-4 left-4 bg-ffk-blue text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">Rentrée</div>
-                    </div>
-                    <div class="p-6 flex flex-col flex-grow">
-                        <time class="text-sm text-ffk-gray font-medium mb-2 block">Septembre 2025</time>
-                        <h3 class="text-xl font-bold text-ffk-black mb-3">Reprise des cours saison 2025-2026</h3>
-                        <div class="text-gray-600 mb-4 flex-grow space-y-2 text-sm">
-                            <p><strong>6 Septembre :</strong> Forum des associations.</p>
-                            <p><strong>7 Septembre :</strong> Cours de Self-Défense féminine.</p>
-                            <p><strong>9 Septembre :</strong> Cours de Karaté traditionnels.</p>
+
+                <!-- Article 2 -->
+                <article class="bento-card flex flex-col group border-t-4 border-t-csb-dojo">
+                    <div class="flex-grow">
+                        <time class="font-condensed text-sm text-gray-400 uppercase tracking-widest mb-3 block">Sept 2025</time>
+                        <h3 class="font-serif text-2xl font-bold text-csb-encre mb-4 group-hover:text-csb-dojo transition">Reprise des cours saison 2025</h3>
+                        <div class="text-gray-600 font-sans text-sm leading-relaxed space-y-2 mb-6">
+                            <p><strong>6 Septembre :</strong> Forum des associations</p>
+                            <p><strong>7 Septembre :</strong> Début Self-défense</p>
+                            <p><strong>9 Septembre :</strong> Début Karaté</p>
                         </div>
+                    </div>
+                </article>
+
+                <!-- Article 3 -->
+                <article class="bento-card flex flex-col group">
+                    <div class="flex-grow">
+                        <time class="font-condensed text-sm text-gray-400 uppercase tracking-widest mb-3 block">Vacances</time>
+                        <h3 class="font-serif text-2xl font-bold text-csb-encre mb-4">Vacances de Noël 2024</h3>
+                        <p class="text-gray-600 font-sans text-sm leading-relaxed mb-6">Reprise des Cours la semaine du 6 Janvier 2025.</p>
                     </div>
                 </article>
             </div>
@@ -61,6 +56,5 @@
     </main>
 
     <div id="footer-placeholder"></div>
-
 </body>
 </html>
