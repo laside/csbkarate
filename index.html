@@ -69,6 +69,11 @@
                                 <a href="./competitions.html" class="block px-4 py-3 text-sm font-medium text-ffk-black hover:bg-gray-50 hover:text-ffk-red transition">Compétitions</a>
                                 <a href="./grades.html" class="block px-4 py-3 text-sm font-medium text-ffk-black hover:bg-gray-50 hover:text-ffk-red transition">Passage de grade</a>
                                 <a href="./galerie.html" class="block px-4 py-3 text-sm font-medium text-ffk-black hover:bg-gray-50 hover:text-ffk-red transition">Galerie</a>
+                                <div class="border-t border-gray-100 my-1"></div>
+                                <a href="./news.html" class="block px-4 py-3 text-sm font-bold text-ffk-blue hover:bg-blue-50 hover:text-ffk-red transition flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H14"></path></svg>
+                                    Actualités & News
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -116,6 +121,115 @@
                         Notre Style : Wado-Ryu
                     </a>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- NOUVELLE SECTION : Dernières News (Carrousel) -->
+    <style>
+        /* Classe utilitaire pour masquer la barre de défilement tout en gardant le scroll actif */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+    <section id="news-preview" class="py-16 bg-white relative z-20 -mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-ffk-black mb-2">Dernières <span class="text-ffk-red">News</span></h2>
+                    <div class="w-16 h-1 bg-ffk-blue"></div>
+                </div>
+                <a href="./news.html" class="hidden sm:flex items-center gap-2 text-ffk-blue font-bold hover:text-ffk-red transition">
+                    Voir tout le blog <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </a>
+            </div>
+
+            <!-- Conteneur du Carrousel -->
+            <div class="relative group">
+                <!-- Bouton Précédent (JavaScript) -->
+                <button onclick="document.getElementById('news-track').scrollBy({left: -350, behavior: 'smooth'})" class="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg border border-gray-100 text-ffk-blue hover:text-ffk-red w-12 h-12 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+
+                <!-- Piste de défilement (Scroll Snap natif) -->
+                <div id="news-track" class="flex gap-6 overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-8 pt-4 px-2 -mx-2">
+                    
+                    <!-- Article 1 -->
+                    <div class="snap-start shrink-0 w-[85vw] sm:w-80 bg-white rounded-2xl shadow-lg shadow-gray-200/50 border-t-4 border-ffk-red p-6 flex flex-col justify-between hover:-translate-y-1 transition duration-300">
+                        <div>
+                            <div class="flex items-center gap-2 text-xs font-bold text-ffk-red uppercase tracking-wider mb-3">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                12 Nov 2025
+                            </div>
+                            <h3 class="text-lg font-bold text-ffk-black mb-2 leading-snug">Assemblée Générale Ordinaire 2025-2026</h3>
+                            <p class="text-ffk-gray text-sm line-clamp-3 mb-4">Convocation à l'assemblée générale ordinaire du CSB Karaté. Invitation à tous les membres du club.</p>
+                        </div>
+                        <a href="./news.html" class="text-ffk-blue font-bold text-sm hover:text-ffk-red transition flex items-center gap-1">Lire l'article <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></a>
+                    </div>
+
+                    <!-- Article 2 -->
+                    <div class="snap-start shrink-0 w-[85vw] sm:w-80 bg-white rounded-2xl shadow-lg shadow-gray-200/50 border-t-4 border-ffk-blue p-6 flex flex-col justify-between hover:-translate-y-1 transition duration-300">
+                        <div>
+                            <div class="flex items-center gap-2 text-xs font-bold text-ffk-blue uppercase tracking-wider mb-3">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                Septembre 2025
+                            </div>
+                            <h3 class="text-lg font-bold text-ffk-black mb-2 leading-snug">Reprise des cours saison 2025-2026</h3>
+                            <p class="text-ffk-gray text-sm line-clamp-3 mb-4">Le 6 Septembre au forum des associations, suivi du début des cours de Self-défense et Karaté dès le 7.</p>
+                        </div>
+                        <a href="./news.html" class="text-ffk-blue font-bold text-sm hover:text-ffk-red transition flex items-center gap-1">Lire l'article <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></a>
+                    </div>
+
+                    <!-- Article 3 -->
+                    <div class="snap-start shrink-0 w-[85vw] sm:w-80 bg-white rounded-2xl shadow-lg shadow-gray-200/50 border-t-4 border-gray-300 p-6 flex flex-col justify-between hover:-translate-y-1 transition duration-300">
+                        <div>
+                            <div class="flex items-center gap-2 text-xs font-bold text-ffk-gray uppercase tracking-wider mb-3">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Vacances
+                            </div>
+                            <h3 class="text-lg font-bold text-ffk-black mb-2 leading-snug">Vacances de Noël 2024</h3>
+                            <p class="text-ffk-gray text-sm line-clamp-3 mb-4">Fermeture du club pendant les fêtes. La reprise des cours s'effectuera la semaine du 6 Janvier 2025.</p>
+                        </div>
+                        <a href="./news.html" class="text-ffk-blue font-bold text-sm hover:text-ffk-red transition flex items-center gap-1">Lire l'article <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></a>
+                    </div>
+
+                    <!-- Article 4 -->
+                    <div class="snap-start shrink-0 w-[85vw] sm:w-80 bg-white rounded-2xl shadow-lg shadow-gray-200/50 border-t-4 border-gray-300 p-6 flex flex-col justify-between hover:-translate-y-1 transition duration-300">
+                        <div>
+                            <div class="flex items-center gap-2 text-xs font-bold text-ffk-gray uppercase tracking-wider mb-3">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Vacances
+                            </div>
+                            <h3 class="text-lg font-bold text-ffk-black mb-2 leading-snug">Vacances de la Toussaint 2024</h3>
+                            <p class="text-ffk-gray text-sm line-clamp-3 mb-4">Pause automnale. La reprise des entraînements est programmée pour la semaine du 4 Novembre.</p>
+                        </div>
+                        <a href="./news.html" class="text-ffk-blue font-bold text-sm hover:text-ffk-red transition flex items-center gap-1">Lire l'article <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></a>
+                    </div>
+
+                    <!-- Article 5 -->
+                    <div class="snap-start shrink-0 w-[85vw] sm:w-80 bg-white rounded-2xl shadow-lg shadow-gray-200/50 border-t-4 border-ffk-blue p-6 flex flex-col justify-between hover:-translate-y-1 transition duration-300">
+                        <div>
+                            <div class="flex items-center gap-2 text-xs font-bold text-ffk-blue uppercase tracking-wider mb-3">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                10 Sept 2024
+                            </div>
+                            <h3 class="text-lg font-bold text-ffk-black mb-2 leading-snug">Compte rendu de l'A.G. 2024</h3>
+                            <p class="text-ffk-gray text-sm line-clamp-3 mb-4">Retrouvez le bilan moral et financier présenté lors de l'Assemblée Générale Ordinaire de septembre.</p>
+                        </div>
+                        <a href="./news.html" class="text-ffk-blue font-bold text-sm hover:text-ffk-red transition flex items-center gap-1">Lire l'article <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></a>
+                    </div>
+
+                </div>
+
+                <!-- Bouton Suivant (JavaScript) -->
+                <button onclick="document.getElementById('news-track').scrollBy({left: 350, behavior: 'smooth'})" class="absolute -right-4 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg border border-gray-100 text-ffk-blue hover:text-ffk-red w-12 h-12 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+            
+            <div class="mt-6 text-center sm:hidden">
+                <a href="./news.html" class="inline-block border-2 border-ffk-gray/20 hover:border-ffk-blue text-ffk-black px-6 py-2 rounded-full font-bold transition duration-200">
+                    Toutes les actualités
+                </a>
             </div>
         </div>
     </section>
