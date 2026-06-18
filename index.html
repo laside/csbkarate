@@ -6,15 +6,12 @@
     <title>CSB Karaté - Brétigny-sur-Orge</title>
     <meta name="description" content="Club Sportif de Brétigny Karaté. Cours de Karaté traditionnel pour enfants et adultes, et Self-défense féminine à Brétigny-sur-Orge.">
     
-    <!-- Importation de la police officielle FFK : Montserrat -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
     
-    <!-- Chargement de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Configuration des couleurs de la Charte FFK -->
     <script>
         tailwind.config = {
             theme: {
@@ -41,21 +38,40 @@
     <header class="bg-white shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
-                <!-- Logo textuel -->
-                <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer">
-                    <div class="w-10 h-10 bg-ffk-blue rounded-full flex items-center justify-center">
-                        <div class="w-6 h-6 bg-ffk-red rounded-full"></div>
-                    </div>
+                <!-- Logo Officiel Wado-Ryu intégré ici -->
+                <a href="./index.html" class="flex-shrink-0 flex items-center gap-3 cursor-pointer">
+                    <img src="./logo-wadoryu.png" alt="Logo CSB Wado-Ryu" class="w-14 h-14 object-contain hover:scale-105 transition-transform duration-300">
                     <span class="font-bold text-2xl tracking-wider">
                         <span class="text-ffk-blue">CSB</span> <span class="text-ffk-red">KARATÉ</span>
                     </span>
-                </div>
+                </a>
                 
                 <!-- Menu Desktop -->
-                <nav class="hidden md:flex space-x-8 items-center">
+                <nav class="hidden lg:flex space-x-6 items-center">
                     <a href="#accueil" class="text-ffk-black hover:text-ffk-red font-medium transition duration-200">Accueil</a>
                     <a href="#disciplines" class="text-ffk-black hover:text-ffk-red font-medium transition duration-200">Disciplines</a>
-                    <a href="#infos" class="text-ffk-black hover:text-ffk-red font-medium transition duration-200">Horaires & Lieux</a>
+                    
+                    <!-- Menu Déroulant : Le club -->
+                    <div class="relative group">
+                        <button class="flex items-center gap-1 text-ffk-black hover:text-ffk-red font-medium transition duration-200 py-2">
+                            Le club
+                            <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 top-full pt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top translate-y-2 group-hover:translate-y-0 z-50">
+                            <div class="bg-white rounded-xl shadow-xl border border-gray-100 py-2 overflow-hidden">
+                                <a href="./club.html" class="block px-4 py-3 text-sm font-medium text-ffk-black hover:bg-gray-50 hover:text-ffk-red transition">Découvrir le club</a>
+                                <a href="./competitions.html" class="block px-4 py-3 text-sm font-medium text-ffk-black hover:bg-gray-50 hover:text-ffk-red transition">Compétitions</a>
+                                <a href="./grades.html" class="block px-4 py-3 text-sm font-medium text-ffk-black hover:bg-gray-50 hover:text-ffk-red transition">Passage de grade</a>
+                                <a href="./galerie.html" class="block px-4 py-3 text-sm font-medium text-ffk-black hover:bg-gray-50 hover:text-ffk-red transition">Galerie</a>
+                                <div class="border-t border-gray-100 my-1"></div>
+                                <a href="./news.html" class="block px-4 py-3 text-sm font-bold text-ffk-blue hover:bg-blue-50 hover:text-ffk-red transition flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H14"></path></svg>
+                                    Actualités & News
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
                     <a href="./wadoryu.html" class="flex items-center gap-1 text-ffk-blue hover:text-ffk-red font-bold transition duration-200">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                         Le Wado-Ryu
@@ -63,7 +79,6 @@
                     <a href="#contact" class="text-ffk-black hover:text-ffk-red font-medium transition duration-200">Contact</a>
                 </nav>
 
-                <!-- Bouton d'action -->
                 <div class="hidden md:flex">
                     <a href="#contact" class="bg-ffk-red hover:bg-opacity-90 text-white px-6 py-2 rounded-full font-bold transition duration-200 shadow-lg shadow-ffk-red/30">
                         Nous rejoindre
@@ -102,7 +117,81 @@
         </div>
     </section>
 
-    <!-- Section Disciplines -->
+    <!-- Dernières News (Carrousel) -->
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+    <section id="news-preview" class="py-16 bg-white relative z-20 -mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-ffk-black mb-2">Dernières <span class="text-ffk-red">News</span></h2>
+                    <div class="w-16 h-1 bg-ffk-blue"></div>
+                </div>
+                <a href="./news.html" class="hidden sm:flex items-center gap-2 text-ffk-blue font-bold hover:text-ffk-red transition">
+                    Voir tout le blog <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </a>
+            </div>
+
+            <div class="relative group">
+                <button onclick="document.getElementById('news-track').scrollBy({left: -350, behavior: 'smooth'})" class="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg border border-gray-100 text-ffk-blue hover:text-ffk-red w-12 h-12 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+
+                <div id="news-track" class="flex gap-6 overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-8 pt-4 px-2 -mx-2">
+                    <!-- Article 1 -->
+                    <div class="snap-start shrink-0 w-[85vw] sm:w-80 bg-white rounded-2xl shadow-lg shadow-gray-200/50 border-t-4 border-ffk-red p-6 flex flex-col justify-between hover:-translate-y-1 transition duration-300">
+                        <div>
+                            <div class="flex items-center gap-2 text-xs font-bold text-ffk-red uppercase tracking-wider mb-3">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                12 Nov 2025
+                            </div>
+                            <h3 class="text-lg font-bold text-ffk-black mb-2 leading-snug">Assemblée Générale Ordinaire 2025-2026</h3>
+                            <p class="text-ffk-gray text-sm line-clamp-3 mb-4">Convocation à l'assemblée générale ordinaire du CSB Karaté. Invitation à tous les membres du club.</p>
+                        </div>
+                        <a href="./news.html" class="text-ffk-blue font-bold text-sm hover:text-ffk-red transition flex items-center gap-1">Lire l'article <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></a>
+                    </div>
+                    <!-- Article 2 -->
+                    <div class="snap-start shrink-0 w-[85vw] sm:w-80 bg-white rounded-2xl shadow-lg shadow-gray-200/50 border-t-4 border-ffk-blue p-6 flex flex-col justify-between hover:-translate-y-1 transition duration-300">
+                        <div>
+                            <div class="flex items-center gap-2 text-xs font-bold text-ffk-blue uppercase tracking-wider mb-3">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                Septembre 2025
+                            </div>
+                            <h3 class="text-lg font-bold text-ffk-black mb-2 leading-snug">Reprise des cours saison 2025-2026</h3>
+                            <p class="text-ffk-gray text-sm line-clamp-3 mb-4">Le 6 Septembre au forum des associations, suivi du début des cours de Self-défense et Karaté dès le 7.</p>
+                        </div>
+                        <a href="./news.html" class="text-ffk-blue font-bold text-sm hover:text-ffk-red transition flex items-center gap-1">Lire l'article <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></a>
+                    </div>
+                    <!-- Article 3 -->
+                    <div class="snap-start shrink-0 w-[85vw] sm:w-80 bg-white rounded-2xl shadow-lg shadow-gray-200/50 border-t-4 border-gray-300 p-6 flex flex-col justify-between hover:-translate-y-1 transition duration-300">
+                        <div>
+                            <div class="flex items-center gap-2 text-xs font-bold text-ffk-gray uppercase tracking-wider mb-3">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Vacances
+                            </div>
+                            <h3 class="text-lg font-bold text-ffk-black mb-2 leading-snug">Vacances de Noël 2024</h3>
+                            <p class="text-ffk-gray text-sm line-clamp-3 mb-4">Fermeture du club pendant les fêtes. La reprise des cours s'effectuera la semaine du 6 Janvier 2025.</p>
+                        </div>
+                        <a href="./news.html" class="text-ffk-blue font-bold text-sm hover:text-ffk-red transition flex items-center gap-1">Lire l'article <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></a>
+                    </div>
+                </div>
+
+                <button onclick="document.getElementById('news-track').scrollBy({left: 350, behavior: 'smooth'})" class="absolute -right-4 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg border border-gray-100 text-ffk-blue hover:text-ffk-red w-12 h-12 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+            
+            <div class="mt-6 text-center sm:hidden">
+                <a href="./news.html" class="inline-block border-2 border-ffk-gray/20 hover:border-ffk-blue text-ffk-black px-6 py-2 rounded-full font-bold transition duration-200">
+                    Toutes les actualités
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Disciplines avec les NOUVELLES ICÔNES -->
     <section id="disciplines" class="py-24 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
@@ -114,8 +203,8 @@
                 <!-- Carte 1 -->
                 <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/50 overflow-hidden border-t-4 border-ffk-blue hover:-translate-y-2 transition duration-300">
                     <div class="p-8">
-                        <div class="w-14 h-14 bg-blue-50 text-ffk-blue rounded-xl flex items-center justify-center mb-6">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <div class="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center mb-6 overflow-hidden p-2">
+                            <img src="./icon-kids.png" alt="Karaté Enfants" class="w-full h-full object-contain">
                         </div>
                         <h3 class="text-xl font-bold mb-3">Karaté Enfants & Ados</h3>
                         <p class="text-ffk-gray mb-4">Des pupilles aux benjamins. Développement de la motricité, du respect et de la concentration dans un cadre ludique et sécurisé.</p>
@@ -125,8 +214,8 @@
                 <!-- Carte 2 -->
                 <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/50 overflow-hidden border-t-4 border-ffk-red hover:-translate-y-2 transition duration-300">
                     <div class="p-8">
-                        <div class="w-14 h-14 bg-red-50 text-ffk-red rounded-xl flex items-center justify-center mb-6">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <div class="w-16 h-16 bg-red-50 rounded-xl flex items-center justify-center mb-6 overflow-hidden p-2">
+                            <img src="./icon-kick.png" alt="Karaté Adultes" class="w-full h-full object-contain">
                         </div>
                         <h3 class="text-xl font-bold mb-3">Karaté Adultes</h3>
                         <p class="text-ffk-gray mb-4">Étude des katas, travail technique (Kihon) et combat (Kumite). Amélioration de la condition physique et de la maîtrise de soi.</p>
@@ -136,8 +225,8 @@
                 <!-- Carte 3 -->
                 <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/50 overflow-hidden border-t-4 border-ffk-black hover:-translate-y-2 transition duration-300">
                     <div class="p-8">
-                        <div class="w-14 h-14 bg-gray-100 text-ffk-black rounded-xl flex items-center justify-center mb-6">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        <div class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center mb-6 overflow-hidden p-2">
+                            <img src="./icon-fist.png" alt="Self-Défense" class="w-full h-full object-contain">
                         </div>
                         <h3 class="text-xl font-bold mb-3">Self-Défense Féminine</h3>
                         <p class="text-ffk-gray mb-4">Apprentissage de techniques simples et efficaces pour se protéger et gagner en confiance en soi face aux situations du quotidien.</p>
@@ -156,7 +245,6 @@
             </div>
 
             <div class="grid md:grid-cols-2 gap-12">
-                <!-- Lieu 1 -->
                 <div class="flex gap-6">
                     <div class="flex-shrink-0">
                         <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-ffk-blue">
@@ -172,8 +260,6 @@
                         </ul>
                     </div>
                 </div>
-
-                <!-- Lieu 2 -->
                 <div class="flex gap-6">
                     <div class="flex-shrink-0">
                         <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-ffk-blue">
@@ -192,11 +278,11 @@
         </div>
     </section>
 
-    <!-- Footer -->
     <footer id="contact" class="bg-ffk-black text-white py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6 border-b border-gray-800 pb-8 mb-8">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-3">
+                    <img src="./logo-wadoryu.png" alt="Logo" class="w-10 h-10 object-contain grayscale opacity-70">
                     <span class="font-bold text-2xl tracking-wider">
                         CSB <span class="text-ffk-red">KARATÉ</span>
                     </span>
