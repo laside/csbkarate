@@ -8,6 +8,7 @@ Code propre, moderne, léger, maintenable. Pédagogique en français.
 ## Stack (NE PAS modifier sans demander)
 - HTML5 sémantique + Tailwind CSS (CDN, config dans `assets/js/tailwind.js`)
 - Vanilla JS ES6+, API `fetch` pour charger JSON et composants
+- Chart.js (CDN) → graphiques de données (ex. radar comparatif sur `wadoryu.html`)
 - Données : fichiers `.json` dans `/data/` (Git-based CMS, pas de SQL)
 - Hébergement : GitHub Pages statique (déploiement via push sur `main`)
 
@@ -68,6 +69,7 @@ Cartes avec coins arrondis, effet glassmorphism subtil, ombres légères.
 - **Commentaires en français.** Code en anglais (variables, fonctions).
 - **Toujours `defer`** sur les `<script>` qui touchent le DOM.
 - **Pas de `<header>` ni `<footer>` en dur** dans les pages : utiliser le placeholder injecté par `main.js`.
+- **Images externes (Wikimedia Commons, etc.) :** toujours les télécharger dans `assets/photos/` (pas de hotlink), et ajouter un bloc « Crédits iconographiques » en bas de page avec lien source + licence si requis (ex. CC BY-SA).
 
 ## Workflow Git
 
