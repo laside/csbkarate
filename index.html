@@ -51,8 +51,9 @@
             <div class="max-w-7xl mx-auto px-6">
                 <div class="flex justify-between items-end mb-8">
                     <div>
-                        <h2 class="text-3xl font-serif text-csb-encre mb-2">Dernières Actualités</h2>
-                        <p class="font-condensed uppercase tracking-widest text-csb-corail text-sm font-bold">La vie du club</p>
+                        <!-- MISE A JOUR H2 : Barlow Condensed (font-condensed), majuscules (uppercase) -->
+                        <h2 class="text-4xl md:text-5xl font-condensed uppercase tracking-wider text-csb-encre mb-2">Dernières Actualités</h2>
+                        <p class="font-sans text-gray-500 text-sm">La vie du club</p>
                     </div>
                     <div class="hidden md:flex gap-2">
                         <button id="btn-prev" class="w-10 h-10 rounded-full border border-csb-tatami flex items-center justify-center text-csb-encre hover:border-csb-corail hover:text-csb-corail transition">
@@ -78,8 +79,9 @@
         <section id="disciplines" class="py-24 bg-csb-washi border-y border-gray-100">
             <div class="max-w-7xl mx-auto px-6">
                 <div class="mb-16">
-                    <h2 class="text-4xl font-serif text-csb-encre mb-4">01. Nos Disciplines</h2>
-                    <p class="text-gray-500 max-w-2xl font-sans">Une approche pédagogique adaptée à chaque âge et à chaque objectif, du développement moteur à la maîtrise de soi.</p>
+                    <!-- MISE A JOUR H2 : Barlow Condensed -->
+                    <h2 class="text-5xl md:text-6xl font-condensed uppercase tracking-wider text-csb-encre mb-4">01. Nos Disciplines</h2>
+                    <p class="text-gray-500 max-w-2xl font-sans text-lg">Une approche pédagogique adaptée à chaque âge et à chaque objectif, du développement moteur à la maîtrise de soi.</p>
                 </div>
 
                 <div class="bento-grid">
@@ -87,6 +89,7 @@
                         <div class="w-16 h-16 bg-csb-washi rounded-xl flex items-center justify-center mb-6">
                             <img src="./icon-kids.png" alt="Enfants" class="w-10 h-10 object-contain" onerror="this.style.display='none'">
                         </div>
+                        <!-- VERIFICATION H3 : Déjà en Barlow Condensed -->
                         <h3 class="font-condensed text-2xl uppercase tracking-wider mb-3 text-csb-encre">Karaté Enfants</h3>
                         <p class="text-gray-600 font-sans">Des pupilles aux benjamins. Développement de la motricité, du respect et de la concentration dans un cadre ludique.</p>
                     </div>
@@ -113,7 +116,8 @@
         <section id="infos" class="py-24 bg-csb-washi">
             <div class="max-w-7xl mx-auto px-6">
                 <div class="mb-16 text-center">
-                    <h2 class="text-4xl font-serif text-csb-encre mb-4">02. Informations Pratiques</h2>
+                    <!-- MISE A JOUR H2 : Barlow Condensed -->
+                    <h2 class="text-5xl md:text-6xl font-condensed uppercase tracking-wider text-csb-encre mb-4">02. Informations Pratiques</h2>
                 </div>
 
                 <div class="bento-grid">
@@ -168,13 +172,14 @@
                         const card = document.createElement('div');
                         card.className = "min-w-[85vw] md:min-w-[350px] flex-shrink-0 snap-center bento-card border-t-4 border-t-csb-corail flex flex-col justify-between";
                         
+                        // MISE A JOUR H3 JS : Remplacement de font-serif par font-condensed uppercase
                         card.innerHTML = `
                             <div>
                                 <div class="flex justify-between items-start mb-4">
-                                    <span class="font-condensed text-xs uppercase tracking-widest text-gray-400">${news.date}</span>
-                                    <span class="px-2 py-1 bg-csb-washi text-csb-dojo text-[10px] font-bold uppercase rounded">${news.category}</span>
+                                    <span class="font-sans text-xs font-bold text-gray-400">${news.date}</span>
+                                    <span class="px-2 py-1 bg-csb-washi text-csb-dojo text-[10px] font-bold uppercase rounded font-sans">${news.category}</span>
                                 </div>
-                                <h3 class="font-serif text-xl font-bold text-csb-encre mb-3">${news.title}</h3>
+                                <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-3">${news.title}</h3>
                                 <p class="text-sm text-gray-600 font-sans leading-relaxed">${news.excerpt}</p>
                             </div>
                         `;
