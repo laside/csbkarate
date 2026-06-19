@@ -3,10 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Histoire du Karaté Wado-Ryu | CSB Karaté</title>
+    <title>Le Karaté Wadō-Ryū : Histoire, Philosophie & Technique | CSB Karaté</title>
+    <meta name="description" content="La Voie de l'Harmonie : histoire d'Hironori Ōtsuka, philosophie du Wa, biomécanique, les 15 katas et l'art du combat. Le style enseigné au CSB Karaté Brétigny.">
+
+    <!-- Styles globaux + config charte -->
     <link rel="stylesheet" href="./assets/css/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="./assets/js/tailwind.js"></script>
+    <!-- Chart.js (CDN, déjà utilisé dans la charte) pour le radar comparatif -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Injection header/footer + animations globales -->
     <script src="./assets/js/main.js" defer></script>
 </head>
 <body class="bg-csb-washi text-csb-encre font-sans antialiased min-h-screen flex flex-col">
@@ -14,58 +20,408 @@
     <div id="header-placeholder"></div>
 
     <main class="flex-grow pt-20">
-        <section class="bg-csb-dojo py-24 border-b-4 border-csb-corail text-white">
-            <div class="max-w-7xl mx-auto px-6">
-                <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm mb-4 block">Dossier Historique</span>
-                <h1 class="font-serif text-5xl md:text-7xl mb-6">La Voie de la Paix<br>et de l'Harmonie.</h1>
-                <p class="text-xl text-gray-300 max-w-2xl font-sans">Découvrez l'alliance subtile entre la percutance du Karaté d'Okinawa et la fluidité du Ju-Jitsu traditionnel japonais.</p>
+
+        <!-- ============================================================= -->
+        <!-- HERO                                                          -->
+        <!-- ============================================================= -->
+        <section class="relative bg-csb-dojo py-24 md:py-28 border-b-4 border-csb-corail text-white overflow-hidden">
+            <!-- Idéogramme « Bu » (武, art martial) en filigrane -->
+            <span aria-hidden="true" class="pointer-events-none select-none absolute -right-6 top-1/2 -translate-y-1/2 font-serif text-[16rem] md:text-[22rem] leading-none text-white/5">武</span>
+            <div class="relative max-w-7xl mx-auto px-6">
+                <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm mb-4 block">Dossier Historique &amp; Technique</span>
+                <h1 class="font-serif text-5xl md:text-7xl mb-6 leading-tight">La Voie de la Paix<br>et de l'Harmonie.</h1>
+                <p class="text-xl text-gray-300 max-w-2xl">Le <strong class="text-white">Wadō-Ryū</strong> (和道流) est le premier style de karaté authentiquement japonais : l'alliance subtile entre la percutance du Karaté d'Okinawa et la fluidité du Ju-Jitsu traditionnel.</p>
+                <div class="flex flex-wrap gap-3 mt-8 font-condensed uppercase tracking-wider text-xs">
+                    <span class="px-4 py-1.5 rounded-full bg-white/10 border border-white/20">Origine : Japon, 1934</span>
+                    <span class="px-4 py-1.5 rounded-full bg-white/10 border border-white/20">Style majeur WKF</span>
+                    <span class="px-4 py-1.5 rounded-full bg-csb-corail/90">Maître Hironori Ōtsuka</span>
+                </div>
             </div>
         </section>
 
         <div class="max-w-7xl mx-auto px-6 py-20">
-            <div class="grid lg:grid-cols-3 gap-16">
-                
+            <div class="grid lg:grid-cols-3 gap-12 lg:gap-16">
+
+                <!-- ===================================================== -->
+                <!-- COLONNE LATÉRALE : Fiche fondateur + sommaire         -->
+                <!-- ===================================================== -->
                 <aside class="lg:col-span-1">
-                    <div class="bento-card sticky top-28 bg-white">
-                        <div class="flex justify-center mb-8">
-                            <img src="./icon-torii.png" alt="Torii" class="h-20 object-contain" onerror="this.style.display='none'">
+                    <div class="bento-card sticky top-28 bg-white p-0 overflow-hidden">
+                        <!-- Portrait du fondateur (Wikimedia Commons, CC BY-SA 4.0) -->
+                        <figure class="m-0">
+                            <div class="bg-csb-tatami aspect-[4/5] flex items-center justify-center">
+                                <img src="./assets/photos/hironori-otsuka.png"
+                                     alt="Portrait de Maître Hironori Ōtsuka, fondateur du Wadō-Ryū"
+                                     loading="lazy"
+                                     class="w-full h-full object-cover"
+                                     onerror="this.closest('figure').querySelector('.img-fallback').classList.remove('hidden'); this.remove();">
+                                <span class="img-fallback hidden font-serif text-6xl text-csb-encre/20">和</span>
+                            </div>
+                            <figcaption class="text-center px-6 py-5 border-b border-csb-tatami">
+                                <p class="font-serif text-2xl font-bold text-csb-encre">Maître Hironori Ōtsuka</p>
+                                <p class="text-sm text-gray-500 font-condensed uppercase tracking-wider">Fondateur · 1892 — 1982</p>
+                            </figcaption>
+                        </figure>
+
+                        <div class="p-6">
+                            <h3 class="font-condensed text-csb-corail mb-4 uppercase tracking-widest text-sm">Signification — 和道流</h3>
+                            <ul class="space-y-3 text-sm text-gray-700 mb-8">
+                                <li class="flex items-baseline gap-3"><strong class="text-csb-encre text-lg font-serif w-10">和 WA</strong> L'harmonie, la paix.</li>
+                                <li class="flex items-baseline gap-3"><strong class="text-csb-encre text-lg font-serif w-10">道 DŌ</strong> La voie, le chemin.</li>
+                                <li class="flex items-baseline gap-3"><strong class="text-csb-encre text-lg font-serif w-10">流 RYŪ</strong> L'école, le style.</li>
+                            </ul>
+
+                            <!-- Sommaire ancré (aide à la navigation sur cette longue page) -->
+                            <nav aria-label="Sommaire" class="border-t border-csb-tatami pt-6">
+                                <p class="font-condensed text-csb-encre uppercase tracking-widest text-xs mb-3">Au sommaire</p>
+                                <ul class="space-y-2 font-condensed uppercase tracking-wider text-sm">
+                                    <li><a href="#histoire" class="nav-link hover:text-csb-corail">01 · Histoire</a></li>
+                                    <li><a href="#philosophie" class="nav-link hover:text-csb-corail">02 · Philosophie</a></li>
+                                    <li><a href="#biomecanique" class="nav-link hover:text-csb-corail">03 · Biomécanique</a></li>
+                                    <li><a href="#katas" class="nav-link hover:text-csb-corail">04 · Les 15 Katas</a></li>
+                                    <li><a href="#combat" class="nav-link hover:text-csb-corail">05 · L'art du combat</a></li>
+                                    <li><a href="#ecoles" class="nav-link hover:text-csb-corail">06 · Les écoles</a></li>
+                                </ul>
+                            </nav>
                         </div>
-                        <div class="text-center border-b border-csb-tatami pb-6 mb-6">
-                            <p class="font-serif text-2xl font-bold text-csb-encre">Maître Hironori Ōtsuka</p>
-                            <p class="text-sm text-gray-500 font-condensed uppercase tracking-wider">(1892 - 1982)</p>
-                        </div>
-                        <h3 class="font-condensed text-csb-corail mb-4 uppercase tracking-widest text-sm">Signification (和道流)</h3>
-                        <ul class="space-y-4 font-sans text-sm text-gray-700">
-                            <li class="flex items-center gap-2"><strong class="text-csb-encre text-lg">WA (和)</strong> : L'harmonie, la paix.</li>
-                            <li class="flex items-center gap-2"><strong class="text-csb-encre text-lg">DO (道)</strong> : La voie, le chemin.</li>
-                            <li class="flex items-center gap-2"><strong class="text-csb-encre text-lg">RYU (流)</strong> : L'école, le style.</li>
-                        </ul>
                     </div>
                 </aside>
 
-                <article class="lg:col-span-2 prose prose-lg max-w-none prose-headings:font-serif prose-h2:text-4xl prose-h2:text-csb-encre prose-p:text-gray-700 prose-p:leading-relaxed">
-                    <h2 class="border-b border-csb-tatami pb-4 mb-8">Les Origines du Style</h2>
-                    <p>Le <strong>Wadō-ryū</strong> est considéré comme le tout premier style spécifiquement japonais de Karaté-Do, par opposition aux styles traditionnels nés sur l'île d'Okinawa. Il a été fondé en 1934 par <strong>Hironori Ōtsuka</strong>.</p>
-                    <p>La genèse de ce style est unique. Avant même de découvrir le Karaté, Hironori Ōtsuka était déjà un grand maître de Ju-Jitsu traditionnel (le Shindō Yōshin-ryū). Il décide alors de fusionner les techniques de frappes du Karaté avec les principes de fluidité, d'esquive et de projection de son école de Ju-Jitsu. Le Wadō-ryū était né.</p>
+                <!-- ===================================================== -->
+                <!-- COLONNE PRINCIPALE                                    -->
+                <!-- ===================================================== -->
+                <div class="lg:col-span-2 space-y-24">
 
-                    <h2 class="border-b border-csb-tatami pb-4 mt-16 mb-8">Les Principes Techniques</h2>
-                    <p>Le Wadō-ryū se distingue visuellement des autres styles par des positions souvent plus hautes et plus naturelles. L'objectif n'est pas de s'opposer à la force de l'adversaire par un blocage dur, mais de l'utiliser à son avantage.</p>
-                    
-                    <div class="bento-grid mt-8 not-prose">
-                        <div class="bento-card bg-csb-washi border-none p-6">
-                            <h4 class="font-condensed uppercase tracking-wider text-csb-corail mb-2 text-lg">Tai Sabaki (L'esquive)</h4>
-                            <p class="text-sm text-gray-600 font-sans">Au lieu de bloquer l'attaque frontalement, le pratiquant déplace son corps hors de la ligne d'attaque.</p>
+                    <!-- 01 · HISTOIRE -->
+                    <article id="histoire" class="scroll-mt-28">
+                        <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm">01 · Genèse d'une lignée</span>
+                        <h2 class="font-serif text-4xl text-csb-encre mt-2 mb-8 border-b border-csb-tatami pb-4">Les Origines du Style</h2>
+
+                        <p class="text-lg text-gray-700 leading-relaxed mb-6">Le <strong>Wadō-Ryū</strong> est considéré comme le tout premier style spécifiquement japonais de Karaté-Dō, par opposition aux styles traditionnels nés sur l'île d'Okinawa. Il est le fruit de la vision d'<strong>Hironori Ōtsuka (1892-1982)</strong>.</p>
+
+                        <p class="text-lg text-gray-700 leading-relaxed mb-8">Sa genèse est unique. Avant même de découvrir le karaté, Ōtsuka était déjà un grand maître de Ju-Jitsu traditionnel (le <em>Shindō Yōshin-Ryū</em>). En 1922, il rejoint l'enseignement de <strong>Gichin Funakoshi</strong>, le père du karaté moderne. Ōtsuka décide alors de fusionner la puissance percutante du karaté d'Okinawa avec les principes d'esquive, de fluidité et de projection des samouraïs. Le Wadō-Ryū était né.</p>
+
+                        <!-- Mini-portrait du maître d'Okinawa : Funakoshi (Wikimedia, domaine public) -->
+                        <figure class="bg-csb-washi border border-csb-tatami rounded-xl p-6 mb-10 flex items-center gap-5">
+                            <div class="bg-csb-tatami w-24 h-24 rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
+                                <img src="./assets/photos/gichin-funakoshi.jpg"
+                                     alt="Gichin Funakoshi, maître d'Okinawa et professeur d'Ōtsuka"
+                                     loading="lazy" class="w-full h-full object-cover"
+                                     onerror="this.nextElementSibling.classList.remove('hidden'); this.remove();">
+                                <span class="hidden font-serif text-3xl text-csb-encre/20">空</span>
+                            </div>
+                            <figcaption class="text-sm text-gray-600 m-0">
+                                <strong class="text-csb-encre font-condensed uppercase tracking-wider">Gichin Funakoshi (1868-1957)</strong><br>
+                                Maître d'Okinawa, il introduit le karaté au Japon. C'est auprès de lui qu'Ōtsuka apprend l'art de la « main vide » avant de tracer sa propre voie.
+                            </figcaption>
+                        </figure>
+
+                        <!-- Frise chronologique verticale -->
+                        <h3 class="font-condensed uppercase tracking-wider text-csb-encre text-xl mb-6">Chronologie</h3>
+                        <ol class="relative border-l-2 border-csb-tatami ml-3 space-y-8 list-none">
+                            <li class="pl-8 relative">
+                                <span class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-csb-corail border-2 border-white"></span>
+                                <span class="font-condensed font-bold text-csb-corail">1892</span>
+                                <p class="text-gray-700 mt-1">Naissance à Shimodate (préfecture d'Ibaraki). Il débute le Ju-Jitsu dès l'enfance.</p>
+                            </li>
+                            <li class="pl-8 relative">
+                                <span class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-csb-corail border-2 border-white"></span>
+                                <span class="font-condensed font-bold text-csb-corail">1921</span>
+                                <p class="text-gray-700 mt-1">Obtention du <em>Menkyo Kaiden</em> (maîtrise totale) du Shindō Yōshin-Ryū Ju-Jitsu.</p>
+                            </li>
+                            <li class="pl-8 relative">
+                                <span class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-csb-corail border-2 border-white"></span>
+                                <span class="font-condensed font-bold text-csb-corail">1922</span>
+                                <p class="text-gray-700 mt-1">Rencontre Gichin Funakoshi et commence l'étude du karaté d'Okinawa.</p>
+                            </li>
+                            <li class="pl-8 relative">
+                                <span class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-csb-encre border-2 border-white"></span>
+                                <span class="font-condensed font-bold text-csb-encre">1934</span>
+                                <p class="text-gray-700 mt-1">Fondation de sa propre voie et du <em>Dai Nippon Karate Shinkō Kai</em>.</p>
+                            </li>
+                            <li class="pl-8 relative">
+                                <span class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-csb-encre border-2 border-white"></span>
+                                <span class="font-condensed font-bold text-csb-encre">1940</span>
+                                <p class="text-gray-700 mt-1">Le nom « <strong>Wadō-Ryū</strong> » est officiellement reconnu.</p>
+                            </li>
+                            <li class="pl-8 relative">
+                                <span class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-csb-dojo border-2 border-white"></span>
+                                <span class="font-condensed font-bold text-csb-dojo">1982</span>
+                                <p class="text-gray-700 mt-1">Décès du fondateur. Son fils, Jirō Ōtsuka, perpétue la lignée familiale.</p>
+                            </li>
+                        </ol>
+                    </article>
+
+                    <!-- 02 · PHILOSOPHIE -->
+                    <article id="philosophie" class="scroll-mt-28">
+                        <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm">02 · L'esprit avant la force</span>
+                        <h2 class="font-serif text-4xl text-csb-encre mt-2 mb-4 border-b border-csb-tatami pb-4">Le Concept de « Wa » (和)</h2>
+                        <p class="text-lg text-gray-700 leading-relaxed mb-8">L'harmonie n'est pas la passivité, mais la recherche d'un équilibre dynamique. On ne s'oppose pas à la force : on l'épouse pour la rediriger.</p>
+
+                        <div class="bento-grid">
+                            <div class="bento-card bg-white border-b-4 border-csb-dojo">
+                                <div class="text-4xl mb-4" aria-hidden="true">🌿</div>
+                                <h3 class="font-condensed uppercase tracking-wider text-lg text-csb-encre mb-2">La Voie du Saule</h3>
+                                <p class="text-sm text-gray-600">Inspirée de la légende d'Akiyama Shirōbei : les branches du saule plient sous la neige pour la laisser glisser, là où le chêne, trop rigide, se brise.</p>
+                            </div>
+                            <div class="bento-card bg-white border-b-4 border-csb-corail">
+                                <div class="text-4xl mb-4" aria-hidden="true">☯️</div>
+                                <h3 class="font-condensed uppercase tracking-wider text-lg text-csb-encre mb-2">Ten · Chi · Jin</h3>
+                                <p class="text-sm text-gray-600">Le Ciel, la Terre et l'Homme. Les lois de l'univers doivent converger en l'individu vers une harmonie parfaite : le principe « <em>Ri-Dō</em> ».</p>
+                            </div>
+                            <div class="bento-card bg-white border-b-4 border-csb-dojo">
+                                <div class="text-4xl mb-4" aria-hidden="true">🤝</div>
+                                <h3 class="font-condensed uppercase tracking-wider text-lg text-csb-encre mb-2">Kei · Ai · Rei</h3>
+                                <p class="text-sm text-gray-600">Respect, Bienveillance et Courtoisie : les trois piliers moraux qui encadrent et justifient l'expression de la force martiale.</p>
+                            </div>
                         </div>
-                        <div class="bento-card bg-csb-washi border-none p-6">
-                            <h4 class="font-condensed uppercase tracking-wider text-csb-corail mb-2 text-lg">Nagashi (La fluidité)</h4>
-                            <p class="text-sm text-gray-600 font-sans">Accompagner et dévier la force de l'adversaire sans créer de choc violent.</p>
+                    </article>
+
+                    <!-- 03 · BIOMÉCANIQUE -->
+                    <article id="biomecanique" class="scroll-mt-28">
+                        <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm">03 · La vitesse plutôt que la masse</span>
+                        <h2 class="font-serif text-4xl text-csb-encre mt-2 mb-4 border-b border-csb-tatami pb-4">La Biomécanique du Wadō</h2>
+                        <p class="text-lg text-gray-700 leading-relaxed mb-8">Le Wadō-Ryū se distingue par des positions plus hautes et naturelles. L'objectif n'est jamais d'opposer un blocage dur, mais d'esquiver et d'utiliser la force adverse — selon l'énergie cinétique <strong>E = ½ m v²</strong>, doubler la vitesse quadruple l'impact.</p>
+
+                        <div class="grid md:grid-cols-2 gap-10 items-center">
+                            <!-- Radar comparatif (Chart.js) -->
+                            <div class="bento-card bg-white">
+                                <h3 class="font-condensed uppercase tracking-wider text-csb-encre text-center mb-4">Wadō-Ryū vs. Okinawa</h3>
+                                <div class="relative w-full max-w-[500px] mx-auto h-[320px]">
+                                    <canvas id="bioRadar"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Sanmi Ittai (trinité du mouvement) -->
+                            <div>
+                                <h3 class="font-condensed uppercase tracking-wider text-csb-encre text-xl mb-2">Sanmi Ittai (三位一体)</h3>
+                                <p class="text-sm text-gray-600 mb-5">« Trois en un » : esquive, déplacement et technique ne forment qu'un seul geste. Explorez chaque principe :</p>
+                                <div class="grid grid-cols-3 gap-3 mb-5">
+                                    <button type="button" data-bio="ten-i" class="bio-btn px-3 py-3 bg-white border border-csb-tatami rounded-lg font-condensed uppercase tracking-wider text-sm hover:border-csb-corail transition">Ten-I</button>
+                                    <button type="button" data-bio="ten-tai" class="bio-btn px-3 py-3 bg-white border border-csb-tatami rounded-lg font-condensed uppercase tracking-wider text-sm hover:border-csb-corail transition">Ten-Tai</button>
+                                    <button type="button" data-bio="ten-gi" class="bio-btn px-3 py-3 bg-white border border-csb-tatami rounded-lg font-condensed uppercase tracking-wider text-sm hover:border-csb-corail transition">Ten-Gi</button>
+                                </div>
+                                <div id="bioDisplay" class="bg-csb-washi border-l-4 border-csb-corail rounded-r-xl p-6 min-h-[140px]">
+                                    <h4 id="bioTitle" class="font-condensed uppercase tracking-wider text-csb-corail text-lg mb-2">Sanmi Ittai</h4>
+                                    <p id="bioDesc" class="text-gray-700 text-sm italic">Cliquez sur un principe pour explorer la trinité du mouvement Wadō.</p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </article>
+                    </article>
+
+                    <!-- 04 · KATAS -->
+                    <article id="katas" class="scroll-mt-28">
+                        <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm">04 · Les formes</span>
+                        <h2 class="font-serif text-4xl text-csb-encre mt-2 mb-4 border-b border-csb-tatami pb-4">L'Encyclopédie des 15 Katas</h2>
+                        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-8">
+                            <p class="text-lg text-gray-700 leading-relaxed max-w-md">De l'esprit paisible des <em>Pinan</em> aux formes avancées héritées des maîtres d'Okinawa.</p>
+                            <div class="flex gap-2 bg-csb-tatami/60 p-1 rounded-lg shrink-0">
+                                <button type="button" data-filter="all" class="kata-btn px-4 py-2 text-xs font-condensed uppercase tracking-wider rounded">Tous</button>
+                                <button type="button" data-filter="pinan" class="kata-btn px-4 py-2 text-xs font-condensed uppercase tracking-wider rounded">Pinan</button>
+                                <button type="button" data-filter="advanced" class="kata-btn px-4 py-2 text-xs font-condensed uppercase tracking-wider rounded">Avancés</button>
+                            </div>
+                        </div>
+                        <div id="kataGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                            <!-- Généré dynamiquement -->
+                        </div>
+                    </article>
+
+                    <!-- 05 · COMBAT -->
+                    <article id="combat" class="scroll-mt-28">
+                        <div class="bg-csb-dojo text-white rounded-2xl p-8 md:p-12 relative overflow-hidden">
+                            <span aria-hidden="true" class="pointer-events-none select-none absolute -right-4 -bottom-8 font-serif text-[12rem] leading-none text-white/5">武</span>
+                            <div class="relative">
+                                <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm">05 · Travail à deux</span>
+                                <h2 class="font-serif text-4xl mt-2 mb-8">L'Art du Partenaire</h2>
+
+                                <!-- Onglets -->
+                                <div class="flex gap-6 border-b border-white/15 mb-8 overflow-x-auto hide-scrollbar">
+                                    <button type="button" data-tab="kihon" class="combat-tab pb-4 font-condensed uppercase tracking-wider whitespace-nowrap">Kihon Kumite</button>
+                                    <button type="button" data-tab="tanto" class="combat-tab pb-4 font-condensed uppercase tracking-wider whitespace-nowrap">Tantō Dori</button>
+                                    <button type="button" data-tab="idori" class="combat-tab pb-4 font-condensed uppercase tracking-wider whitespace-nowrap">Idori</button>
+                                </div>
+
+                                <div class="grid md:grid-cols-3 gap-8 items-center">
+                                    <div class="md:col-span-2">
+                                        <h3 id="combatTitle" class="font-condensed uppercase tracking-wider text-csb-corail text-2xl mb-3">Les 10 Kihon Kumite</h3>
+                                        <p id="combatDesc" class="text-gray-300 leading-relaxed mb-6">La quintessence technique d'Hironori Ōtsuka. Un travail de géométrie pure où le défenseur frôle l'attaque sans jamais s'opposer à la force.</p>
+                                        <ul id="combatList" class="space-y-2 text-sm text-gray-200">
+                                            <li class="flex items-center gap-2"><span class="text-csb-corail">▸</span> Maîtrise du millimètre</li>
+                                            <li class="flex items-center gap-2"><span class="text-csb-corail">▸</span> Gestion de l'angle mort</li>
+                                            <li class="flex items-center gap-2"><span class="text-csb-corail">▸</span> Atemi décisif instantané</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
+                                        <div id="combatMetric" class="font-condensed font-bold text-csb-corail text-6xl mb-1">10</div>
+                                        <div id="combatSub" class="text-xs uppercase tracking-widest text-gray-400 font-condensed">Enchaînements fondamentaux</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- 06 · ÉCOLES -->
+                    <article id="ecoles" class="scroll-mt-28">
+                        <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm">06 · Panorama contemporain</span>
+                        <h2 class="font-serif text-4xl text-csb-encre mt-2 mb-8 border-b border-csb-tatami pb-4">Les Trois Grandes Écoles</h2>
+                        <div class="bento-grid">
+                            <div class="bento-card text-center bg-white">
+                                <div class="w-16 h-16 mx-auto mb-4 rounded-full border-2 border-csb-encre flex items-center justify-center font-serif text-2xl text-csb-encre">鳩</div>
+                                <h3 class="font-condensed uppercase tracking-wider text-csb-encre mb-2">Wadōkai</h3>
+                                <p class="text-sm text-gray-600">Branche historique et administrative. Emblème : le poing dans les ailes de la colombe.</p>
+                            </div>
+                            <div class="bento-card text-center bg-white border-csb-corail">
+                                <div class="w-16 h-16 mx-auto mb-4 rounded-full border-2 border-csb-corail flex items-center justify-center font-serif text-2xl text-csb-corail">和</div>
+                                <h3 class="font-condensed uppercase tracking-wider text-csb-encre mb-2">Wadō-Ryū Renmei</h3>
+                                <p class="text-sm text-gray-600">Lignée familiale directe (famille Ōtsuka). Emblème : le kanji « Wa » en son centre.</p>
+                            </div>
+                            <div class="bento-card text-center bg-white">
+                                <div class="w-16 h-16 mx-auto mb-4 rounded-full border-2 border-csb-dojo flex items-center justify-center font-serif text-2xl text-csb-dojo">日</div>
+                                <h3 class="font-condensed uppercase tracking-wider text-csb-encre mb-2">WIKF</h3>
+                                <p class="text-sm text-gray-600">Fédération internationale de Tatsuo Suzuki. Emblème : le disque solaire (Hinomaru).</p>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- Crédits iconographiques (obligatoire pour la licence CC BY-SA) -->
+                    <aside class="text-xs text-gray-400 border-t border-csb-tatami pt-6">
+                        <p class="font-condensed uppercase tracking-widest text-gray-500 mb-2">Crédits iconographiques</p>
+                        <ul class="space-y-1">
+                            <li>Portrait d'Hironori Ōtsuka — <a href="https://commons.wikimedia.org/wiki/File:Hironori_Otsuka.png" target="_blank" rel="noopener" class="underline hover:text-csb-corail">Wikimedia Commons</a>, par HistoryTuan, licence <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener" class="underline hover:text-csb-corail">CC BY-SA 4.0</a>.</li>
+                            <li>Portrait de Gichin Funakoshi — <a href="https://commons.wikimedia.org/wiki/File:Funakoshi_Gichin.jpg" target="_blank" rel="noopener" class="underline hover:text-csb-corail">Wikimedia Commons</a>, domaine public.</li>
+                        </ul>
+                    </aside>
+
+                </div>
             </div>
         </div>
     </main>
 
     <div id="footer-placeholder"></div>
+
+    <!-- ============================================================= -->
+    <!-- LOGIQUE DE PAGE (Vanilla JS)                                  -->
+    <!-- ============================================================= -->
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        // --- Couleurs de la charte (pour Chart.js) ---
+        const C = { corail: "#E63946", encre: "#0D1B2A", tatami: "#E0E1DD" };
+
+        /* ---------- 1. Encyclopédie des katas (grille filtrable) ---------- */
+        const katas = [
+            { name: "Pinan Nidan",   cat: "pinan",    origin: "Initiation", desc: "Parades de base et déplacements linéaires." },
+            { name: "Pinan Shodan",  cat: "pinan",    origin: "Initiation", desc: "Pivots de hanche et changements de garde." },
+            { name: "Pinan Sandan",  cat: "pinan",    origin: "Okinawa",    desc: "Dégagements sur saisies arrière." },
+            { name: "Pinan Yondan",  cat: "pinan",    origin: "Okinawa",    desc: "Frappes de coude (empi) et coups latéraux." },
+            { name: "Pinan Godan",   cat: "pinan",    origin: "Okinawa",    desc: "Synthèse avec saut et feintes complexes." },
+            { name: "Kushanku",      cat: "advanced", origin: "Chine/Okinawa", desc: "Le plus long : synthèse des cinq Pinan." },
+            { name: "Naihanchi",     cat: "advanced", origin: "Okinawa",    desc: "Combat rapproché latéral (cavalier de fer)." },
+            { name: "Seishan",       cat: "advanced", origin: "Okinawa",    desc: "Postures et rythme lent puis explosif." },
+            { name: "Chinto",        cat: "advanced", origin: "Okinawa",    desc: "Équilibre sur une jambe (la grue)." },
+            { name: "Wanshu",        cat: "advanced", origin: "Okinawa",    desc: "Esquives de buste et projections (l'hirondelle)." },
+            { name: "Bassai",        cat: "advanced", origin: "Okinawa",    desc: "Puissance de rotation pour briser la garde." },
+            { name: "Jion",          cat: "advanced", origin: "Temple Jion", desc: "Mouvements amples et rectilignes puissants." },
+            { name: "Jitte",         cat: "advanced", origin: "Okinawa",    desc: "Défenses contre bâton (« dix mains »)." },
+            { name: "Niseishi",      cat: "advanced", origin: "Okinawa",    desc: "Travail du rythme et des 24 pas." },
+            { name: "Rohai",         cat: "advanced", origin: "Okinawa",    desc: "Esquives aériennes et vision du héron." }
+        ];
+
+        const grid = document.getElementById("kataGrid");
+        const kataBtns = document.querySelectorAll(".kata-btn");
+
+        const renderKatas = (filter = "all") => {
+            const list = filter === "all" ? katas : katas.filter(k => k.cat === filter);
+            grid.innerHTML = list.map(k => `
+                <div class="bento-card bg-white p-5">
+                    <p class="font-condensed uppercase tracking-widest text-[10px] text-csb-corail mb-1">${k.origin}</p>
+                    <h4 class="font-condensed uppercase tracking-wider text-csb-encre mb-2">${k.name}</h4>
+                    <p class="text-xs text-gray-500 leading-snug">${k.desc}</p>
+                </div>`).join("");
+        };
+
+        const setKataActive = (btn) => {
+            kataBtns.forEach(b => b.classList.remove("bg-white", "shadow-sm", "text-csb-corail"));
+            btn.classList.add("bg-white", "shadow-sm", "text-csb-corail");
+        };
+
+        kataBtns.forEach(btn => btn.addEventListener("click", () => {
+            renderKatas(btn.dataset.filter);
+            setKataActive(btn);
+        }));
+        renderKatas();
+        setKataActive(document.querySelector('.kata-btn[data-filter="all"]'));
+
+        /* ---------- 2. Sanmi Ittai (biomécanique) ---------- */
+        const biomech = {
+            "ten-i":   { title: "Ten-I · Le déplacement", desc: "Quitter la ligne de force adverse par un déplacement minimal du corps. La sécurité naît de l'évitement." },
+            "ten-tai": { title: "Ten-Tai · L'orientation", desc: "La torsion du tronc présente un profil étroit : on réduit la cible tout en chargeant l'énergie du contre." },
+            "ten-gi":  { title: "Ten-Gi · La technique", desc: "Parade et riposte appliquées en un seul instant. Le coup adverse ne traverse plus que le vide." }
+        };
+        const bioTitle = document.getElementById("bioTitle");
+        const bioDesc  = document.getElementById("bioDesc");
+        document.querySelectorAll(".bio-btn").forEach(btn => btn.addEventListener("click", () => {
+            const data = biomech[btn.dataset.bio];
+            bioTitle.textContent = data.title;
+            bioDesc.textContent  = data.desc;
+            document.querySelectorAll(".bio-btn").forEach(b => b.classList.remove("border-csb-corail", "bg-csb-corail/5"));
+            btn.classList.add("border-csb-corail", "bg-csb-corail/5");
+        }));
+
+        /* ---------- 3. Onglets de combat ---------- */
+        const combatData = {
+            kihon: { title: "Les 10 Kihon Kumite", metric: "10", sub: "Enchaînements fondamentaux",
+                     desc: "La quintessence technique d'Hironori Ōtsuka. Ces leçons de géométrie enseignent l'esquive millimétrée : le défenseur absorbe l'attaque sans blocage rigide.",
+                     points: ["Maîtrise du millimètre", "Gestion de l'angle mort", "Atemi décisif instantané"] },
+            tanto: { title: "Tantō Dori — Défense au couteau", metric: "7", sub: "Clés traditionnelles",
+                     desc: "Défenses contre attaques au couteau héritées du Ju-Jitsu. Désarmé, le pratiquant neutralise l'agresseur par des clés articulaires et des projections.",
+                     points: ["Ude Garami (enroulement du bras)", "Kote Nage (projection par le poignet)", "Eri Nage (projection par le col)"] },
+            idori: { title: "Idori — Combat à genoux", metric: "7", sub: "Formes assises (Seiza)",
+                     desc: "Héritage pur des samouraïs pratiquant en seiza. Sans la mobilité des jambes, on projette grâce à la colonne vertébrale et aux hanches.",
+                     points: ["Gestion du centre de gravité", "Contrôles articulaires", "Ashi Dori (fauchage de jambe)"] }
+        };
+        const combatTabs = document.querySelectorAll(".combat-tab");
+        const setCombat = (key, btn) => {
+            const d = combatData[key];
+            document.getElementById("combatTitle").textContent  = d.title;
+            document.getElementById("combatDesc").textContent   = d.desc;
+            document.getElementById("combatMetric").textContent = d.metric;
+            document.getElementById("combatSub").textContent    = d.sub;
+            document.getElementById("combatList").innerHTML = d.points
+                .map(p => `<li class="flex items-center gap-2"><span class="text-csb-corail">▸</span> ${p}</li>`).join("");
+            combatTabs.forEach(t => t.classList.remove("text-white", "border-b-2", "border-csb-corail"));
+            combatTabs.forEach(t => t.classList.add("text-gray-400"));
+            btn.classList.add("text-white", "border-b-2", "border-csb-corail");
+            btn.classList.remove("text-gray-400");
+        };
+        combatTabs.forEach(btn => btn.addEventListener("click", () => setCombat(btn.dataset.tab, btn)));
+        setCombat("kihon", document.querySelector('.combat-tab[data-tab="kihon"]'));
+
+        /* ---------- 4. Radar comparatif (Chart.js) ---------- */
+        const canvas = document.getElementById("bioRadar");
+        if (canvas && window.Chart) {
+            Chart.defaults.font.family = "'Barlow Condensed', sans-serif";
+            new Chart(canvas.getContext("2d"), {
+                type: "radar",
+                data: {
+                    labels: ["Vitesse", "Souplesse", "Économie", "Force directe", "Esquive"],
+                    datasets: [
+                        { label: "Wadō-Ryū", data: [95, 90, 100, 40, 95],
+                          backgroundColor: "rgba(230, 57, 70, 0.2)", borderColor: C.corail, pointBackgroundColor: C.corail },
+                        { label: "Okinawa (standard)", data: [70, 60, 60, 95, 50],
+                          backgroundColor: "rgba(13, 27, 42, 0.1)", borderColor: C.encre, pointBackgroundColor: C.encre }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: "bottom", labels: { font: { size: 13 }, padding: 16 } } },
+                    scales: { r: { suggestedMin: 0, suggestedMax: 100, angleLines: { color: C.tatami },
+                                   grid: { color: C.tatami }, ticks: { display: false },
+                                   pointLabels: { font: { size: 12 }, color: C.encre } } }
+                }
+            });
+        }
+    });
+    </script>
 </body>
 </html>
