@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Découvrir le club | CSB Karaté</title>
+    <title>Le Club & L'Équipe | CSB Karaté</title>
     
     <!-- Centralisation : Charte Graphique -->
     <link rel="stylesheet" href="./assets/css/style.css">
@@ -13,40 +13,201 @@
     <!-- Centralisation : Injection du Header et Footer -->
     <script src="./assets/js/main.js" defer></script>
 </head>
-<body class="bg-gray-50 text-ffk-black font-sans antialiased min-h-screen flex flex-col">
+<body class="bg-csb-washi text-csb-encre font-sans antialiased min-h-screen flex flex-col">
 
     <!-- Emplacement où le JavaScript va injecter l'en-tête -->
     <div id="header-placeholder"></div>
 
-    <main class="flex-grow flex items-center justify-center py-20 px-4 relative overflow-hidden">
-        <!-- Fond décoratif -->
-        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
-        
-        <div class="max-w-2xl w-full bg-white rounded-3xl shadow-xl p-10 md:p-16 text-center relative z-10 border-t-4 border-ffk-blue">
-            <div class="w-24 h-24 bg-blue-50 text-ffk-blue rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
-                <!-- Icône d'outils / construction -->
-                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-            </div>
+    <main class="flex-grow pt-32 pb-20 px-6">
+        <div class="max-w-7xl mx-auto">
             
-            <h1 class="text-3xl md:text-4xl font-extrabold text-ffk-black mb-4">Découvrir le club</h1>
-            <h2 class="text-xl text-ffk-red font-bold mb-6 uppercase tracking-wider">Page en construction</h2>
+            <!-- SECTION 1 : HERO & PRÉSENTATION -->
+            <section class="mb-20 grid md:grid-cols-2 gap-12 items-center fade-in">
+                <div>
+                    <span class="inline-block px-3 py-1 bg-red-100 text-csb-corail rounded-full text-xs font-bold mb-6 font-condensed uppercase tracking-wider">Association Loi 1901</span>
+                    <h1 class="font-serif text-5xl md:text-7xl leading-tight text-csb-encre mb-6">Bienvenue au <br><span class="text-csb-corail">CSB Karaté.</span></h1>
+                    <p class="text-xl text-gray-600 leading-relaxed font-sans mb-8">
+                        Que vous cherchiez une activité ludique pour votre enfant, un art martial pour vous dépasser, ou des techniques de self-défense, le CSB-Karaté vous accueille dans une ambiance chaleureuse et sécurisée.
+                    </p>
+                    <div class="flex items-center gap-4 bg-white p-4 rounded-xl border border-csb-tatami inline-flex shadow-sm">
+                        <div class="text-4xl">👥</div>
+                        <div>
+                            <p class="font-condensed uppercase tracking-wider text-gray-500 text-sm font-bold">Saison 2025-2026</p>
+                            <p class="text-2xl font-bold text-csb-encre">105 Licenciés</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative">
+                    <div class="aspect-[4/3] bg-csb-tatami rounded-2xl overflow-hidden shadow-xl">
+                        <img src="./assets/photos/IMG_8934-r.jpg" alt="Le club CSB Karaté" class="w-full h-full object-cover grayscale hover:grayscale-0 transition duration-700">
+                    </div>
+                    <!-- Badge Cours d'essai -->
+                    <div class="absolute -bottom-6 -left-6 bg-csb-dojo text-white p-6 rounded-xl shadow-xl max-w-xs border-l-4 border-csb-corail">
+                        <h4 class="font-condensed uppercase tracking-wider text-lg mb-1">Cours d'essai gratuit</h4>
+                        <p class="text-sm font-sans opacity-90">Participez à un cours d'essai tout au long de l'année. <a href="#contact" class="underline hover:text-csb-corail transition">Contactez-nous.</a></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2 : L'ÉQUIPE ENSEIGNANTE -->
+            <section class="mb-24 fade-in">
+                <div class="flex items-center gap-4 mb-8 border-b border-csb-tatami pb-4">
+                    <h2 class="text-4xl font-condensed uppercase tracking-wider text-csb-encre">L'Équipe Enseignante</h2>
+                </div>
+                <p class="text-gray-600 font-sans mb-8 max-w-3xl text-lg">La transmission et la sécurité sont au cœur de notre pédagogie. Nos cours sont encadrés par deux professionnels passionnés et diplômés d'État.</p>
+                
+                <div class="bento-grid">
+                    <!-- Prof 1 -->
+                    <div class="bento-card border-t-4 border-t-csb-encre flex flex-col md:flex-row items-start gap-6">
+                        <div class="w-16 h-16 bg-csb-washi border border-csb-tatami rounded-2xl flex items-center justify-center text-3xl flex-shrink-0">🥋</div>
+                        <div>
+                            <h3 class="font-condensed text-3xl uppercase tracking-wider text-csb-encre mb-1">Denis Didier</h3>
+                            <span class="inline-block px-2 py-1 bg-csb-dojo text-white rounded text-xs font-bold uppercase mb-4">Professeur 3ème Dan</span>
+                            <p class="text-gray-600 font-sans leading-relaxed">Professeur diplômé d'État. Il encadre principalement les sections enfants (à partir de 7 ans), adolescents et adultes, transmettant les valeurs de l'effort et du respect avec rigueur.</p>
+                        </div>
+                    </div>
+                    <!-- Prof 2 -->
+                    <div class="bento-card border-t-4 border-t-csb-encre flex flex-col md:flex-row items-start gap-6">
+                        <div class="w-16 h-16 bg-csb-washi border border-csb-tatami rounded-2xl flex items-center justify-center text-3xl flex-shrink-0">🥋</div>
+                        <div>
+                            <h3 class="font-condensed text-3xl uppercase tracking-wider text-csb-encre mb-1">Lehsen Moukkaddi</h3>
+                            <span class="inline-block px-2 py-1 bg-csb-dojo text-white rounded text-xs font-bold uppercase mb-4">Professeur 3ème Dan</span>
+                            <p class="text-gray-600 font-sans leading-relaxed">Professeur diplômé d'État et titulaire du CQP (mention "karaté et disciplines associées"). Expérimenté pour le très jeune public, il est le spécialiste de notre section Baby Karaté.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3 : NOS SECTIONS -->
+            <section class="mb-24 fade-in">
+                <div class="flex items-center gap-4 mb-8 border-b border-csb-tatami pb-4">
+                    <h2 class="text-4xl font-condensed uppercase tracking-wider text-csb-encre">Nos Sections</h2>
+                </div>
+                
+                <div class="bento-grid">
+                    <!-- Baby Karaté -->
+                    <div class="bento-card group border-t-4 border-t-csb-corail bg-white">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre">Baby Karaté</h3>
+                            <span class="text-sm font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">4 - 6 ans</span>
+                        </div>
+                        <p class="text-sm text-csb-corail font-bold mb-4">Développement harmonieux & Éveil</p>
+                        <ul class="space-y-2 text-sm text-gray-600 font-sans mb-6">
+                            <li class="flex items-start gap-2"><span class="text-csb-corail mt-1">▸</span> Connaissance du schéma corporel et équilibre</li>
+                            <li class="flex items-start gap-2"><span class="text-csb-corail mt-1">▸</span> Coordination des mouvements et latéralité</li>
+                            <li class="flex items-start gap-2"><span class="text-csb-corail mt-1">▸</span> Apprentissage exclusif par le jeu ludique</li>
+                        </ul>
+                    </div>
+
+                    <!-- Enfants & Ados -->
+                    <div class="bento-card group border-t-4 border-t-csb-dojo bg-white">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre">Enfants & Ados</h3>
+                            <span class="text-sm font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Dès 7 ans</span>
+                        </div>
+                        <p class="text-sm text-csb-dojo font-bold mb-4">Confiance en soi & Goût de l'effort</p>
+                        <ul class="space-y-2 text-sm text-gray-600 font-sans mb-6">
+                            <li class="flex items-start gap-2"><span class="text-csb-dojo mt-1">▸</span> Développement de la concentration et du respect</li>
+                            <li class="flex items-start gap-2"><span class="text-csb-dojo mt-1">▸</span> Amélioration de la sociabilité</li>
+                            <li class="flex items-start gap-2"><span class="text-csb-dojo mt-1">▸</span> Compétitions proposées (jamais imposées)</li>
+                        </ul>
+                    </div>
+
+                    <!-- Adultes & Self-Défense -->
+                    <div class="bento-card group border-t-4 border-t-csb-encre bg-csb-dojo text-white">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-condensed text-2xl uppercase tracking-wider text-white">Adultes & Self</h3>
+                            <span class="text-sm font-bold text-white/70 bg-white/10 px-2 py-1 rounded">Adultes</span>
+                        </div>
+                        <p class="text-sm text-csb-corail font-bold mb-4">Condition physique & Sécurité</p>
+                        <ul class="space-y-2 text-sm text-gray-300 font-sans mb-6">
+                            <li class="flex items-start gap-2"><span class="text-csb-corail mt-1">▸</span> Apprentissage des techniques de self-défense</li>
+                            <li class="flex items-start gap-2"><span class="text-csb-corail mt-1">▸</span> Recherche de l'esthétique du mouvement (Katas)</li>
+                            <li class="flex items-start gap-2"><span class="text-csb-corail mt-1">▸</span> Passages de grades réguliers</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4 : LE BUREAU & CONTACT -->
+            <section id="contact" class="mb-12 fade-in">
+                <div class="bg-white p-8 md:p-12 rounded-3xl border border-csb-tatami shadow-lg relative overflow-hidden">
+                    <!-- Fond décoratif discret -->
+                    <div class="absolute top-0 right-0 opacity-5 text-[15rem] leading-none pointer-events-none transform translate-x-1/4 -translate-y-1/4">✉️</div>
+                    
+                    <div class="relative z-10">
+                        <h2 class="text-4xl font-condensed uppercase tracking-wider text-csb-encre mb-4">Le Bureau du Club</h2>
+                        <p class="text-gray-600 font-sans mb-10 max-w-2xl text-lg">Le CSB-Karaté est géré par une équipe de bénévoles dévoués. Pour toute question, demande de cours d'essai ou information, n'hésitez pas à les contacter.</p>
+                        
+                        <div class="grid md:grid-cols-3 gap-6">
+                            <!-- Président -->
+                            <div class="p-6 border border-csb-tatami rounded-xl hover:border-csb-corail transition bg-csb-washi">
+                                <p class="text-xs font-bold text-csb-corail uppercase tracking-widest mb-2 font-sans">Président</p>
+                                <h4 class="font-condensed text-2xl text-csb-encre mb-4 uppercase">Yassin Kaïma</h4>
+                                <div class="space-y-3 font-sans text-sm text-gray-600">
+                                    <a href="tel:0623525913" class="flex items-center gap-3 hover:text-csb-corail transition">
+                                        <span class="bg-white p-2 rounded shadow-sm">📞</span> 06 23 52 59 13
+                                    </a>
+                                    <a href="mailto:csbkarate@outlook.fr" class="flex items-center gap-3 hover:text-csb-corail transition">
+                                        <span class="bg-white p-2 rounded shadow-sm">✉️</span> csbkarate@outlook.fr
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Secrétaire -->
+                            <div class="p-6 border border-csb-tatami rounded-xl hover:border-csb-dojo transition bg-csb-washi">
+                                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 font-sans">Secrétaire</p>
+                                <h4 class="font-condensed text-2xl text-csb-encre mb-4 uppercase">Julien Veyrières</h4>
+                                <div class="space-y-3 font-sans text-sm text-gray-600">
+                                    <a href="tel:0684358298" class="flex items-center gap-3 hover:text-csb-dojo transition">
+                                        <span class="bg-white p-2 rounded shadow-sm">📞</span> 06 84 35 82 98
+                                    </a>
+                                    <a href="mailto:julienvey@hotmail.com" class="flex items-center gap-3 hover:text-csb-dojo transition">
+                                        <span class="bg-white p-2 rounded shadow-sm">✉️</span> julienvey@hotmail.com
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Trésorier -->
+                            <div class="p-6 border border-csb-tatami rounded-xl hover:border-csb-dojo transition bg-csb-washi">
+                                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 font-sans">Trésorier</p>
+                                <h4 class="font-condensed text-2xl text-csb-encre mb-4 uppercase">Madjid Outenah</h4>
+                                <div class="space-y-3 font-sans text-sm text-gray-600">
+                                    <a href="mailto:madjid.outenah@free.fr" class="flex items-center gap-3 hover:text-csb-dojo transition mt-10">
+                                        <span class="bg-white p-2 rounded shadow-sm">✉️</span> madjid.outenah@free.fr
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
             
-            <p class="text-ffk-gray mb-10 leading-relaxed text-lg">
-                Nous préparons actuellement cette section. Vous y retrouverez très bientôt l'histoire du club, la présentation de nos professeurs et le bureau de l'association.
-            </p>
-            
-            <a href="./index.html" class="inline-flex items-center gap-2 bg-ffk-blue hover:bg-opacity-90 text-white px-8 py-3 rounded-full font-bold transition duration-200 shadow-lg shadow-ffk-blue/30">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                Retour à l'accueil
-            </a>
         </div>
     </main>
 
     <!-- Emplacement où le JavaScript va injecter le pied de page -->
     <div id="footer-placeholder"></div>
 
+    <!-- Script simple pour l'animation au scroll -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('fade-in');
+                        // Optionnel: arrêter l'observation une fois animé
+                        observer.unobserve(entry.target); 
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            document.querySelectorAll('.fade-in').forEach(el => {
+                // S'assurer que l'élément est invisible avant l'animation si on veut un effet pop
+                el.style.opacity = '0';
+                observer.observe(el);
+            });
+        });
+    </script>
 </body>
 </html>
