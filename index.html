@@ -77,7 +77,7 @@
                 <!-- Conteneur du carrousel -->
                 <div class="relative -mx-6 px-6">
                     <div id="carousel-container" class="flex gap-6 overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-8">
-                        <!-- Les cartes seront injectées ici par assets/js/news.js -->
+                        <!-- Les cartes seront injectées ici par Javascript -->
                     </div>
                 </div>
                 
@@ -280,26 +280,51 @@
     <div id="footer-placeholder"></div>
 
     <!-- SCRIPT DU CARROUSEL DYNAMIQUE -->
-    <script src="./assets/js/news.js" defer></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const container = document.getElementById('carousel-container');
             const btnNext = document.getElementById('btn-next');
             const btnPrev = document.getElementById('btn-prev');
 
-            // 1. Récupération des données JSON est maitenant géré par news.js
-            
-            // 2. Gestion du défilement (boutons ajustés à 300px)
+            fetch('./data/news.json')
+                .then(response => response.json())
+                .then(data => {
+                    const latestNews = data.slice(0, 3);
+                    container.innerHTML = ''; // Nettoyage de sécurité
+                    
+                    latestNews.forEach(news => {
+                        const card = document.createElement('div');
+                        // Ajustement précis des largeurs pour qu'elles s'alignent parfaitement
+                        card.className = "w-[85vw] md:w-[300px] flex-shrink-0 snap-center bento-card border-t-4 border-t-csb-corail flex flex-col justify-between";
+                        
+                        card.innerHTML = `
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <span class="font-sans text-xs font-bold text-gray-400">${news.date}</span>
+                                    <span class="px-2 py-1 bg-csb-washi text-csb-dojo text-[10px] font-bold uppercase rounded font-sans">${news.category}</span>
+                                </div>
+                                <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-3">${news.title}</h3>
+                                <p class="text-sm text-gray-600 font-sans leading-relaxed line-clamp-3">${news.excerpt}</p>
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error("Erreur lors du chargement des news :", error);
+                    container.innerHTML = `<p class="text-csb-corail px-6">Impossible de charger les actualités pour le moment.</p>`;
+                });
+
             if(btnNext && btnPrev) {
                 btnNext.addEventListener('click', () => {
-                    container.scrollBy({ left: 300, behavior: 'smooth' });
+                    // 300px (largeur) + 24px (gap-6) = 324px
+                    container.scrollBy({ left: 324, behavior: 'smooth' });
                 });
                 btnPrev.addEventListener('click', () => {
-                    container.scrollBy({ left: -300, behavior: 'smooth' });
+                    container.scrollBy({ left: -324, behavior: 'smooth' });
                 });
             }
 
-            // 3. Animation d'apparition
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
