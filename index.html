@@ -1,148 +1,179 @@
-<!DOCTYPE html>
-<html lang="fr" class="scroll-smooth">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSB Karaté - Brétigny-sur-Orge</title>
-    <meta name="description" content="Club Sportif de Brétigny Karaté. Cours de Karaté traditionnel pour enfants et adultes.">
-    
-    <link rel="stylesheet" href="./assets/css/style.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="./assets/js/tailwind.js"></script>
-    <script src="./assets/js/main.js" defer></script>
-</head>
-<body class="bg-csb-washi text-csb-encre font-sans antialiased min-h-screen flex flex-col">
-
-    <div id="header-placeholder"></div>
-
-    <main class="flex-grow pt-24">
-        <section id="accueil" class="py-20 px-6">
-            <div class="max-w-7xl mx-auto">
-                <div class="grid md:grid-cols-2 gap-16 items-center">
-                    <div class="fade-in">
-                        <span class="inline-block px-3 py-1 bg-red-100 text-csb-corail rounded-full text-xs font-bold mb-6 font-condensed uppercase tracking-widest">Club Sportif de Brétigny</span>
-                        <h1 class="font-serif text-6xl md:text-8xl leading-tight mb-8 text-csb-encre">
-                            L'esprit martial,<br>
-                            <span class="text-csb-corail">l'énergie pour tous.</span>
-                        </h1>
-                        <p class="text-xl text-gray-600 leading-relaxed max-w-lg font-sans mb-10">
-                            Découvrez la pratique du Karaté traditionnel et de la Self-défense féminine au sein d'une institution de rigueur et de respect.
-                        </p>
-                        <div class="flex flex-wrap gap-4 font-condensed uppercase tracking-wider">
-                            <a href="#infos" class="bg-csb-dojo text-white px-8 py-3 rounded-full hover:bg-csb-encre transition shadow-lg">Voir les horaires</a>
-                            <a href="./wadoryu.html" class="bg-white border border-csb-tatami text-csb-encre px-8 py-3 rounded-full hover:border-csb-corail transition">Notre Style</a>
-                        </div>
-                    </div>
-                    <div class="relative fade-in" style="animation-delay: 0.2s">
-                        <div class="aspect-[4/5] bg-csb-tatami rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center relative">
-                            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-                            <img src="./icon-kick.png" alt="Karaté" class="w-48 h-48 object-contain opacity-20" onerror="this.style.display='none'">
-                        </div>
-                        <div class="absolute -bottom-6 -left-6 bg-csb-encre text-white p-6 rounded-xl shadow-xl max-w-xs border-l-4 border-csb-corail">
-                            <p class="text-sm italic font-serif text-lg">"Le Karaté commence et se termine par le salut."</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- NOUVELLE SECTION : CARROUSEL D'ACTUALITÉS -->
-        <section id="dernieres-news" class="py-16 bg-white">
+<section id="disciplines" class="py-24 bg-white border-y border-gray-100">
             <div class="max-w-7xl mx-auto px-6">
-                <div class="flex justify-between items-end mb-8">
-                    <div>
-                        <!-- MISE A JOUR H2 : Barlow Condensed (font-condensed), majuscules (uppercase) -->
-                        <h2 class="text-4xl md:text-5xl font-condensed uppercase tracking-wider text-csb-encre mb-2">Dernières Actualités</h2>
-                        <p class="font-sans text-gray-500 text-sm">La vie du club</p>
-                    </div>
-                    <div class="hidden md:flex gap-2">
-                        <button id="btn-prev" class="w-10 h-10 rounded-full border border-csb-tatami flex items-center justify-center text-csb-encre hover:border-csb-corail hover:text-csb-corail transition">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                        </button>
-                        <button id="btn-next" class="w-10 h-10 rounded-full border border-csb-tatami flex items-center justify-center text-csb-encre hover:border-csb-corail hover:text-csb-corail transition">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Conteneur du carrousel -->
-                <div id="carousel-container" class="flex gap-6 overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-8">
-                    <!-- Les cartes seront injectées ici par JavaScript -->
-                </div>
-                
-                <div class="text-center mt-4">
-                    <a href="./news.html" class="inline-block border-b-2 border-csb-corail pb-1 font-condensed uppercase tracking-wider text-csb-encre hover:text-csb-corail transition">Voir toutes les actualités</a>
-                </div>
-            </div>
-        </section>
-
-        <section id="disciplines" class="py-24 bg-csb-washi border-y border-gray-100">
-            <div class="max-w-7xl mx-auto px-6">
-                <div class="mb-16">
-                    <!-- MISE A JOUR H2 : Barlow Condensed -->
-                    <h2 class="text-5xl md:text-6xl font-condensed uppercase tracking-wider text-csb-encre mb-4">01. Nos Disciplines</h2>
-                    <p class="text-gray-500 max-w-2xl font-sans text-lg">Une approche pédagogique adaptée à chaque âge et à chaque objectif, du développement moteur à la maîtrise de soi.</p>
+                <div class="text-center mb-16">
+                    <h2 class="text-5xl font-condensed uppercase tracking-wider text-ffk-encre mb-4">01. Nos Disciplines</h2>
+                    <p class="text-gray-500 max-w-2xl mx-auto font-sans text-lg">Une approche pédagogique adaptée à chaque âge et à chaque objectif, du développement moteur à la maîtrise de soi.</p>
                 </div>
 
                 <div class="bento-grid">
-                    <div class="bento-card group">
-                        <div class="w-16 h-16 bg-csb-washi rounded-xl flex items-center justify-center mb-6">
-                            <img src="./icon-kids.png" alt="Enfants" class="w-10 h-10 object-contain" onerror="this.style.display='none'">
+                    <div class="bento-card group border-t-4 border-t-ffk-encre">
+                        <div class="w-16 h-16 bg-ffk-washi rounded-xl flex items-center justify-center mb-6">
+                            <img src="./icon-kids.png" alt="Enfants" class="w-12 h-12 object-contain" onerror="this.style.display='none'">
                         </div>
-                        <!-- VERIFICATION H3 : Déjà en Barlow Condensed -->
-                        <h3 class="font-condensed text-2xl uppercase tracking-wider mb-3 text-csb-encre">Karaté Enfants</h3>
-                        <p class="text-gray-600 font-sans">Des pupilles aux benjamins. Développement de la motricité, du respect et de la concentration dans un cadre ludique.</p>
+                        <h3 class="font-condensed text-2xl uppercase tracking-wider mb-3 text-ffk-encre">Karaté Enfants</h3>
+                        <p class="text-gray-600 font-sans">Des baby-karaté aux minimes. Développement de la motricité, du respect et de la concentration dans un cadre ludique et sécurisé.</p>
                     </div>
 
-                    <div class="bento-card group border-csb-corail border-opacity-30">
+                    <div class="bento-card group border-t-4 border-t-ffk-corail">
                         <div class="w-16 h-16 bg-red-50 rounded-xl flex items-center justify-center mb-6">
-                            <img src="./icon-kick.png" alt="Adultes" class="w-10 h-10 object-contain" onerror="this.style.display='none'">
+                            <img src="./icon-kick.png" alt="Adultes" class="w-12 h-12 object-contain" onerror="this.style.display='none'">
                         </div>
-                        <h3 class="font-condensed text-2xl uppercase tracking-wider mb-3 text-csb-corail">Karaté Adultes</h3>
-                        <p class="text-gray-600 font-sans">Étude des katas, travail technique (Kihon) et combat (Kumite). Amélioration de la condition physique.</p>
+                        <h3 class="font-condensed text-2xl uppercase tracking-wider mb-3 text-ffk-corail">Karaté Adultes</h3>
+                        <p class="text-gray-600 font-sans">Étude des katas, travail technique (Kihon) et combat (Kumite). Amélioration de la condition physique et préparation aux grades.</p>
                     </div>
 
-                    <div class="bento-card group bg-csb-dojo text-white border-none">
+                    <div class="bento-card group border-t-4 border-t-ffk-tatami bg-ffk-dojo text-white">
                         <div class="w-16 h-16 bg-white/10 rounded-xl flex items-center justify-center mb-6">
                             <img src="./icon-fist.png" alt="Self" class="w-10 h-10 object-contain brightness-0 invert" onerror="this.style.display='none'">
                         </div>
                         <h3 class="font-condensed text-2xl uppercase tracking-wider mb-3 text-white">Self-Défense</h3>
-                        <p class="text-gray-300 font-sans">Apprentissage de techniques simples et efficaces pour se protéger et gagner en confiance face aux situations du quotidien.</p>
+                        <p class="text-gray-300 font-sans">Apprentissage de techniques simples et efficaces pour les femmes, pour se protéger et gagner en confiance face aux situations du quotidien.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="infos" class="py-24 bg-csb-washi">
+        <section id="infos" class="py-24 bg-ffk-dojo text-white">
             <div class="max-w-7xl mx-auto px-6">
-                <div class="mb-16 text-center">
-                    <!-- MISE A JOUR H2 : Barlow Condensed -->
-                    <h2 class="text-5xl md:text-6xl font-condensed uppercase tracking-wider text-csb-encre mb-4">02. Informations Pratiques</h2>
+                <div class="text-center mb-16">
+                    <h2 class="text-5xl font-condensed uppercase tracking-wider mb-4">02. Informations Pratiques</h2>
+                    <p class="text-gray-400 max-w-2xl mx-auto font-sans">Lieux, horaires d'entraînements, tarifs et modalités d'inscription pour la saison 2024/2025.</p>
                 </div>
 
                 <div class="bento-grid">
-                    <div class="bento-card md:col-span-2">
-                        <h3 class="font-condensed text-2xl uppercase tracking-wider mb-6 text-csb-encre border-b border-csb-tatami pb-4">Gymnase Auguste Delaune</h3>
-                        <p class="text-gray-500 mb-6 italic">Rue Henri Douard, 91220 Brétigny-sur-Orge</p>
-                        <div class="space-y-3 font-sans">
-                            <div class="flex justify-between items-center p-3 hover:bg-csb-washi rounded-lg transition">
-                                <span class="font-bold text-csb-dojo">Karaté Adultes</span>
-                                <span class="text-gray-600">Lundi & Jeudi (Soir)</span>
+                    <!-- Grande Carte : Horaires -->
+                    <div class="bento-card md:col-span-2 bg-white text-ffk-encre">
+                        <div class="flex justify-between items-start mb-8">
+                            <h3 class="text-2xl font-bold font-condensed uppercase tracking-wider">Horaires 2024/2025</h3>
+                            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase font-sans">Saison Active</span>
+                        </div>
+                        <div class="space-y-4 font-sans text-sm md:text-base">
+                            <!-- Baby & Enfants 1 -->
+                            <div class="flex flex-col md:flex-row justify-between border-b border-gray-100 pb-3">
+                                <div>
+                                    <span class="font-bold block text-ffk-dojo">Baby Karaté & Enfants (Gr. 1)</span>
+                                    <span class="text-gray-500 text-xs">Gymnase Auguste Delaune</span>
+                                </div>
+                                <div class="text-left md:text-right mt-1 md:mt-0">
+                                    <span class="block text-gray-600">Mardi et Jeudi</span>
+                                    <span class="font-semibold text-ffk-encre">18h30 - 19h30</span>
+                                </div>
                             </div>
-                            <div class="flex justify-between items-center p-3 hover:bg-csb-washi rounded-lg transition">
-                                <span class="font-bold text-csb-corail">Self-Défense Féminine</span>
-                                <span class="text-gray-600">Dimanche (Matin)</span>
+                            <!-- Enfants 2 -->
+                            <div class="flex flex-col md:flex-row justify-between border-b border-gray-100 pb-3">
+                                <div>
+                                    <span class="font-bold block text-ffk-dojo">Enfants (Groupe 2)</span>
+                                    <span class="text-gray-500 text-xs">École Louise Michel</span>
+                                </div>
+                                <div class="text-left md:text-right mt-1 md:mt-0">
+                                    <span class="block text-gray-600">Lundi et Vendredi</span>
+                                    <span class="font-semibold text-ffk-encre">18h00 - 19h00</span>
+                                </div>
+                            </div>
+                            <!-- Ados & Adultes -->
+                            <div class="flex flex-col md:flex-row justify-between border-b border-gray-100 pb-3">
+                                <div>
+                                    <span class="font-bold block text-ffk-dojo">Ados & Adultes (dès 2011)</span>
+                                    <span class="text-gray-500 text-xs">Gymnase Auguste Delaune</span>
+                                </div>
+                                <div class="text-left md:text-right mt-1 md:mt-0">
+                                    <span class="block text-gray-600">Mardi et Jeudi</span>
+                                    <span class="font-semibold text-ffk-encre">19h30 - 21h00</span>
+                                </div>
+                            </div>
+                            <!-- Self Défense -->
+                            <div class="flex flex-col md:flex-row justify-between pb-2">
+                                <div>
+                                    <span class="font-bold block text-ffk-corail">Self-Défense Féminine</span>
+                                    <span class="text-gray-500 text-xs">Gymnase Auguste Delaune</span>
+                                </div>
+                                <div class="text-left md:text-right mt-1 md:mt-0">
+                                    <span class="block text-gray-600">Dimanche</span>
+                                    <span class="font-semibold text-ffk-corail">11h00 - 12h30</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bento-card">
-                        <h3 class="font-condensed text-2xl uppercase tracking-wider mb-6 text-csb-encre border-b border-csb-tatami pb-4">Salle Louise Michel</h3>
-                        <p class="text-gray-500 mb-6 italic">Av. de la Commune de Paris</p>
+                    <!-- Petite Carte : Tarifs & Essai -->
+                    <div class="bento-card bg-ffk-corail text-white border-none flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold font-condensed uppercase tracking-wider mb-2">Essai Gratuit</h3>
+                            <p class="text-sm opacity-90 mb-4 font-sans">Venez tester un cours sans engagement. Prévoyez juste un jogging et un t-shirt !</p>
+                        </div>
+                        <div>
+                            <div class="text-5xl font-bold font-condensed mb-1">0 €</div>
+                            <div class="border-t border-white/20 pt-3 mt-3">
+                                <p class="text-xs opacity-90 font-sans font-bold uppercase tracking-wider">Cotisation Annuelle :</p>
+                                <ul class="text-xs opacity-80 font-sans mt-1 space-y-1">
+                                    <li>• Baby Karaté : 183 €</li>
+                                    <li>• Enfants : 203 €</li>
+                                    <li>• Adultes : 233 €</li>
+                                    <li>• Self-Défense : 133 €</li>
+                                </ul>
+                                <p class="text-[10px] opacity-75 mt-2 italic">* Prévoir 37€ supplémentaires pour la licence FFK.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Petite Carte : Inscriptions & Liens -->
+                    <div class="bento-card bg-ffk-washi text-ffk-encre flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold font-condensed uppercase tracking-wider mb-2">Inscriptions</h3>
+                            <p class="text-sm text-gray-600 mb-6 font-sans">Les inscriptions se font sur place ou en ligne. Des remises familiales sont applicables.</p>
+                        </div>
                         <div class="space-y-3 font-sans">
-                            <div class="flex justify-between items-center p-3 hover:bg-csb-washi rounded-lg transition">
-                                <span class="font-bold text-csb-dojo">Karaté Enfants</span>
-                                <span class="text-gray-600">Mercredi (Après-midi)</span>
+                            <!-- LIEN 1 : Formulaire d'inscription -->
+                            <a href="#lien-vers-helloasso-ou-form" class="block w-full text-center bg-ffk-corail text-white py-3 rounded-lg font-bold text-sm tracking-wide hover:bg-ffk-encre transition shadow-md">
+                                DÉMARRER L'INSCRIPTION →
+                            </a>
+                            <!-- LIEN 2 : Fiche de renseignements PDF -->
+                            <a href="./assets/docs/fiche_renseignements_24_25.pdf" target="_blank" class="block w-full text-center border-2 border-ffk-tatami bg-white text-ffk-encre py-3 rounded-lg font-bold text-sm tracking-wide hover:border-ffk-encre transition flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                FICHE RENSEIGNEMENTS
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Carte Large : Lieux et Equipement -->
+                    <div class="bento-card md:col-span-2 bg-white text-ffk-encre">
+                        <h3 class="text-2xl font-bold font-condensed uppercase tracking-wider mb-6">Lieux & Équipements</h3>
+                        <div class="grid md:grid-cols-2 gap-8 font-sans">
+                            <!-- Adresses -->
+                            <div class="space-y-5">
+                                <div class="flex gap-3 items-start">
+                                    <div class="mt-1 text-ffk-dojo">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <strong class="block text-ffk-encre">Gymnase Auguste Delaune</strong>
+                                        <span class="text-sm text-gray-500 block">1er étage - Rue Henry Douard</span>
+                                        <span class="text-sm text-gray-500 block">91220 Brétigny-sur-Orge</span>
+                                    </div>
+                                </div>
+                                <div class="flex gap-3 items-start">
+                                    <div class="mt-1 text-ffk-dojo">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <strong class="block text-ffk-encre">École Louise Michel</strong>
+                                        <span class="text-sm text-gray-500 block">10 rue Louis Armand</span>
+                                        <span class="text-sm text-gray-500 block">91220 Brétigny-sur-Orge</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Équipement -->
+                            <div class="bg-ffk-washi p-5 rounded-xl border border-ffk-tatami text-sm">
+                                <strong class="font-condensed uppercase tracking-wider text-lg mb-3 block text-ffk-encre">Équipement Requis</strong>
+                                <ul class="space-y-2 text-gray-600 mb-4">
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-ffk-corail rounded-full"></span> Karaté-gi (kimono) & ceinture</li>
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-ffk-corail rounded-full"></span> Gants de protection (bleu ou rouge)</li>
+                                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-ffk-dojo rounded-full"></span> Self-Défense : Tenue de sport classique</li>
+                                </ul>
+                                <p class="text-xs text-gray-500 italic border-t border-ffk-tatami pt-2">
+                                    * Le club prête les casques, plastrons et chaussons pour les compétitions enfants.
+                                </p>
                             </div>
                         </div>
                     </div>
