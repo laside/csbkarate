@@ -9,24 +9,91 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="./assets/js/tailwind.js"></script>
     <script src="./assets/js/main.js" defer></script>
-    <!-- On ajoute le script de récupération du JSON -->
     <script src="./assets/js/news.js" defer></script>
 </head>
 <body class="bg-csb-washi text-csb-encre font-sans antialiased min-h-screen flex flex-col">
     
     <div id="header-placeholder"></div>
 
-    <main class="flex-grow pt-32 pb-20">
+    <main class="flex-grow pt-32 pb-20 relative">
         <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16">
+            <div class="text-center mb-16 relative">
+                <!-- Bouton Admin discret -->
+                <button id="btn-open-login" class="absolute top-0 right-0 bg-gray-200 text-gray-500 hover:bg-csb-dojo hover:text-white px-3 py-1 rounded text-xs font-bold transition">Admin</button>
+                
                 <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm mb-4 block">La vie du club</span>
                 <h1 class="font-serif text-5xl md:text-6xl text-csb-encre mb-6">Actualités & News</h1>
                 <p class="text-xl text-gray-500 max-w-2xl mx-auto font-sans">Restez informé des événements du club, des passages de grades et des informations importantes.</p>
             </div>
 
-            <!-- Le conteneur vide qui va recevoir les news du JSON -->
+            <!-- Grille Publique des News -->
             <div class="bento-grid" id="news-grid">
-                <!-- Injecté par assets/js/news.js -->
+                <!-- Injecté par JS -->
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- MODALES D'ADMINISTRATION (Cachées par défaut) -->
+        <!-- ============================================== -->
+
+        <!-- 1. Modale de Connexion -->
+        <div id="modal-login" class="fixed inset-0 bg-csb-encre/90 z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
+            <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full relative">
+                <button id="btn-close-login" class="absolute top-4 right-4 text-gray-400 hover:text-csb-corail">✕</button>
+                <h3 class="font-condensed text-2xl uppercase tracking-wider mb-4">Accès Bureau</h3>
+                <input type="password" id="admin-password" placeholder="Mot de passe" class="w-full border border-csb-tatami rounded p-3 mb-4 font-sans focus:outline-none focus:border-csb-dojo">
+                <button id="btn-login" class="w-full bg-csb-dojo text-white font-bold py-3 rounded hover:bg-csb-corail transition">Se connecter</button>
+                <p id="login-error" class="text-csb-corail text-sm mt-2 hidden">Mot de passe incorrect.</p>
+            </div>
+        </div>
+
+        <!-- 2. Modale Dashboard Admin -->
+        <div id="modal-admin" class="fixed inset-0 bg-csb-washi z-50 overflow-y-auto hidden opacity-0 transition-opacity">
+            <div class="max-w-5xl mx-auto p-6 pt-20">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="font-serif text-4xl text-csb-encre">Gestion des Actualités</h2>
+                    <div class="flex gap-4">
+                        <button id="btn-export" class="bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700 transition shadow-lg">💾 Télécharger news.json</button>
+                        <button id="btn-close-admin" class="bg-gray-200 text-csb-encre px-6 py-2 rounded font-bold hover:bg-gray-300 transition">Fermer</button>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Formulaire Ajout/Edition -->
+                    <div class="md:col-span-1 bg-white p-6 rounded-xl border border-csb-tatami shadow-sm h-fit sticky top-24">
+                        <h3 id="form-title" class="font-condensed text-xl uppercase tracking-wider mb-4 text-csb-corail">Ajouter une Actu</h3>
+                        <input type="hidden" id="news-id">
+                        
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Titre</label>
+                        <input type="text" id="news-title" class="w-full border border-csb-tatami rounded p-2 mb-3 text-sm" required>
+
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">Date</label>
+                                <input type="text" id="news-date" placeholder="ex: 12 Nov 2025" class="w-full border border-csb-tatami rounded p-2 text-sm" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">Catégorie</label>
+                                <input type="text" id="news-category" placeholder="ex: Événement" class="w-full border border-csb-tatami rounded p-2 text-sm" required>
+                            </div>
+                        </div>
+
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Nom de l'image (optionnel)</label>
+                        <input type="text" id="news-image" placeholder="ex: photo.jpg" class="w-full border border-csb-tatami rounded p-2 mb-3 text-sm">
+                        <p class="text-[10px] text-gray-400 mb-4 mt-1">L'image devra être glissée dans le dossier <code class="bg-gray-100 px-1">assets/photos/</code> sur Github.</p>
+
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Contenu</label>
+                        <textarea id="news-excerpt" rows="4" class="w-full border border-csb-tatami rounded p-2 mb-4 text-sm" required></textarea>
+
+                        <button id="btn-save-news" class="w-full bg-csb-dojo text-white font-bold py-2 rounded hover:bg-csb-corail transition">Enregistrer l'actu</button>
+                        <button id="btn-cancel-edit" class="w-full bg-gray-100 text-gray-600 font-bold py-2 rounded mt-2 hidden hover:bg-gray-200 transition">Annuler l'édition</button>
+                    </div>
+
+                    <!-- Liste des Actus -->
+                    <div class="md:col-span-2 space-y-4" id="admin-news-list">
+                        <!-- Généré par JS -->
+                    </div>
+                </div>
             </div>
         </div>
     </main>
