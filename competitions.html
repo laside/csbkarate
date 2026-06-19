@@ -199,9 +199,15 @@
                         renderPublicFeed();
                     })
                     .catch(error => {
-                    console.error(error);
-                    if(feed) feed.innerHTML = '<p class="text-gray-500 text-center font-sans">Les résultats sont momentanément indisponibles.</p>';
-                });
+                        console.warn("Fichier JSON non trouvé (mode prévisualisation), utilisation des données par défaut.", error);
+                        compData = defaultData;
+                        renderPublicFeed();
+                    });
+            } catch (error) {
+                console.warn("Environnement sécurisé, utilisation des données par défaut.", error);
+                compData = defaultData;
+                renderPublicFeed();
+            }
 
             // --- FONCTION DE TRI PAR DATE ---
             function getSortableDate(comp) {
