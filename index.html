@@ -1,3 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSB Karaté - Brétigny-sur-Orge</title>
+    <meta name="description" content="Club Sportif de Brétigny Karaté. Cours de Karaté traditionnel pour enfants et adultes.">
+    
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./assets/js/tailwind.js"></script>
+    <script src="./assets/js/main.js" defer></script>
+</head>
+<body class="bg-csb-washi text-csb-encre font-sans antialiased min-h-screen flex flex-col">
+
+    <div id="header-placeholder"></div>
+
+    <main class="flex-grow pt-24">
+        <section id="accueil" class="py-20 px-6">
+            <div class="max-w-7xl mx-auto">
+                <div class="grid md:grid-cols-2 gap-16 items-center">
+                    <div class="fade-in">
+                        <span class="inline-block px-3 py-1 bg-red-100 text-csb-corail rounded-full text-xs font-bold mb-6 font-condensed uppercase tracking-widest">Club Sportif de Brétigny</span>
+                        <h1 class="font-serif text-6xl md:text-8xl leading-tight mb-8 text-csb-encre">
+                            L'esprit martial,<br>
+                            <span class="text-csb-corail">l'énergie pour tous.</span>
+                        </h1>
+                        <p class="text-xl text-gray-600 leading-relaxed max-w-lg font-sans mb-10">
+                            Découvrez la pratique du Karaté traditionnel et de la Self-défense féminine au sein d'une institution de rigueur et de respect.
+                        </p>
+                        <div class="flex flex-wrap gap-4 font-condensed uppercase tracking-wider">
+                            <a href="#infos" class="bg-csb-dojo text-white px-8 py-3 rounded-full hover:bg-csb-encre transition shadow-lg">Voir les horaires</a>
+                            <a href="./wadoryu.html" class="bg-white border border-csb-tatami text-csb-encre px-8 py-3 rounded-full hover:border-csb-corail transition">Notre Style</a>
+                        </div>
+                    </div>
+                    <div class="relative fade-in" style="animation-delay: 0.2s">
+                        <div class="aspect-[4/5] bg-csb-tatami rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center relative">
+                            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                            <img src="./icon-kick.png" alt="Karaté" class="w-48 h-48 object-contain opacity-20" onerror="this.style.display='none'">
+                        </div>
+                        <div class="absolute -bottom-6 -left-6 bg-csb-encre text-white p-6 rounded-xl shadow-xl max-w-xs border-l-4 border-csb-corail">
+                            <p class="text-sm italic font-serif text-lg">"Le Karaté commence et se termine par le salut."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NOUVELLE SECTION : CARROUSEL D'ACTUALITÉS -->
+        <section id="dernieres-news" class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex justify-between items-end mb-8">
+                    <div>
+                        <!-- MISE A JOUR H2 : Barlow Condensed (font-condensed), majuscules (uppercase) -->
+                        <h2 class="text-4xl md:text-5xl font-condensed uppercase tracking-wider text-csb-encre mb-2">Dernières Actualités</h2>
+                        <p class="font-sans text-gray-500 text-sm">La vie du club</p>
+                    </div>
+                    <div class="hidden md:flex gap-2">
+                        <button id="btn-prev" class="w-10 h-10 rounded-full border border-csb-tatami flex items-center justify-center text-csb-encre hover:border-csb-corail hover:text-csb-corail transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <button id="btn-next" class="w-10 h-10 rounded-full border border-csb-tatami flex items-center justify-center text-csb-encre hover:border-csb-corail hover:text-csb-corail transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Conteneur du carrousel -->
+                <div id="carousel-container" class="flex gap-6 overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-8">
+                    <!-- Les cartes seront injectées ici par JavaScript -->
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="./news.html" class="inline-block border-b-2 border-csb-corail pb-1 font-condensed uppercase tracking-wider text-csb-encre hover:text-csb-corail transition">Voir toutes les actualités</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="disciplines" class="py-24 bg-csb-washi border-y border-gray-100">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="mb-16">
+                    <!-- MISE A JOUR H2 : Barlow Condensed -->
+                    <h2 class="text-5xl md:text-6xl font-condensed uppercase tracking-wider text-csb-encre mb-4">01. Nos Disciplines</h2>
+                    <p class="text-gray-500 max-w-2xl font-sans text-lg">Une approche pédagogique adaptée à chaque âge et à chaque objectif, du développement moteur à la maîtrise de soi.</p>
+                </div>
+
+                <div class="bento-grid">
+                    <div class="bento-card group">
+                        <div class="w-16 h-16 bg-csb-washi rounded-xl flex items-center justify-center mb-6">
+                            <img src="./icon-kids.png" alt="Enfants" class="w-10 h-10 object-contain" onerror="this.style.display='none'">
+                        </div>
+                        <!-- VERIFICATION H3 : Déjà en Barlow Condensed -->
+                        <h3 class="font-condensed text-2xl uppercase tracking-wider mb-3 text-csb-encre">Karaté Enfants</h3>
+                        <p class="text-gray-600 font-sans">Des pupilles aux benjamins. Développement de la motricité, du respect et de la concentration dans un cadre ludique.</p>
+                    </div>
+
+                    <div class="bento-card group border-csb-corail border-opacity-30">
+                        <div class="w-16 h-16 bg-red-50 rounded-xl flex items-center justify-center mb-6">
+                            <img src="./icon-kick.png" alt="Adultes" class="w-10 h-10 object-contain" onerror="this.style.display='none'">
+                        </div>
+                        <h3 class="font-condensed text-2xl uppercase tracking-wider mb-3 text-csb-corail">Karaté Adultes</h3>
+                        <p class="text-gray-600 font-sans">Étude des katas, travail technique (Kihon) et combat (Kumite). Amélioration de la condition physique.</p>
+                    </div>
+
+                    <div class="bento-card group bg-csb-dojo text-white border-none">
+                        <div class="w-16 h-16 bg-white/10 rounded-xl flex items-center justify-center mb-6">
+                            <img src="./icon-fist.png" alt="Self" class="w-10 h-10 object-contain brightness-0 invert" onerror="this.style.display='none'">
+                        </div>
+                        <h3 class="font-condensed text-2xl uppercase tracking-wider mb-3 text-white">Self-Défense</h3>
+                        <p class="text-gray-300 font-sans">Apprentissage de techniques simples et efficaces pour se protéger et gagner en confiance face aux situations du quotidien.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 <section id="disciplines" class="py-24 bg-white border-y border-gray-100">
             <div class="max-w-7xl mx-auto px-6">
                 <div class="text-center mb-16">
@@ -32,7 +146,6 @@
                 </div>
             </div>
         </section>
-
         <section id="infos" class="py-24 bg-ffk-dojo text-white">
             <div class="max-w-7xl mx-auto px-6">
                 <div class="text-center mb-16">
