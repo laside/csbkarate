@@ -46,11 +46,42 @@
             </div>
         </section>
 
-        <section id="disciplines" class="py-24 bg-white border-y border-gray-100">
+        <!-- NOUVELLE SECTION : CARROUSEL D'ACTUALITÉS -->
+        <section id="dernieres-news" class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex justify-between items-end mb-8">
+                    <div>
+                        <!-- MISE A JOUR H2 : Barlow Condensed (font-condensed), majuscules (uppercase) -->
+                        <h2 class="text-4xl md:text-5xl font-condensed uppercase tracking-wider text-csb-encre mb-2">Dernières Actualités</h2>
+                        <p class="font-sans text-gray-500 text-sm">La vie du club</p>
+                    </div>
+                    <div class="hidden md:flex gap-2">
+                        <button id="btn-prev" class="w-10 h-10 rounded-full border border-csb-tatami flex items-center justify-center text-csb-encre hover:border-csb-corail hover:text-csb-corail transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <button id="btn-next" class="w-10 h-10 rounded-full border border-csb-tatami flex items-center justify-center text-csb-encre hover:border-csb-corail hover:text-csb-corail transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Conteneur du carrousel -->
+                <div id="carousel-container" class="flex gap-6 overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-8">
+                    <!-- Les cartes seront injectées ici par JavaScript -->
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="./news.html" class="inline-block border-b-2 border-csb-corail pb-1 font-condensed uppercase tracking-wider text-csb-encre hover:text-csb-corail transition">Voir toutes les actualités</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="disciplines" class="py-24 bg-csb-washi border-y border-gray-100">
             <div class="max-w-7xl mx-auto px-6">
                 <div class="mb-16">
-                    <h2 class="text-4xl font-serif text-csb-encre mb-4">01. Nos Disciplines</h2>
-                    <p class="text-gray-500 max-w-2xl font-sans">Une approche pédagogique adaptée à chaque âge et à chaque objectif, du développement moteur à la maîtrise de soi.</p>
+                    <!-- MISE A JOUR H2 : Barlow Condensed -->
+                    <h2 class="text-5xl md:text-6xl font-condensed uppercase tracking-wider text-csb-encre mb-4">01. Nos Disciplines</h2>
+                    <p class="text-gray-500 max-w-2xl font-sans text-lg">Une approche pédagogique adaptée à chaque âge et à chaque objectif, du développement moteur à la maîtrise de soi.</p>
                 </div>
 
                 <div class="bento-grid">
@@ -58,6 +89,7 @@
                         <div class="w-16 h-16 bg-csb-washi rounded-xl flex items-center justify-center mb-6">
                             <img src="./icon-kids.png" alt="Enfants" class="w-10 h-10 object-contain" onerror="this.style.display='none'">
                         </div>
+                        <!-- VERIFICATION H3 : Déjà en Barlow Condensed -->
                         <h3 class="font-condensed text-2xl uppercase tracking-wider mb-3 text-csb-encre">Karaté Enfants</h3>
                         <p class="text-gray-600 font-sans">Des pupilles aux benjamins. Développement de la motricité, du respect et de la concentration dans un cadre ludique.</p>
                     </div>
@@ -84,7 +116,8 @@
         <section id="infos" class="py-24 bg-csb-washi">
             <div class="max-w-7xl mx-auto px-6">
                 <div class="mb-16 text-center">
-                    <h2 class="text-4xl font-serif text-csb-encre mb-4">02. Informations Pratiques</h2>
+                    <!-- MISE A JOUR H2 : Barlow Condensed -->
+                    <h2 class="text-5xl md:text-6xl font-condensed uppercase tracking-wider text-csb-encre mb-4">02. Informations Pratiques</h2>
                 </div>
 
                 <div class="bento-grid">
@@ -120,9 +153,58 @@
 
     <div id="footer-placeholder"></div>
 
+    <!-- SCRIPT DU CARROUSEL DYNAMIQUE -->
     <script>
-        // Simple animation trigger
         document.addEventListener("DOMContentLoaded", () => {
+            const container = document.getElementById('carousel-container');
+            const btnNext = document.getElementById('btn-next');
+            const btnPrev = document.getElementById('btn-prev');
+
+            // 1. Récupération des données JSON
+            fetch('./data/news.json')
+                .then(response => response.json())
+                .then(data => {
+                    // On ne garde que les 3 premières actus
+                    const latestNews = data.slice(0, 3);
+                    
+                    latestNews.forEach(news => {
+                        // Création d'une carte Bento pour chaque actu
+                        const card = document.createElement('div');
+                        // MODIFICATION : Largeur réduite à 300px sur ordinateur
+                        card.className = "min-w-[85vw] md:min-w-[300px] flex-shrink-0 snap-center bento-card border-t-4 border-t-csb-corail flex flex-col justify-between";
+                        
+                        // MISE A JOUR H3 JS : Remplacement de font-serif par font-condensed uppercase
+                        card.innerHTML = `
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <span class="font-sans text-xs font-bold text-gray-400">${news.date}</span>
+                                    <span class="px-2 py-1 bg-csb-washi text-csb-dojo text-[10px] font-bold uppercase rounded font-sans">${news.category}</span>
+                                </div>
+                                <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-3">${news.title}</h3>
+                                <p class="text-sm text-gray-600 font-sans leading-relaxed">${news.excerpt}</p>
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error("Erreur lors du chargement des news :", error);
+                    container.innerHTML = `<p class="text-csb-corail">Impossible de charger les actualités pour le moment.</p>`;
+                });
+
+            // 2. Gestion du défilement (boutons)
+            if(btnNext && btnPrev) {
+                btnNext.addEventListener('click', () => {
+                    // MODIFICATION : Défilement ajusté à 300px
+                    container.scrollBy({ left: 300, behavior: 'smooth' });
+                });
+                btnPrev.addEventListener('click', () => {
+                    // MODIFICATION : Défilement ajusté à -300px
+                    container.scrollBy({ left: -300, behavior: 'smooth' });
+                });
+            }
+
+            // 3. Animation d'apparition
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
