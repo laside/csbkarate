@@ -1,18 +1,26 @@
 [
-{
-"id": 1,
-"date": "12 Nov 2025",
-"category": "Événement",
-"title": "Assemblée Générale 2025-2026",
-"excerpt": "Convocation à l'assemblée générale ordinaire du CSB Karaté. Invitation à tous les membres du club pour faire le bilan de l'année.",
-"image": "groupe1.jpg"
-},
-{
-"id": 2,
-"date": "06 Sept 2025",
-"category": "Rentrée",
-"title": "Reprise des cours saison 2025",
-"excerpt": "Le 6 septembre au Forum des associations. Début de la Self-défense le 7 sept et reprise du Karaté le 9 sept.",
-"image": ""
-}
+    {
+        "id": 1781835622660,
+        "date": "01/09/2026",
+        "category": "Événement",
+        "title": "Un Nouveau site pour le club",
+        "excerpt": "Version en construction",
+        "image": "site.jpg"
+    },
+    {
+        "id": 1,
+        "date": "12 Nov 2025",
+        "category": "Événement",
+        "title": "Assemblée Générale 2025-2026",
+        "excerpt": "Convocation à l'assemblée générale ordinaire du CSB Karaté. Invitation à tous les membres du club pour faire le bilan de l'année.",
+        "image": "groupe1.jpg"
+    },
+    {
+        "id": 2,
+        "date": "06 Sept 2025",
+        "category": "Rentrée",
+        "title": "Reprise des cours saison 2025",
+        "excerpt": "Le 6 septembre au Forum des associations. Début de la Self-défense le 7 sept et reprise du Karaté le 9 sept.",
+        "image": ""
+    }
 ]
