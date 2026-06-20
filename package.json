@@ -1,0 +1,23 @@
+{
+  "name": "csbkarate",
+  "version": "1.0.0",
+  "description": "CSB Karaté Brétigny - Official Website",
+  "private": true,
+  "scripts": {
+    "dev": "npx http-server -p 3000",
+    "build": "echo 'No build step required for static HTML'",
+    "lint": "echo 'No linting configured'"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^1.4.1"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "karate",
+    "csb",
+    "bretigny",
+    "wado-ryu"
+  ],
+  "author": "CSB Karaté",
+  "license": "SEE LICENSE IN LICENSE"
+}
