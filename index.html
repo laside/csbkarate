@@ -294,6 +294,10 @@
             const btnNext = document.getElementById('btn-next');
             const btnPrev = document.getElementById('btn-prev');
 
+            // Échappe le HTML pour injecter du contenu utilisateur en toute sécurité.
+            const esc = (str) => String(str ?? '').replace(/[&<>"']/g, c =>
+                ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
             Store.loadCollection('news')
                 .then(data => {
                     const latestNews = data.slice(0, 3);
@@ -307,11 +311,11 @@
                         card.innerHTML = `
                             <div>
                                 <div class="flex justify-between items-start mb-4">
-                                    <span class="font-sans text-xs font-bold text-gray-400">${news.date}</span>
-                                    <span class="px-2 py-1 bg-csb-washi text-csb-dojo text-[10px] font-bold uppercase rounded font-sans">${news.category}</span>
+                                    <span class="font-sans text-xs font-bold text-gray-400">${esc(news.date)}</span>
+                                    <span class="px-2 py-1 bg-csb-washi text-csb-dojo text-[10px] font-bold uppercase rounded font-sans">${esc(news.category)}</span>
                                 </div>
-                                <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-3">${news.title}</h3>
-                                <p class="text-sm text-gray-600 font-sans leading-relaxed line-clamp-3">${news.excerpt}</p>
+                                <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-3">${esc(news.title)}</h3>
+                                <p class="text-sm text-gray-600 font-sans leading-relaxed line-clamp-3">${esc(news.excerpt)}</p>
                             </div>
                         `;
                         container.appendChild(card);

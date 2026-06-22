@@ -130,8 +130,8 @@ Présent sur `news.html`, `competitions.html`, `galerie.html` et `grades.html`.
 ## Dette technique connue (audit du 22/06/2026)
 Détail et priorisation dans l'historique de conversation ; points saillants à traiter :
 - ~~**Navigation mobile absente**~~ ✅ **Corrigé** : `components/header.html` a désormais un bouton hamburger (`lg:hidden`) + un panneau `#mobile-menu` ; logique d'ouverture/fermeture (clic, lien, Échap) dans `initMobileMenu()` de `main.js`.
-- **Pas d'échappement HTML** dans les rendus CMS (`news.js`, `competitions.html`, `galerie.js`, carrousel `index.html`) : contenu injecté via `innerHTML` sans `esc()`. `grades.js` fait référence (fonction `esc`). Risque XSS faible aujourd'hui (admins de confiance), à corriger avant d'ouvrir l'édition à une BDD.
-- **`logo-wadoryu.png` ≈ 1 Mo** chargé sur chaque page (header + footer) → compresser/redimensionner.
+- ~~**Pas d'échappement HTML** dans les rendus CMS~~ ✅ **Corrigé** : `news.js`, `galerie.js`, `competitions.html` et le carrousel de `index.html` ont chacun leur fonction `esc()` (même pattern que `grades.js`, dupliquée volontairement — utilitaire pur de 2 lignes, pas de quoi justifier un module partagé). Tout contenu issu des données (`.json`) est échappé avant injection via `innerHTML`.
+- ~~**`logo-wadoryu.png` ≈ 1 Mo**~~ ✅ **Corrigé** : redimensionné de 851×828 à 192×192 px (4× la taille d'affichage réelle de 48×48 dans `header.html`/`footer.html`, marge confortable pour le rétina), transparence conservée. ~987 Ko → ~70 Ko (−93 %).
 - **Tailwind via CDN** (`cdn.tailwindcss.com`) : avertissement console + perf en prod. Candidat à un build CSS *si* un jour on accepte une étape de build (sinon laisser tel quel, cf. contraintes).
 - ~~**Logique CMS dupliquée** sur 4 pages~~ ✅ **Factorisée** : l'**accès aux données** (lecture JSON + export) est dans `assets/js/store.js`, et le **mode admin** (login + modales) dans `assets/js/admin.js` (`Admin.init({ onUnlock, onCloseAdmin })`). Chaque page ne garde que son rendu et son CRUD. Mot de passe `CSB` centralisé dans `admin.js`.
 - Typo corrigée : « Self-Défense Féminine Féminine » (index.html).

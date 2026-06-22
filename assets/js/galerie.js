@@ -80,6 +80,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // OUTILS
     // ============================================================
+    // Échappe le HTML pour injecter du contenu utilisateur en toute sécurité.
+    const esc = (str) => String(str ?? '').replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
     // Construit le chemin d'une photo (gère l'espace de "le club" via encodeURI).
     function photoSrc(section, filename, stageDossier) {
         const path = (section === 'stages')
@@ -138,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             <button type="button" class="gallery-tile group block aspect-square overflow-hidden rounded-xl bg-csb-tatami border border-csb-tatami hover:border-csb-corail transition"
                     data-group="${groupId}" data-index="${index}">
-                <img src="${src}" alt="${caption}" loading="lazy"
+                <img src="${src}" alt="${esc(caption)}" loading="lazy"
                      class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                      onerror="this.parentElement.classList.add('hidden')">
             </button>`;
@@ -191,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `
                 <div class="mb-12">
                     <div class="flex items-center gap-4 mb-5">
-                        <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre">${stage.nom}</h3>
+                        <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre">${esc(stage.nom)}</h3>
                         <span class="font-sans text-xs text-gray-400">${(stage.photos || []).length} photo(s)</span>
                         <span class="flex-grow h-px bg-csb-tatami"></span>
                     </div>
@@ -277,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function refreshStageOptions() {
         if (!selectStage) return;
         selectStage.innerHTML = (galleryData.sections.stages || [])
-            .map((s, i) => `<option value="${i}">${s.nom}</option>`).join('');
+            .map((s, i) => `<option value="${i}">${esc(s.nom)}</option>`).join('');
     }
 
     // Affiche/masque le sélecteur de stage selon la section choisie.
@@ -306,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         adminPhotoList.innerHTML = arr.map((f, i) => `
             <div class="flex justify-between items-center gap-3 bg-white border border-csb-tatami rounded px-3 py-2">
-                <span class="text-sm text-csb-dojo truncate" title="${f}">${f}</span>
+                <span class="text-sm text-csb-dojo truncate" title="${esc(f)}">${esc(f)}</span>
                 <button type="button" class="btn-del-photo px-2 py-1 bg-red-100 text-csb-corail rounded hover:bg-csb-corail hover:text-white transition text-xs" data-index="${i}">Suppr.</button>
             </div>`).join('');
 
@@ -355,8 +359,8 @@ document.addEventListener('DOMContentLoaded', () => {
         adminStageList.innerHTML = stages.map((s, i) => `
             <div class="flex justify-between items-center gap-3 bg-white border border-csb-tatami rounded px-3 py-2">
                 <div class="truncate">
-                    <span class="text-sm font-bold text-csb-dojo">${s.nom}</span>
-                    <span class="block text-[10px] text-gray-400">${s.dossier} · ${(s.photos || []).length} photo(s)</span>
+                    <span class="text-sm font-bold text-csb-dojo">${esc(s.nom)}</span>
+                    <span class="block text-[10px] text-gray-400">${esc(s.dossier)} · ${(s.photos || []).length} photo(s)</span>
                 </div>
                 <button type="button" class="btn-del-stage px-2 py-1 bg-red-100 text-csb-corail rounded hover:bg-csb-corail hover:text-white transition text-xs" data-index="${i}">Suppr.</button>
             </div>`).join('');

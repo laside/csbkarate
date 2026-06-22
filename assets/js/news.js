@@ -21,6 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCancelEdit = document.getElementById('btn-cancel-edit');
     const btnExport = document.getElementById('btn-export');
 
+    // Échappe le HTML pour injecter du contenu utilisateur en toute sécurité.
+    const esc = (str) => String(str ?? '').replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
     Store.loadCollection('news')
         .then(data => {
             newsData = data;
@@ -47,19 +51,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (news.image && news.image.trim() !== '') {
                 imageHTML = `
                     <div class="h-48 w-full mb-4 rounded-lg overflow-hidden bg-csb-tatami">
-                        <img src="./assets/photos/${news.image}" alt="Illustration" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.style.display='none'">
+                        <img src="./assets/photos/${esc(news.image)}" alt="Illustration" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.style.display='none'">
                     </div>
                 `;
             }
-            
+
             return `
                 <article class="bento-card border-t-4 ${borderColor} flex flex-col group">
                     <div class="flex-grow">
                         ${imageHTML}
-                        <time class="font-condensed text-sm text-gray-400 uppercase tracking-widest mb-3 block">${news.date}</time>
-                        <span class="px-2 py-1 bg-csb-washi text-csb-dojo text-[10px] font-bold uppercase rounded mb-3 inline-block font-sans">${news.category}</span>
-                        <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-4 group-hover:text-csb-corail transition">${news.title}</h3>
-                        <p class="text-gray-600 font-sans text-sm leading-relaxed mb-6">${news.excerpt}</p>
+                        <time class="font-condensed text-sm text-gray-400 uppercase tracking-widest mb-3 block">${esc(news.date)}</time>
+                        <span class="px-2 py-1 bg-csb-washi text-csb-dojo text-[10px] font-bold uppercase rounded mb-3 inline-block font-sans">${esc(news.category)}</span>
+                        <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-4 group-hover:text-csb-corail transition">${esc(news.title)}</h3>
+                        <p class="text-gray-600 font-sans text-sm leading-relaxed mb-6">${esc(news.excerpt)}</p>
                     </div>
                 </article>
             `;
@@ -76,8 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
         adminNewsList.innerHTML = newsData.map(news => `
             <div class="bg-white p-4 rounded-xl border border-csb-tatami flex justify-between items-center gap-4">
                 <div class="flex-grow">
-                    <span class="text-xs text-gray-400 font-bold">${news.date} | ${news.category}</span>
-                    <h4 class="font-bold text-csb-dojo">${news.title}</h4>
+                    <span class="text-xs text-gray-400 font-bold">${esc(news.date)} | ${esc(news.category)}</span>
+                    <h4 class="font-bold text-csb-dojo">${esc(news.title)}</h4>
                 </div>
                 <div class="flex gap-2">
                     <button class="btn-edit px-3 py-1 bg-gray-100 text-gray-600 rounded hover:bg-csb-dojo hover:text-white transition text-sm" data-id="${news.id}">Éditer</button>
