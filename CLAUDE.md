@@ -9,7 +9,7 @@ Code propre, moderne, léger, maintenable. Pédagogique en français.
 - HTML5 sémantique + Tailwind CSS (CDN, config dans `assets/js/tailwind.js`)
 - Vanilla JS ES6+, API `fetch` pour charger JSON et composants
 - Chart.js (CDN) → graphiques de données (ex. radar comparatif sur `wadoryu.html`)
-- Données : fichiers `.json` dans `/data/` (Git-based CMS, pas de SQL)
+- Données : **bascule Supabase en cours** (cf. section BDD). `news` est servi par Supabase (Postgres + Auth, SDK via CDN ESM) ; `competitions`, `galerie`, `grades` restent sur fichiers `.json` dans `/data/` (Git-based CMS) jusqu'à leur migration. Le routage par collection est dans `store.js`.
 - Hébergement : **Vercel** (déploiement auto sur push `main` = prod, preview sur les autres branches). Pas de `vercel.json` : config zéro. Vercel Web Analytics actif sur chaque page.
 
 ## Structure du projet
@@ -43,13 +43,19 @@ Code propre, moderne, léger, maintenable. Pédagogique en français.
 
 │   ├── main.js       ← injection header/footer, menu mobile, animations globales
 
-│   ├── store.js      ← couche d'accès aux données (loadCollection/saveCollection), cf. section BDD
+│   ├── supabase.js   ← client Supabase (module ESM, window.sb), cf. section BDD
 
-│   └── admin.js      ← mode admin factorisé (login + modales), cf. section BDD
+│   ├── store.js      ← couche d'accès aux données + routage Supabase/JSON, cf. section BDD
+
+│   └── admin.js      ← mode admin factorisé (login Supabase Auth + modales), cf. section BDD
 
 ├── photos/           ← images des actualités et compétitions
 
 └── docs/             ← PDFs et documents
+
+├── supabase/
+
+│   └── migrations/   ← scripts SQL versionnés (tables + RLS), 1 par collection migrée
 
 ## Structure galerie.json
 - sections : club / competitions / entrainement / stages
@@ -100,15 +106,14 @@ Cartes avec coins arrondis, effet glassmorphism subtil, ombres légères.
 ## Mode Administrateur (CMS sans serveur)
 
 Présent sur `news.html`, `competitions.html`, `galerie.html` et `grades.html`.
-- Déverrouillage : bouton discret + mot de passe `CSB`
-- Permet ajout/modif/suppression d'entrées
-- Génère un nouveau fichier `.json` à télécharger
-- L'admin dépose ensuite ce fichier sur GitHub manuellement
+- Déverrouillage : bouton discret + **connexion Supabase Auth** (`signInWithPassword`, géré dans `admin.js`). L'email admin est constant (`window.CSB_ADMIN_EMAIL` dans `supabase.js`) ; l'admin ne saisit que son mot de passe. La session Auth autorise ensuite les écritures en base (RLS).
+- Permet ajout/modif/suppression d'entrées.
+- **Collections migrées (Supabase)** : enregistrement direct en base (bouton « Enregistrer en ligne »). Aujourd'hui : `news`.
+- **Collections non migrées (JSON)** : génèrent encore un `.json` à télécharger, que l'admin dépose sur GitHub. Aujourd'hui : `competitions`, `galerie`, `grades`.
 
 **Ne JAMAIS** :
-- Modifier le mot de passe sans demander
-- Ajouter une vraie authentification serveur (le site est statique)
-- Toucher à la logique d'export JSON sans demander
+- Modifier le compte/mot de passe admin Supabase sans demander
+- Toucher à la logique d'export JSON (collections non encore migrées) sans demander
 
 ## Tests en local
 
@@ -120,8 +125,8 @@ Présent sur `news.html`, `competitions.html`, `galerie.html` et `grades.html`.
 ## État du projet
 
 **Pages terminées :** `index.html`, `wadoryu.html`, `news.html`, `club.html`, `competitions.html`, `mentions-legales.html`, `galerie.html`, `grades.html`
-- galerie.html ✅ — données dans data/galerie.json, admin protégé mot de passe CSB
-- grades.html ✅ — données dans data/grades.json (Kyu + Dan), admin protégé mot de passe CSB
+- galerie.html ✅ — données dans data/galerie.json, admin via Supabase Auth
+- grades.html ✅ — données dans data/grades.json (Kyu + Dan), admin via Supabase Auth
 
 **TODO restants :**
 - [ ] Insérer le lien HelloAsso définitif dans la section "Informations Pratiques" de l'accueil (placeholder `#lien-vers-helloasso-ou-form` dans `index.html`)
@@ -146,9 +151,32 @@ Détail et priorisation dans l'historique de conversation ; points saillants à 
 - ❌ Modifier les fichiers `.json` de `/data/` manuellement (passer par le mode admin)
 - ❌ Toucher à la palette de couleurs ou aux polices sans validation explicite
 
-## Évolution future : Base de données (en réflexion — NE PAS implémenter sans GO)
+## Base de données : Supabase (bascule EN COURS)
 
-Objectif visé : remplacer le CMS « Git-based » (export JSON manuel → commit) par une vraie persistance, pour que l'admin enregistre directement depuis le site.
+Objectif : remplacer le CMS « Git-based » (export JSON manuel → commit) par une vraie persistance, pour que l'admin enregistre directement depuis le site. **Migration progressive, collection par collection.**
+
+### État de la bascule
+- ✅ **`news`** — migré (table Postgres + RLS, Auth, lecture/écriture depuis le site). Pilote validé.
+- ⬜ **`competitions`**, **`galerie`**, **`grades`** — encore sur JSON, à migrer.
+
+### Comment c'est branché
+- **`assets/js/supabase.js`** (module ESM, `window.sb`) : crée le client. URL + clé `anon`/`publishable` **publiques** (sûres : sécurité par la RLS). ⚠️ Jamais la clé `service_role` ici. Chargé via `<script type="module">` sur les pages utilisant Store/Admin.
+- **`store.js`** : `SUPABASE_COLLECTIONS` (Set) liste les collections migrées → routées vers Supabase ; les autres gardent le fetch JSON + export téléchargé. **Migrer une collection = ajouter son nom au Set + écrire ses cas `load/saveFromSupabase` + un SQL `00xx_<collection>.sql`.** Les pages ne changent pas.
+- **`admin.js`** : login = `signInWithPassword` (Supabase Auth) ; la session autorise les écritures (RLS « écriture = authenticated »).
+- **SQL versionné** : `supabase/migrations/00xx_<collection>.sql` (table + RLS + reprise des données). Exécuté à la main dans le SQL Editor Supabase. `0001_news.sql` sert de modèle.
+
+### RLS (modèle appliqué)
+- `SELECT` ouvert à `anon` + `authenticated` (site public). Pour `grades`, prévoir de **filtrer `hidden`** côté policy ou requête lors de sa migration.
+- `INSERT`/`UPDATE`/`DELETE` réservés à `authenticated` (l'admin connecté).
+
+### Points de vigilance
+- *Free tier* : projet **mis en pause après ~1 semaine d'inactivité** → prévoir un ping (Vercel Cron) ou accepter un cold start.
+- *`id`* : on conserve des `id` numériques fournis par le client (le `Date.now()` des pages) pour ne pas toucher au CRUD existant ; le `save` fait `upsert` + `delete` du complément (= « remplace la collection par ce tableau »).
+- *Storage* : l'upload des photos reste manuel (`assets/photos/`) pour l'instant ; **Supabase Storage** est l'étape suivante envisagée (remplacera le dépôt manuel), notamment pour `galerie`.
+
+---
+
+### Archives — étude initiale du choix
 
 **Recommandation : Supabase** (Postgres managé + Auth + Storage).
 - *Pourquoi lui* : un seul produit couvre les 3 besoins de la migration — la **BDD** (remplace les `.json`), l'**Auth** (remplace le faux mot de passe `CSB`) et le **Storage** (remplace l'upload manuel des photos dans `assets/photos/`).

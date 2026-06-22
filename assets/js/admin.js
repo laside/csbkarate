@@ -3,10 +3,16 @@
 // =============================================================
 // Centralise la logique du « mode admin » commune aux 4 pages CMS
 // (news, competitions, galerie, grades) : ouverture/fermeture de la
-// modale de connexion, vérification du mot de passe, bascule vers le
-// dashboard, fermeture du dashboard.
+// modale de connexion, AUTHENTIFICATION, bascule vers le dashboard,
+// fermeture du dashboard (avec déconnexion).
 //
 //   Admin.init({ onUnlock, onCloseAdmin })
+//
+// AUTHENTIFICATION : vraie Auth Supabase (signInWithPassword). Le compte
+// admin est unique : l'email est constant (window.CSB_ADMIN_EMAIL, défini
+// dans supabase.js) et l'admin ne saisit que son mot de passe. C'est la
+// session Auth qui autorise ensuite les écritures en base (RLS).
+// Le client Supabase est fourni par supabase.js (window.sb).
 //
 // Les 4 pages partagent EXACTEMENT les mêmes IDs (#btn-open-login,
 // #modal-login, #btn-login, #admin-password, #login-error,
@@ -17,18 +23,11 @@
 //                    déjà ouvert quand il est appelé.
 //   - onCloseAdmin : à la fermeture du dashboard (rafraîchir le public).
 //
-// DEMAIN (Auth Supabase, cf. CLAUDE.md) : il suffira de remplacer la
-// vérification du mot de passe ci-dessous par un appel au SDK.
-// Les pages ne changeront pas.
-//
 // Chargé en vanilla JS via <script defer> : expose un objet global `Admin`.
 // =============================================================
 
 (function (global) {
     'use strict';
-
-    // Mot de passe du bureau (site statique — futur remplacement : Supabase Auth).
-    const ADMIN_PASSWORD = 'CSB';
 
     // IDs partagés par les 4 pages CMS.
     const IDS = {
@@ -75,25 +74,40 @@
             el.closeLogin.addEventListener('click', () => hide(el.modalLogin));
         }
 
-        // Tenter la connexion.
+        // Tenter la connexion (Supabase Auth).
         if (el.login) {
-            el.login.addEventListener('click', () => {
-                if (el.password.value === ADMIN_PASSWORD) {
+            el.login.addEventListener('click', async () => {
+                if (el.loginError) el.loginError.classList.add('hidden');
+                el.login.disabled = true;
+                try {
+                    const { error } = await global.sb.auth.signInWithPassword({
+                        email: global.CSB_ADMIN_EMAIL,
+                        password: el.password.value
+                    });
+                    if (error) throw error;
+
                     el.password.value = '';
-                    if (el.loginError) el.loginError.classList.add('hidden');
                     el.modalLogin.classList.add('hidden', 'opacity-0');
                     show(el.modalAdmin);
                     if (typeof hooks.onUnlock === 'function') hooks.onUnlock();
-                } else if (el.loginError) {
-                    el.loginError.classList.remove('hidden');
+                } catch (err) {
+                    console.error(err);
+                    if (el.loginError) el.loginError.classList.remove('hidden');
+                } finally {
+                    el.login.disabled = false;
                 }
             });
         }
 
-        // Fermer le dashboard.
+        // Fermer le dashboard (et clore la session Auth).
         if (el.closeAdmin) {
-            el.closeAdmin.addEventListener('click', () => {
+            el.closeAdmin.addEventListener('click', async () => {
                 hide(el.modalAdmin);
+                try {
+                    await global.sb.auth.signOut();
+                } catch (err) {
+                    console.error(err);
+                }
                 if (typeof hooks.onCloseAdmin === 'function') hooks.onCloseAdmin();
             });
         }
