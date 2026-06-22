@@ -12,6 +12,10 @@
 
     <!-- Centralisation : Injection du Header/Footer -->
     <script src="./assets/js/main.js" defer></script>
+    <!-- Client Supabase (le carrousel d'actus lit la collection news en base) -->
+    <script type="module" src="./assets/js/supabase.js"></script>
+    <!-- Couche d'accès aux données (routage Supabase / JSON + export) -->
+    <script src="./assets/js/store.js" defer></script>
 
     <!-- Vercel Web Analytics -->
     <script>
@@ -186,7 +190,7 @@
                             <!-- Self Défense -->
                             <div class="flex flex-col md:flex-row justify-between pb-2">
                                 <div>
-                                    <span class="font-bold block text-csb-corail">Self-Défense Féminine Féminine</span>
+                                    <span class="font-bold block text-csb-corail">Self-Défense Féminine</span>
                                     <span class="text-gray-500 text-xs">Gymnase Auguste Delaune</span>
                                 </div>
                                 <div class="text-left md:text-right mt-1 md:mt-0">
@@ -292,8 +296,11 @@
             const btnNext = document.getElementById('btn-next');
             const btnPrev = document.getElementById('btn-prev');
 
-            fetch('./data/news.json')
-                .then(response => response.json())
+            // Échappe le HTML pour injecter du contenu utilisateur en toute sécurité.
+            const esc = (str) => String(str ?? '').replace(/[&<>"']/g, c =>
+                ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+            Store.loadCollection('news')
                 .then(data => {
                     const latestNews = data.slice(0, 3);
                     container.innerHTML = ''; // Nettoyage de sécurité
@@ -306,11 +313,11 @@
                         card.innerHTML = `
                             <div>
                                 <div class="flex justify-between items-start mb-4">
-                                    <span class="font-sans text-xs font-bold text-gray-400">${news.date}</span>
-                                    <span class="px-2 py-1 bg-csb-washi text-csb-dojo text-[10px] font-bold uppercase rounded font-sans">${news.category}</span>
+                                    <span class="font-sans text-xs font-bold text-gray-400">${esc(news.date)}</span>
+                                    <span class="px-2 py-1 bg-csb-washi text-csb-dojo text-[10px] font-bold uppercase rounded font-sans">${esc(news.category)}</span>
                                 </div>
-                                <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-3">${news.title}</h3>
-                                <p class="text-sm text-gray-600 font-sans leading-relaxed line-clamp-3">${news.excerpt}</p>
+                                <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-3">${esc(news.title)}</h3>
+                                <p class="text-sm text-gray-600 font-sans leading-relaxed line-clamp-3">${esc(news.excerpt)}</p>
                             </div>
                         `;
                         container.appendChild(card);

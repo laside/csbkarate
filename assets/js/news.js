@@ -2,21 +2,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Variables globales
     let newsData = [];
-    const ADMIN_PASSWORD = "CSB"; // Mot de passe ultra simple pour le bureau
     
     // Elements du DOM - Mode Public
     const grid = document.getElementById('news-grid');
     
-    // Elements du DOM - Mode Admin
-    const btnOpenLogin = document.getElementById('btn-open-login');
-    const modalLogin = document.getElementById('modal-login');
-    const btnCloseLogin = document.getElementById('btn-close-login');
-    const btnLogin = document.getElementById('btn-login');
-    const inputPassword = document.getElementById('admin-password');
-    const loginError = document.getElementById('login-error');
-    
-    const modalAdmin = document.getElementById('modal-admin');
-    const btnCloseAdmin = document.getElementById('btn-close-admin');
+    // Elements du DOM - Mode Admin (login/modales gérés par admin.js)
     const adminNewsList = document.getElementById('admin-news-list');
     
     // Elements du Formulaire
@@ -31,11 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCancelEdit = document.getElementById('btn-cancel-edit');
     const btnExport = document.getElementById('btn-export');
 
-    fetch('./data/news.json')
-        .then(response => {
-            if (!response.ok) throw new Error("Erreur réseau");
-            return response.json();
-        })
+    // Échappe le HTML pour injecter du contenu utilisateur en toute sécurité.
+    const esc = (str) => String(str ?? '').replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    Store.loadCollection('news')
         .then(data => {
             newsData = data;
             renderPublicGrid();
@@ -61,66 +51,37 @@ document.addEventListener('DOMContentLoaded', () => {
             if (news.image && news.image.trim() !== '') {
                 imageHTML = `
                     <div class="h-48 w-full mb-4 rounded-lg overflow-hidden bg-csb-tatami">
-                        <img src="./assets/photos/${news.image}" alt="Illustration" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.style.display='none'">
+                        <img src="./assets/photos/${esc(news.image)}" alt="Illustration" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.style.display='none'">
                     </div>
                 `;
             }
-            
+
             return `
                 <article class="bento-card border-t-4 ${borderColor} flex flex-col group">
                     <div class="flex-grow">
                         ${imageHTML}
-                        <time class="font-condensed text-sm text-gray-400 uppercase tracking-widest mb-3 block">${news.date}</time>
-                        <span class="px-2 py-1 bg-csb-washi text-csb-dojo text-[10px] font-bold uppercase rounded mb-3 inline-block font-sans">${news.category}</span>
-                        <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-4 group-hover:text-csb-corail transition">${news.title}</h3>
-                        <p class="text-gray-600 font-sans text-sm leading-relaxed mb-6">${news.excerpt}</p>
+                        <time class="font-condensed text-sm text-gray-400 uppercase tracking-widest mb-3 block">${esc(news.date)}</time>
+                        <span class="px-2 py-1 bg-csb-washi text-csb-dojo text-[10px] font-bold uppercase rounded mb-3 inline-block font-sans">${esc(news.category)}</span>
+                        <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-4 group-hover:text-csb-corail transition">${esc(news.title)}</h3>
+                        <p class="text-gray-600 font-sans text-sm leading-relaxed mb-6">${esc(news.excerpt)}</p>
                     </div>
                 </article>
             `;
         }).join('');
     }
 
-    if(btnOpenLogin) {
-        btnOpenLogin.addEventListener('click', () => {
-            modalLogin.classList.remove('hidden');
-            setTimeout(() => modalLogin.classList.remove('opacity-0'), 10);
-        });
-    }
-
-    btnCloseLogin.addEventListener('click', () => {
-        modalLogin.classList.add('opacity-0');
-        setTimeout(() => modalLogin.classList.add('hidden'), 300);
-    });
-
-    btnLogin.addEventListener('click', () => {
-        if (inputPassword.value === ADMIN_PASSWORD) {
-            // Succès
-            inputPassword.value = '';
-            loginError.classList.add('hidden');
-            modalLogin.classList.add('hidden');
-            modalLogin.classList.add('opacity-0');
-            
-            // Ouvrir le dashboard
-            modalAdmin.classList.remove('hidden');
-            setTimeout(() => modalAdmin.classList.remove('opacity-0'), 10);
-            renderAdminList();
-        } else {
-            loginError.classList.remove('hidden');
-        }
-    });
-
-    btnCloseAdmin.addEventListener('click', () => {
-        modalAdmin.classList.add('opacity-0');
-        setTimeout(() => modalAdmin.classList.add('hidden'), 300);
-        renderPublicGrid(); // On rafraîchit l'affichage public en fermant
+    // Mode admin : connexion + dashboard (logique factorisée dans admin.js).
+    Admin.init({
+        onUnlock: renderAdminList,
+        onCloseAdmin: renderPublicGrid
     });
 
     function renderAdminList() {
         adminNewsList.innerHTML = newsData.map(news => `
             <div class="bg-white p-4 rounded-xl border border-csb-tatami flex justify-between items-center gap-4">
                 <div class="flex-grow">
-                    <span class="text-xs text-gray-400 font-bold">${news.date} | ${news.category}</span>
-                    <h4 class="font-bold text-csb-dojo">${news.title}</h4>
+                    <span class="text-xs text-gray-400 font-bold">${esc(news.date)} | ${esc(news.category)}</span>
+                    <h4 class="font-bold text-csb-dojo">${esc(news.title)}</h4>
                 </div>
                 <div class="flex gap-2">
                     <button class="btn-edit px-3 py-1 bg-gray-100 text-gray-600 rounded hover:bg-csb-dojo hover:text-white transition text-sm" data-id="${news.id}">Éditer</button>
@@ -209,22 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     btnExport.addEventListener('click', () => {
-        // Formater le JSON de manière lisible (indentation de 4 espaces)
-        const dataStr = JSON.stringify(newsData, null, 4);
-        
-        // Créer un fichier "Blob" en mémoire
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        
-        // Créer un lien invisible pour forcer le téléchargement
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "news.json";
-        document.body.appendChild(a);
-        a.click(); // Clique sur le lien
-        document.body.removeChild(a); // Nettoie
-        URL.revokeObjectURL(url);
-        
-        alert("Fichier news.json téléchargé !\nRemplacez l'ancien fichier sur votre dépôt Github.");
+        // L'export passe désormais par la couche d'accès aux données (store.js).
+        Store.saveCollection('news', newsData);
     });
 });
