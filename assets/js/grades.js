@@ -86,11 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // CHARGEMENT DES DONNÉES
     // ============================================================
-    fetch('./data/grades.json')
-        .then(response => {
-            if (!response.ok) throw new Error("Erreur réseau");
-            return response.json();
-        })
+    Store.loadCollection('grades')
         .then(data => {
             if (data && Array.isArray(data.grades)) gradesData = data;
             renderPublic();
@@ -361,17 +357,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     if (btnExport) {
         btnExport.addEventListener('click', () => {
-            const dataStr = JSON.stringify(gradesData, null, 4);
-            const blob = new Blob([dataStr], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = "grades.json";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            alert("Fichier grades.json téléchargé !\nRemplacez l'ancien fichier dans data/ sur votre dépôt Github.");
+            // L'export passe désormais par la couche d'accès aux données (store.js).
+            Store.saveCollection('grades', gradesData);
         });
     }
 });

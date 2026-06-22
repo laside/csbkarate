@@ -41,7 +41,9 @@ Code propre, moderne, léger, maintenable. Pédagogique en français.
 
 │   ├── tailwind.js   ← config Tailwind (couleurs + polices charte)
 
-│   └── main.js       ← injection header/footer, animations globales
+│   ├── main.js       ← injection header/footer, menu mobile, animations globales
+
+│   └── store.js      ← couche d'accès aux données (loadCollection/saveCollection), cf. section BDD
 
 ├── photos/           ← images des actualités et compétitions
 
@@ -125,11 +127,11 @@ Présent sur `news.html`, `competitions.html`, `galerie.html` et `grades.html`.
 
 ## Dette technique connue (audit du 22/06/2026)
 Détail et priorisation dans l'historique de conversation ; points saillants à traiter :
-- **Navigation mobile absente** : `components/header.html` masque le menu sous `lg:` sans menu hamburger → impossible de naviguer sur mobile. À corriger en priorité (le projet est « mobile-first »).
+- ~~**Navigation mobile absente**~~ ✅ **Corrigé** : `components/header.html` a désormais un bouton hamburger (`lg:hidden`) + un panneau `#mobile-menu` ; logique d'ouverture/fermeture (clic, lien, Échap) dans `initMobileMenu()` de `main.js`.
 - **Pas d'échappement HTML** dans les rendus CMS (`news.js`, `competitions.html`, `galerie.js`, carrousel `index.html`) : contenu injecté via `innerHTML` sans `esc()`. `grades.js` fait référence (fonction `esc`). Risque XSS faible aujourd'hui (admins de confiance), à corriger avant d'ouvrir l'édition à une BDD.
 - **`logo-wadoryu.png` ≈ 1 Mo** chargé sur chaque page (header + footer) → compresser/redimensionner.
 - **Tailwind via CDN** (`cdn.tailwindcss.com`) : avertissement console + perf en prod. Candidat à un build CSS *si* un jour on accepte une étape de build (sinon laisser tel quel, cf. contraintes).
-- **Logique CMS dupliquée** sur 4 pages (login/modale/export quasi identiques) → candidate à une factorisation (`assets/js/store.js`) qui faciliterait aussi la future bascule BDD.
+- **Logique CMS dupliquée** sur 4 pages (login/modale/export quasi identiques). L'**accès aux données** (lecture JSON + export) est désormais factorisé dans `assets/js/store.js` (étape 0 BDD faite — cf. plus bas). Reste à factoriser le **login/modale admin** (toujours dupliqué sur les 4 pages).
 - Typo corrigée : « Self-Défense Féminine Féminine » (index.html).
 
 ## Ce qu'il ne faut PAS faire
@@ -156,4 +158,8 @@ Objectif visé : remplacer le CMS « Git-based » (export JSON manuel → commit
 
 **Schéma cible proposé** (1 table par collection actuelle) : `news`, `competitions`, `galerie_photos`, `grades`. Conserver un `id` par ligne et harmoniser son type (aujourd'hui mélange de timestamps et de petits entiers).
 
-**Étape 0 de préparation (sans BDD)** : factoriser l'accès aux données dans `assets/js/store.js` (`loadCollection(name)` / `saveCollection(name, data)`) pour découpler les pages de la source. Aujourd'hui → lit le `.json` / déclenche l'export ; demain → appelle Supabase. C'est le premier chantier à faire avant toute bascule.
+**Étape 0 de préparation (sans BDD) — ✅ FAITE.** L'accès aux données est factorisé dans `assets/js/store.js` :
+- `Store.loadCollection(name)` → `Promise` des données (lit `./data/<name>.json`).
+- `Store.saveCollection(name, data)` → aujourd'hui télécharge `<name>.json` (export manuel inchangé) ; **demain** ce sera un appel Supabase, **sans toucher aux pages**.
+- Branché sur les 5 consommateurs : `news.js`, `galerie.js`, `grades.js`, le JS inline de `competitions.html` et le carrousel de `index.html`. Chargé via `<script defer src="./assets/js/store.js">` (avant les scripts de page).
+- Bascule BDD : il suffira de remplacer le **corps** de ces 2 fonctions par le SDK Supabase.

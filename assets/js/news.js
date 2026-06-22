@@ -31,11 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCancelEdit = document.getElementById('btn-cancel-edit');
     const btnExport = document.getElementById('btn-export');
 
-    fetch('./data/news.json')
-        .then(response => {
-            if (!response.ok) throw new Error("Erreur réseau");
-            return response.json();
-        })
+    Store.loadCollection('news')
         .then(data => {
             newsData = data;
             renderPublicGrid();
@@ -209,22 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     btnExport.addEventListener('click', () => {
-        // Formater le JSON de manière lisible (indentation de 4 espaces)
-        const dataStr = JSON.stringify(newsData, null, 4);
-        
-        // Créer un fichier "Blob" en mémoire
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        
-        // Créer un lien invisible pour forcer le téléchargement
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "news.json";
-        document.body.appendChild(a);
-        a.click(); // Clique sur le lien
-        document.body.removeChild(a); // Nettoie
-        URL.revokeObjectURL(url);
-        
-        alert("Fichier news.json téléchargé !\nRemplacez l'ancien fichier sur votre dépôt Github.");
+        // L'export passe désormais par la couche d'accès aux données (store.js).
+        Store.saveCollection('news', newsData);
     });
 });

@@ -75,11 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // CHARGEMENT DES DONNÉES
     // ============================================================
-    fetch('./data/galerie.json')
-        .then(response => {
-            if (!response.ok) throw new Error("Erreur réseau");
-            return response.json();
-        })
+    Store.loadCollection('galerie')
         .then(data => {
             if (data && data.sections) galleryData = data;
             renderTabs();
@@ -448,17 +444,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     if (btnExport) {
         btnExport.addEventListener('click', () => {
-            const dataStr = JSON.stringify(galleryData, null, 4);
-            const blob = new Blob([dataStr], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = "galerie.json";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            alert("Fichier galerie.json téléchargé !\nRemplacez l'ancien fichier dans data/ sur votre dépôt Github.");
+            // L'export passe désormais par la couche d'accès aux données (store.js).
+            Store.saveCollection('galerie', galleryData);
         });
     }
 });
