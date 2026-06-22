@@ -157,11 +157,12 @@ Objectif : remplacer le CMS « Git-based » (export JSON manuel → commit) par 
 
 ### État de la bascule
 - ✅ **`news`** — migré (table Postgres + RLS, Auth, lecture/écriture depuis le site). Pilote validé.
-- ⬜ **`competitions`**, **`galerie`**, **`grades`** — encore sur JSON, à migrer.
+- ✅ **`competitions`** — migré (même patron que `news`, tableau plat).
+- ⬜ **`galerie`**, **`grades`** — encore sur JSON, à migrer.
 
 ### Comment c'est branché
 - **`assets/js/supabase.js`** (module ESM, `window.sb`) : crée le client. URL + clé `anon`/`publishable` **publiques** (sûres : sécurité par la RLS). ⚠️ Jamais la clé `service_role` ici. Chargé via `<script type="module">` sur les pages utilisant Store/Admin.
-- **`store.js`** : `SUPABASE_COLLECTIONS` (Set) liste les collections migrées → routées vers Supabase ; les autres gardent le fetch JSON + export téléchargé. **Migrer une collection = ajouter son nom au Set + écrire ses cas `load/saveFromSupabase` + un SQL `00xx_<collection>.sql`.** Les pages ne changent pas.
+- **`store.js`** : `SUPABASE_COLLECTIONS` (Set) liste les collections migrées → routées vers Supabase ; les autres gardent le fetch JSON + export téléchargé. **Migrer une collection = ajouter son nom au Set + écrire ses cas `load/saveFromSupabase` + un SQL `00xx_<collection>.sql`.** Les pages ne changent pas. Pour les tableaux plats (news, competitions), `saveToSupabase` délègue à `replaceSupabaseTable(table, rows)` (upsert + suppression du complément) — helper partagé, à ne pas dupliquer pour la prochaine collection plate.
 - **`admin.js`** : login = `signInWithPassword` (Supabase Auth) ; la session autorise les écritures (RLS « écriture = authenticated »).
 - **SQL versionné** : `supabase/migrations/00xx_<collection>.sql` (table + RLS + reprise des données). Exécuté à la main dans le SQL Editor Supabase. `0001_news.sql` sert de modèle.
 

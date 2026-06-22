@@ -28,9 +28,9 @@
     // Indentation de l'export JSON, alignée sur l'historique Git (4 espaces).
     const JSON_INDENT = 4;
 
-    // Collections déjà migrées vers Supabase. On y ajoutera 'competitions',
-    // 'galerie' et 'grades' au fil de la bascule.
-    const SUPABASE_COLLECTIONS = new Set(['news']);
+    // Collections déjà migrées vers Supabase. On y ajoutera 'galerie' et
+    // 'grades' au fil de la bascule.
+    const SUPABASE_COLLECTIONS = new Set(['news', 'competitions']);
 
     // Récupère le client Supabase ou échoue clairement s'il manque.
     function sb() {
@@ -38,6 +38,26 @@
             throw new Error('Client Supabase non initialisé : supabase.js (type="module") est-il chargé sur cette page ?');
         }
         return global.sb;
+    }
+
+    // Remplace entièrement le contenu d'une table par `rows` (clé = id) :
+    // upsert des lignes présentes, puis suppression de tout le reste.
+    // Mutualise le « save = remplace toute la collection » commun aux
+    // tableaux plats (news, competitions...). Les collections à structure
+    // imbriquée (ex. galerie) ne passeront pas par ce helper.
+    async function replaceSupabaseTable(table, rows) {
+        if (rows.length) {
+            const { error } = await sb().from(table).upsert(rows);
+            if (error) throw error;
+        }
+
+        const ids = rows.map(r => r.id);
+        const del = sb().from(table).delete();
+        const query = ids.length
+            ? del.not('id', 'in', `(${ids.join(',')})`) // tout sauf les ids conservés
+            : del.not('id', 'is', null);                  // tableau vide -> on vide la table
+        const { error } = await query;
+        if (error) throw error;
     }
 
     // =========================================================
@@ -50,6 +70,16 @@
             const { data, error } = await sb()
                 .from('news')
                 .select('id, date, category, title, excerpt, image')
+                .order('id', { ascending: false });
+            if (error) throw error;
+            return data || [];
+        }
+        if (name === 'competitions') {
+            // L'ordre exact n'a pas d'importance : competitions.html re-trie
+            // côté client par date réelle (getSortableDate). id desc par défaut.
+            const { data, error } = await sb()
+                .from('competitions')
+                .select('id, date, title, location, image, results')
                 .order('id', { ascending: false });
             if (error) throw error;
             return data || [];
@@ -67,22 +97,18 @@
                 excerpt: n.excerpt ?? '',
                 image: n.image ?? ''
             }));
-
-            // 1) Insère/met à jour les éléments présents (clé = id).
-            if (rows.length) {
-                const { error } = await sb().from('news').upsert(rows);
-                if (error) throw error;
-            }
-
-            // 2) Supprime les lignes retirées côté admin (absentes du tableau).
-            const ids = rows.map(r => r.id);
-            const del = sb().from('news').delete();
-            const query = ids.length
-                ? del.not('id', 'in', `(${ids.join(',')})`) // tout sauf les ids conservés
-                : del.not('id', 'is', null);                  // tableau vide -> on vide la table
-            const { error } = await query;
-            if (error) throw error;
-            return;
+            return replaceSupabaseTable('news', rows);
+        }
+        if (name === 'competitions') {
+            const rows = (data || []).map(c => ({
+                id: c.id,
+                date: c.date ?? '',
+                title: c.title ?? '',
+                location: c.location ?? '',
+                image: c.image ?? '',
+                results: c.results ?? ''
+            }));
+            return replaceSupabaseTable('competitions', rows);
         }
         throw new Error(`Collection Supabase inconnue : ${name}`);
     }
