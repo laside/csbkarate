@@ -8,11 +8,12 @@
 //   Store.loadCollection(name)        -> Promise<données>
 //   Store.saveCollection(name, data)  -> Promise<void>
 //
-// BASCULE EN COURS (Supabase) : la migration se fait collection par
-// collection. `SUPABASE_COLLECTIONS` liste celles déjà branchées sur la base ;
-// les autres conservent l'ancien comportement « Git-based » (fetch JSON +
-// export par téléchargement). Aucune page (news.js, galerie.js, grades.js,
-// competitions.html, carrousel index.html) n'a à changer : seul ce fichier sait.
+// BASCULE TERMINÉE (Supabase) : les 4 collections sont branchées sur la
+// base (`SUPABASE_COLLECTIONS`). Le contrat load/saveCollection(name, data)
+// ne change pas selon la source : les pages n'ont pas à savoir d'où
+// viennent les données. Seule exception : grades.js re-fetch après login
+// (onUnlock) car la RLS cache les grades `hidden` à l'anon — l'admin doit
+// redemander les données en tant qu'utilisateur connecté pour les voir.
 //
 // Le client Supabase est fourni par supabase.js (window.sb), chargé en
 // <script type="module"> sur les pages concernées.
@@ -28,9 +29,8 @@
     // Indentation de l'export JSON, alignée sur l'historique Git (4 espaces).
     const JSON_INDENT = 4;
 
-    // Collections déjà migrées vers Supabase. On y ajoutera 'grades'
-    // au fil de la bascule.
-    const SUPABASE_COLLECTIONS = new Set(['news', 'competitions', 'galerie']);
+    // Collections migrées vers Supabase (les 4 collections du CMS).
+    const SUPABASE_COLLECTIONS = new Set(['news', 'competitions', 'galerie', 'grades']);
 
     // Structure vide de la galerie (sécurité si la ligne est absente).
     const EMPTY_GALERIE = { sections: { club: [], competitions: [], entrainement: [], stages: [] } };
@@ -97,6 +97,32 @@
             if (error) throw error;
             return (data && data.data) || EMPTY_GALERIE;
         }
+        if (name === 'grades') {
+            // Tri par `position` (PAS par id) : grades.js n'a jamais trié les
+            // données, l'ordre affiché est l'ordre du tableau JSON d'origine
+            // (5,4,3,2,1 puis 101→105), pas un ordre numérique d'id.
+            const { data, error } = await sb()
+                .from('grades')
+                .select('id, type, grade, ceinture, couleur_hex, hidden, katas, kihon_ippon_kumite, sanbon_kumite, ohyo_kumite, age_minimum, temps_attente, licences')
+                .order('position', { ascending: true });
+            if (error) throw error;
+            const grades = (data || []).map(r => ({
+                id: r.id,
+                type: r.type,
+                grade: r.grade,
+                ceinture: r.ceinture,
+                couleurHex: r.couleur_hex,
+                hidden: r.hidden,
+                katas: r.katas || [],
+                kihonIpponKumite: r.kihon_ippon_kumite || [],
+                sanbonKumite: r.sanbon_kumite || [],
+                ohyoKumite: r.ohyo_kumite || [],
+                ageMinimum: r.age_minimum,
+                tempsAttente: r.temps_attente,
+                licences: r.licences
+            }));
+            return { grades };
+        }
         throw new Error(`Collection Supabase inconnue : ${name}`);
     }
 
@@ -128,6 +154,28 @@
             const { error } = await sb().from('galerie').upsert({ id: 1, data });
             if (error) throw error;
             return;
+        }
+        if (name === 'grades') {
+            // `position` est recalculée depuis l'ordre actuel du tableau
+            // (data.grades) : reproduit le comportement JSON où l'ordre
+            // affiché = l'ordre du fichier, sans avoir à toucher grades.js.
+            const rows = (data?.grades || []).map((g, index) => ({
+                id: g.id,
+                position: index,
+                type: g.type ?? 'kyu',
+                grade: g.grade ?? '',
+                ceinture: g.ceinture ?? '',
+                couleur_hex: g.couleurHex ?? '',
+                hidden: !!g.hidden,
+                katas: g.katas ?? [],
+                kihon_ippon_kumite: g.kihonIpponKumite ?? [],
+                sanbon_kumite: g.sanbonKumite ?? [],
+                ohyo_kumite: g.ohyoKumite ?? [],
+                age_minimum: g.ageMinimum ?? '',
+                temps_attente: g.tempsAttente ?? '',
+                licences: g.licences ?? ''
+            }));
+            return replaceSupabaseTable('grades', rows);
         }
         throw new Error(`Collection Supabase inconnue : ${name}`);
     }

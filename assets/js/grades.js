@@ -158,8 +158,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // ADMIN — Connexion
     // ============================================================
     // Mode admin : connexion + dashboard (logique factorisée dans admin.js).
+    // onUnlock re-fetch les données : la RLS cache les grades `hidden` à
+    // l'anon, donc le chargement initial (avant login) ne les contient pas.
+    // Une fois connecté (authenticated), on redemande la collection complète.
     Admin.init({
-        onUnlock: () => { resetForm(); renderAdminList(); },
+        onUnlock: () => {
+            resetForm();
+            Store.loadCollection('grades')
+                .then(data => {
+                    if (data && Array.isArray(data.grades)) gradesData = data;
+                    renderAdminList();
+                })
+                .catch(error => {
+                    console.error(error);
+                    renderAdminList();
+                });
+        },
         onCloseAdmin: renderPublic
     });
 
