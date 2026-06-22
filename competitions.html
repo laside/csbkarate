@@ -10,6 +10,7 @@
     <script src="./assets/js/tailwind.js"></script>
     <script src="./assets/js/main.js" defer></script>
     <script src="./assets/js/store.js" defer></script>
+    <script src="./assets/js/admin.js" defer></script>
 
     <!-- Vercel Web Analytics -->
     <script>
@@ -133,21 +134,11 @@
         document.addEventListener('DOMContentLoaded', () => {
             
             let compData = [];
-            const ADMIN_PASSWORD = "CSB";
             
             // DOM Elements
             const feed = document.getElementById('competitions-feed');
             
-            // Admin DOM
-            const btnOpenLogin = document.getElementById('btn-open-login');
-            const modalLogin = document.getElementById('modal-login');
-            const btnCloseLogin = document.getElementById('btn-close-login');
-            const btnLogin = document.getElementById('btn-login');
-            const inputPassword = document.getElementById('admin-password');
-            const loginError = document.getElementById('login-error');
-            
-            const modalAdmin = document.getElementById('modal-admin');
-            const btnCloseAdmin = document.getElementById('btn-close-admin');
+            // Admin DOM (login/modales gérés par admin.js)
             const adminList = document.getElementById('admin-comp-list');
             
             // Form DOM
@@ -400,39 +391,10 @@
             }
             setTimeout(observeFadeIn, 100);
 
-            // --- LOGIQUE ADMIN (Ouverture / Fermeture) ---
-            if(btnOpenLogin) {
-                btnOpenLogin.addEventListener('click', () => {
-                    modalLogin.classList.remove('hidden');
-                    setTimeout(() => modalLogin.classList.remove('opacity-0'), 10);
-                });
-            }
-
-            btnCloseLogin.addEventListener('click', () => {
-                modalLogin.classList.add('opacity-0');
-                setTimeout(() => modalLogin.classList.add('hidden'), 300);
-            });
-
-            btnLogin.addEventListener('click', () => {
-                if (inputPassword.value === ADMIN_PASSWORD) {
-                    inputPassword.value = '';
-                    loginError.classList.add('hidden');
-                    modalLogin.classList.add('opacity-0');
-                    setTimeout(() => {
-                        modalLogin.classList.add('hidden');
-                        modalAdmin.classList.remove('hidden');
-                        setTimeout(() => modalAdmin.classList.remove('opacity-0'), 10);
-                        renderAdminList();
-                    }, 300);
-                } else {
-                    loginError.classList.remove('hidden');
-                }
-            });
-
-            btnCloseAdmin.addEventListener('click', () => {
-                modalAdmin.classList.add('opacity-0');
-                setTimeout(() => modalAdmin.classList.add('hidden'), 300);
-                renderPublicFeed();
+            // --- LOGIQUE ADMIN (connexion + dashboard, factorisée dans admin.js) ---
+            Admin.init({
+                onUnlock: renderAdminList,
+                onCloseAdmin: renderPublicFeed
             });
 
             // --- RENDER LISTE ADMIN ---

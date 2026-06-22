@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // CONFIGURATION
     // ============================================================
-    const ADMIN_PASSWORD = "CSB";
     const BASE = "./assets/photos/galerie";
 
     // Correspondance clé de section -> nom réel du dossier sur le disque.
@@ -40,17 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnLbPrev = document.getElementById('lightbox-prev');
     const btnLbNext = document.getElementById('lightbox-next');
 
-    // Admin - connexion
-    const btnOpenLogin = document.getElementById('btn-open-login');
-    const modalLogin = document.getElementById('modal-login');
-    const btnCloseLogin = document.getElementById('btn-close-login');
-    const btnLogin = document.getElementById('btn-login');
-    const inputPassword = document.getElementById('admin-password');
-    const loginError = document.getElementById('login-error');
-
-    // Admin - dashboard
-    const modalAdmin = document.getElementById('modal-admin');
-    const btnCloseAdmin = document.getElementById('btn-close-admin');
+    // Admin - dashboard (login/modales gérés par admin.js)
     const btnExport = document.getElementById('btn-export');
 
     // Admin - gestion des photos
@@ -275,41 +264,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // ADMIN — Connexion
     // ============================================================
-    if (btnOpenLogin) {
-        btnOpenLogin.addEventListener('click', () => {
-            modalLogin.classList.remove('hidden');
-            setTimeout(() => modalLogin.classList.remove('opacity-0'), 10);
-        });
-    }
-    if (btnCloseLogin) {
-        btnCloseLogin.addEventListener('click', () => {
-            modalLogin.classList.add('opacity-0');
-            setTimeout(() => modalLogin.classList.add('hidden'), 300);
-        });
-    }
-    if (btnLogin) {
-        btnLogin.addEventListener('click', () => {
-            if (inputPassword.value === ADMIN_PASSWORD) {
-                inputPassword.value = '';
-                loginError.classList.add('hidden');
-                modalLogin.classList.add('hidden', 'opacity-0');
-                modalAdmin.classList.remove('hidden');
-                setTimeout(() => modalAdmin.classList.remove('opacity-0'), 10);
-                refreshAdmin();
-            } else {
-                loginError.classList.remove('hidden');
-            }
-        });
-    }
-    if (btnCloseAdmin) {
-        btnCloseAdmin.addEventListener('click', () => {
-            modalAdmin.classList.add('opacity-0');
-            setTimeout(() => modalAdmin.classList.add('hidden'), 300);
-            // Rafraîchit l'affichage public avec les éventuelles modifications.
-            renderTabs();
-            renderSection(activeSection);
-        });
-    }
+    // Mode admin : connexion + dashboard (logique factorisée dans admin.js).
+    Admin.init({
+        onUnlock: refreshAdmin,
+        onCloseAdmin: () => { renderTabs(); renderSection(activeSection); }
+    });
 
     // ============================================================
     // ADMIN — Gestion des photos

@@ -2,21 +2,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Variables globales
     let newsData = [];
-    const ADMIN_PASSWORD = "CSB"; // Mot de passe ultra simple pour le bureau
     
     // Elements du DOM - Mode Public
     const grid = document.getElementById('news-grid');
     
-    // Elements du DOM - Mode Admin
-    const btnOpenLogin = document.getElementById('btn-open-login');
-    const modalLogin = document.getElementById('modal-login');
-    const btnCloseLogin = document.getElementById('btn-close-login');
-    const btnLogin = document.getElementById('btn-login');
-    const inputPassword = document.getElementById('admin-password');
-    const loginError = document.getElementById('login-error');
-    
-    const modalAdmin = document.getElementById('modal-admin');
-    const btnCloseAdmin = document.getElementById('btn-close-admin');
+    // Elements du DOM - Mode Admin (login/modales gérés par admin.js)
     const adminNewsList = document.getElementById('admin-news-list');
     
     // Elements du Formulaire
@@ -76,39 +66,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
-    if(btnOpenLogin) {
-        btnOpenLogin.addEventListener('click', () => {
-            modalLogin.classList.remove('hidden');
-            setTimeout(() => modalLogin.classList.remove('opacity-0'), 10);
-        });
-    }
-
-    btnCloseLogin.addEventListener('click', () => {
-        modalLogin.classList.add('opacity-0');
-        setTimeout(() => modalLogin.classList.add('hidden'), 300);
-    });
-
-    btnLogin.addEventListener('click', () => {
-        if (inputPassword.value === ADMIN_PASSWORD) {
-            // Succès
-            inputPassword.value = '';
-            loginError.classList.add('hidden');
-            modalLogin.classList.add('hidden');
-            modalLogin.classList.add('opacity-0');
-            
-            // Ouvrir le dashboard
-            modalAdmin.classList.remove('hidden');
-            setTimeout(() => modalAdmin.classList.remove('opacity-0'), 10);
-            renderAdminList();
-        } else {
-            loginError.classList.remove('hidden');
-        }
-    });
-
-    btnCloseAdmin.addEventListener('click', () => {
-        modalAdmin.classList.add('opacity-0');
-        setTimeout(() => modalAdmin.classList.add('hidden'), 300);
-        renderPublicGrid(); // On rafraîchit l'affichage public en fermant
+    // Mode admin : connexion + dashboard (logique factorisée dans admin.js).
+    Admin.init({
+        onUnlock: renderAdminList,
+        onCloseAdmin: renderPublicGrid
     });
 
     function renderAdminList() {

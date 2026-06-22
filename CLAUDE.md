@@ -43,7 +43,9 @@ Code propre, moderne, léger, maintenable. Pédagogique en français.
 
 │   ├── main.js       ← injection header/footer, menu mobile, animations globales
 
-│   └── store.js      ← couche d'accès aux données (loadCollection/saveCollection), cf. section BDD
+│   ├── store.js      ← couche d'accès aux données (loadCollection/saveCollection), cf. section BDD
+
+│   └── admin.js      ← mode admin factorisé (login + modales), cf. section BDD
 
 ├── photos/           ← images des actualités et compétitions
 
@@ -131,7 +133,7 @@ Détail et priorisation dans l'historique de conversation ; points saillants à 
 - **Pas d'échappement HTML** dans les rendus CMS (`news.js`, `competitions.html`, `galerie.js`, carrousel `index.html`) : contenu injecté via `innerHTML` sans `esc()`. `grades.js` fait référence (fonction `esc`). Risque XSS faible aujourd'hui (admins de confiance), à corriger avant d'ouvrir l'édition à une BDD.
 - **`logo-wadoryu.png` ≈ 1 Mo** chargé sur chaque page (header + footer) → compresser/redimensionner.
 - **Tailwind via CDN** (`cdn.tailwindcss.com`) : avertissement console + perf en prod. Candidat à un build CSS *si* un jour on accepte une étape de build (sinon laisser tel quel, cf. contraintes).
-- **Logique CMS dupliquée** sur 4 pages (login/modale/export quasi identiques). L'**accès aux données** (lecture JSON + export) est désormais factorisé dans `assets/js/store.js` (étape 0 BDD faite — cf. plus bas). Reste à factoriser le **login/modale admin** (toujours dupliqué sur les 4 pages).
+- ~~**Logique CMS dupliquée** sur 4 pages~~ ✅ **Factorisée** : l'**accès aux données** (lecture JSON + export) est dans `assets/js/store.js`, et le **mode admin** (login + modales) dans `assets/js/admin.js` (`Admin.init({ onUnlock, onCloseAdmin })`). Chaque page ne garde que son rendu et son CRUD. Mot de passe `CSB` centralisé dans `admin.js`.
 - Typo corrigée : « Self-Défense Féminine Féminine » (index.html).
 
 ## Ce qu'il ne faut PAS faire
