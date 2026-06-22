@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/_/g, ' ')
             .replace(/\s+/g, ' ')
             .trim()
-            .replace(/\bself defense\b/i, 'Self-Défense')
+            .replace(/\bself defense\b/i, 'Self-Défense Féminine')
             .replace(/\b\w/g, c => c.toUpperCase());
     }
 

@@ -43,6 +43,10 @@ Code propre, moderne, léger, maintenable. Pédagogique en français.
 
 └── docs/             ← PDFs et documents
 
+## Structure galerie.json
+- sections : club / competitions / entrainement / stages
+- stages : tableau d'objets { nom, dossier, photos[] }
+
 ## Charte graphique (RESPECT STRICT)
 
 **Couleurs (utiliser ces noms Tailwind définis dans `tailwind.js`) :**
@@ -101,13 +105,13 @@ Présent sur `news.html` et `competitions.html`.
 ## État du projet
 
 **Pages terminées :** `index.html`, `wadoryu.html`, `news.html`, `club.html`, `competitions.html`, `mentions-legales.html`
+- galerie.html ✅ — données dans data/galerie.json, admin protégé mot de passe CSB
 
 **Pages à construire :**
 - `grades.html` → programmes techniques par grade (ceintures)
-- `galerie.html` → galerie photos du club
 
 **TODO restants :**
-- [ ] Contenu de `grades.html` et `galerie.html`
+- [ ] Contenu de `grades.html` 
 - [ ] Insérer le lien HelloAsso définitif dans la section "Informations Pratiques" de l'accueil
 - [ ] Remplacer les `[À REMPLIR]` dans `mentions-legales.html` (président, email)
 
