@@ -158,7 +158,8 @@ Objectif : remplacer le CMS « Git-based » (export JSON manuel → commit) par 
 ### État de la bascule
 - ✅ **`news`** — migré (table Postgres + RLS, Auth, lecture/écriture depuis le site). Pilote validé.
 - ✅ **`competitions`** — migré (même patron que `news`, tableau plat).
-- ⬜ **`galerie`**, **`grades`** — encore sur JSON, à migrer.
+- ✅ **`galerie`** — migré en **document JSONB** (table singleton 1 ligne, `id = 1`), car structure imbriquée (sections + stages). Voir note Storage ci-dessous : seule la **structure** est en base, les **fichiers images** restent manuels.
+- ⬜ **`grades`** — encore sur JSON, à migrer (tableau plat, mais champ `hidden` à filtrer côté public).
 
 ### Comment c'est branché
 - **`assets/js/supabase.js`** (module ESM, `window.sb`) : crée le client. URL + clé `anon`/`publishable` **publiques** (sûres : sécurité par la RLS). ⚠️ Jamais la clé `service_role` ici. Chargé via `<script type="module">` sur les pages utilisant Store/Admin.

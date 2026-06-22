@@ -28,9 +28,12 @@
     // Indentation de l'export JSON, alignée sur l'historique Git (4 espaces).
     const JSON_INDENT = 4;
 
-    // Collections déjà migrées vers Supabase. On y ajoutera 'galerie' et
-    // 'grades' au fil de la bascule.
-    const SUPABASE_COLLECTIONS = new Set(['news', 'competitions']);
+    // Collections déjà migrées vers Supabase. On y ajoutera 'grades'
+    // au fil de la bascule.
+    const SUPABASE_COLLECTIONS = new Set(['news', 'competitions', 'galerie']);
+
+    // Structure vide de la galerie (sécurité si la ligne est absente).
+    const EMPTY_GALERIE = { sections: { club: [], competitions: [], entrainement: [], stages: [] } };
 
     // Récupère le client Supabase ou échoue clairement s'il manque.
     function sb() {
@@ -84,6 +87,16 @@
             if (error) throw error;
             return data || [];
         }
+        if (name === 'galerie') {
+            // Document JSONB unique (ligne id = 1) : on renvoie l'objet tel quel.
+            const { data, error } = await sb()
+                .from('galerie')
+                .select('data')
+                .eq('id', 1)
+                .maybeSingle();
+            if (error) throw error;
+            return (data && data.data) || EMPTY_GALERIE;
+        }
         throw new Error(`Collection Supabase inconnue : ${name}`);
     }
 
@@ -109,6 +122,12 @@
                 results: c.results ?? ''
             }));
             return replaceSupabaseTable('competitions', rows);
+        }
+        if (name === 'galerie') {
+            // Document JSONB unique : on écrase la ligne id = 1 avec tout l'objet.
+            const { error } = await sb().from('galerie').upsert({ id: 1, data });
+            if (error) throw error;
+            return;
         }
         throw new Error(`Collection Supabase inconnue : ${name}`);
     }
