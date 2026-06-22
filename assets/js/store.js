@@ -1,42 +1,189 @@
 // =============================================================
-// COUCHE D'ACCÈS AUX DONNÉES — store.js  (Étape 0 : préparation BDD)
+// COUCHE D'ACCÈS AUX DONNÉES — store.js
 // =============================================================
-// Objectif : centraliser la lecture et l'écriture des données pour
-// DÉCOUPLER les pages de la SOURCE. Aucune page ne sait plus d'où
-// viennent les données : elle demande une « collection » par son nom.
+// Centralise lecture/écriture des données pour DÉCOUPLER les pages de la
+// SOURCE. Une page demande une « collection » par son nom, sans savoir d'où
+// viennent les données :
 //
 //   Store.loadCollection(name)        -> Promise<données>
 //   Store.saveCollection(name, data)  -> Promise<void>
 //
-// AUJOURD'HUI (CMS « Git-based », site 100 % statique) :
-//   - load : fetch ./data/<name>.json
-//   - save : génère et télécharge <name>.json (l'admin le commit ensuite)
+// BASCULE TERMINÉE (Supabase) : les 4 collections sont branchées sur la
+// base (`SUPABASE_COLLECTIONS`). Le contrat load/saveCollection(name, data)
+// ne change pas selon la source : les pages n'ont pas à savoir d'où
+// viennent les données. Seule exception : grades.js re-fetch après login
+// (onUnlock) car la RLS cache les grades `hidden` à l'anon — l'admin doit
+// redemander les données en tant qu'utilisateur connecté pour les voir.
 //
-// DEMAIN (bascule Supabase, cf. CLAUDE.md) : il suffira de remplacer
-// le CORPS de ces deux fonctions par des appels au SDK Supabase.
-// Les pages (news.js, galerie.js, grades.js, competitions.html, le
-// carrousel de index.html) n'auront, elles, RIEN à changer.
+// Le client Supabase est fourni par supabase.js (window.sb), chargé en
+// <script type="module"> sur les pages concernées.
 //
-// Chargé en vanilla JS via <script defer> : pas de bundler, pas de
-// module ES. La fonction expose un objet global `Store`.
+// Chargé en vanilla JS via <script defer> : expose un objet global `Store`.
 // =============================================================
 
 (function (global) {
     'use strict';
 
-    // Dossier des fichiers JSON (= source de données actuelle).
+    // Dossier des fichiers JSON (collections pas encore migrées).
     const DATA_DIR = './data';
-
-    // Indentation de l'export, alignée sur l'historique Git (4 espaces).
+    // Indentation de l'export JSON, alignée sur l'historique Git (4 espaces).
     const JSON_INDENT = 4;
 
-    /**
-     * Charge une collection de données par son nom.
-     * @param {string} name  ex. "news", "competitions", "galerie", "grades"
-     * @returns {Promise<any>}  données parsées (tableau OU objet selon la collection)
-     * @throws  en cas d'erreur réseau — le code appelant conserve sa gestion de secours
-     */
-    async function loadCollection(name) {
+    // Collections migrées vers Supabase (les 4 collections du CMS).
+    const SUPABASE_COLLECTIONS = new Set(['news', 'competitions', 'galerie', 'grades']);
+
+    // Structure vide de la galerie (sécurité si la ligne est absente).
+    const EMPTY_GALERIE = { sections: { club: [], competitions: [], entrainement: [], stages: [] } };
+
+    // Récupère le client Supabase ou échoue clairement s'il manque.
+    function sb() {
+        if (!global.sb) {
+            throw new Error('Client Supabase non initialisé : supabase.js (type="module") est-il chargé sur cette page ?');
+        }
+        return global.sb;
+    }
+
+    // Remplace entièrement le contenu d'une table par `rows` (clé = id) :
+    // upsert des lignes présentes, puis suppression de tout le reste.
+    // Mutualise le « save = remplace toute la collection » commun aux
+    // tableaux plats (news, competitions...). Les collections à structure
+    // imbriquée (ex. galerie) ne passeront pas par ce helper.
+    async function replaceSupabaseTable(table, rows) {
+        if (rows.length) {
+            const { error } = await sb().from(table).upsert(rows);
+            if (error) throw error;
+        }
+
+        const ids = rows.map(r => r.id);
+        const del = sb().from(table).delete();
+        const query = ids.length
+            ? del.not('id', 'in', `(${ids.join(',')})`) // tout sauf les ids conservés
+            : del.not('id', 'is', null);                  // tableau vide -> on vide la table
+        const { error } = await query;
+        if (error) throw error;
+    }
+
+    // =========================================================
+    // SOURCE SUPABASE (collections migrées)
+    // =========================================================
+    async function loadFromSupabase(name) {
+        if (name === 'news') {
+            // Tri par id décroissant : les nouvelles actus (id = Date.now())
+            // remontent en tête, comme le faisait l'unshift de news.js.
+            const { data, error } = await sb()
+                .from('news')
+                .select('id, date, category, title, excerpt, image')
+                .order('id', { ascending: false });
+            if (error) throw error;
+            return data || [];
+        }
+        if (name === 'competitions') {
+            // L'ordre exact n'a pas d'importance : competitions.html re-trie
+            // côté client par date réelle (getSortableDate). id desc par défaut.
+            const { data, error } = await sb()
+                .from('competitions')
+                .select('id, date, title, location, image, results')
+                .order('id', { ascending: false });
+            if (error) throw error;
+            return data || [];
+        }
+        if (name === 'galerie') {
+            // Document JSONB unique (ligne id = 1) : on renvoie l'objet tel quel.
+            const { data, error } = await sb()
+                .from('galerie')
+                .select('data')
+                .eq('id', 1)
+                .maybeSingle();
+            if (error) throw error;
+            return (data && data.data) || EMPTY_GALERIE;
+        }
+        if (name === 'grades') {
+            // Tri par `position` (PAS par id) : grades.js n'a jamais trié les
+            // données, l'ordre affiché est l'ordre du tableau JSON d'origine
+            // (5,4,3,2,1 puis 101→105), pas un ordre numérique d'id.
+            const { data, error } = await sb()
+                .from('grades')
+                .select('id, type, grade, ceinture, couleur_hex, hidden, katas, kihon_ippon_kumite, sanbon_kumite, ohyo_kumite, age_minimum, temps_attente, licences')
+                .order('position', { ascending: true });
+            if (error) throw error;
+            const grades = (data || []).map(r => ({
+                id: r.id,
+                type: r.type,
+                grade: r.grade,
+                ceinture: r.ceinture,
+                couleurHex: r.couleur_hex,
+                hidden: r.hidden,
+                katas: r.katas || [],
+                kihonIpponKumite: r.kihon_ippon_kumite || [],
+                sanbonKumite: r.sanbon_kumite || [],
+                ohyoKumite: r.ohyo_kumite || [],
+                ageMinimum: r.age_minimum,
+                tempsAttente: r.temps_attente,
+                licences: r.licences
+            }));
+            return { grades };
+        }
+        throw new Error(`Collection Supabase inconnue : ${name}`);
+    }
+
+    async function saveToSupabase(name, data) {
+        if (name === 'news') {
+            const rows = (data || []).map(n => ({
+                id: n.id,
+                date: n.date ?? '',
+                category: n.category ?? '',
+                title: n.title ?? '',
+                excerpt: n.excerpt ?? '',
+                image: n.image ?? ''
+            }));
+            return replaceSupabaseTable('news', rows);
+        }
+        if (name === 'competitions') {
+            const rows = (data || []).map(c => ({
+                id: c.id,
+                date: c.date ?? '',
+                title: c.title ?? '',
+                location: c.location ?? '',
+                image: c.image ?? '',
+                results: c.results ?? ''
+            }));
+            return replaceSupabaseTable('competitions', rows);
+        }
+        if (name === 'galerie') {
+            // Document JSONB unique : on écrase la ligne id = 1 avec tout l'objet.
+            const { error } = await sb().from('galerie').upsert({ id: 1, data });
+            if (error) throw error;
+            return;
+        }
+        if (name === 'grades') {
+            // `position` est recalculée depuis l'ordre actuel du tableau
+            // (data.grades) : reproduit le comportement JSON où l'ordre
+            // affiché = l'ordre du fichier, sans avoir à toucher grades.js.
+            const rows = (data?.grades || []).map((g, index) => ({
+                id: g.id,
+                position: index,
+                type: g.type ?? 'kyu',
+                grade: g.grade ?? '',
+                ceinture: g.ceinture ?? '',
+                couleur_hex: g.couleurHex ?? '',
+                hidden: !!g.hidden,
+                katas: g.katas ?? [],
+                kihon_ippon_kumite: g.kihonIpponKumite ?? [],
+                sanbon_kumite: g.sanbonKumite ?? [],
+                ohyo_kumite: g.ohyoKumite ?? [],
+                age_minimum: g.ageMinimum ?? '',
+                temps_attente: g.tempsAttente ?? '',
+                licences: g.licences ?? ''
+            }));
+            return replaceSupabaseTable('grades', rows);
+        }
+        throw new Error(`Collection Supabase inconnue : ${name}`);
+    }
+
+    // =========================================================
+    // SOURCE JSON (collections pas encore migrées)
+    // =========================================================
+    async function loadFromJson(name) {
         const response = await fetch(`${DATA_DIR}/${name}.json`);
         if (!response.ok) {
             throw new Error(`Impossible de charger ${name}.json (HTTP ${response.status})`);
@@ -44,25 +191,11 @@
         return response.json();
     }
 
-    /**
-     * Enregistre une collection.
-     * Aujourd'hui : déclenche le téléchargement de <name>.json (export manuel,
-     * que l'admin dépose ensuite sur GitHub).
-     * @param {string} name
-     * @param {any} data
-     * @param {{ filename?: string, notify?: boolean }} [options]
-     *        filename : nom de fichier forcé (défaut : <name>.json)
-     *        notify   : afficher l'alerte de confirmation (défaut : true)
-     * @returns {Promise<void>}
-     */
-    function saveCollection(name, data, options = {}) {
+    function saveToJson(name, data, options = {}) {
         const filename = options.filename || `${name}.json`;
-        const notify = options.notify !== false; // alerte affichée par défaut
+        const notify = options.notify !== false;
 
-        // Formatage lisible, identique à l'export historique de chaque page.
         const json = JSON.stringify(data, null, JSON_INDENT);
-
-        // Création d'un Blob en mémoire + lien invisible pour forcer le téléchargement.
         const blob = new Blob([json], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -76,9 +209,33 @@
         if (notify) {
             alert(`Fichier ${filename} téléchargé !\nRemplacez l'ancien fichier dans data/ sur votre dépôt GitHub.`);
         }
-
-        // Renvoie une promesse pour rester compatible avec la future version async (Supabase).
         return Promise.resolve();
+    }
+
+    // =========================================================
+    // API PUBLIQUE (routage selon la collection)
+    // =========================================================
+    async function loadCollection(name) {
+        return SUPABASE_COLLECTIONS.has(name)
+            ? loadFromSupabase(name)
+            : loadFromJson(name);
+    }
+
+    async function saveCollection(name, data, options = {}) {
+        if (SUPABASE_COLLECTIONS.has(name)) {
+            // L'appelant (ex. news.js) ne gère pas le retour : on assure
+            // ici le retour utilisateur (succès / échec) sans toucher aux pages.
+            try {
+                await saveToSupabase(name, data);
+                if (options.notify !== false) alert('Modifications enregistrées en ligne ✅');
+            } catch (err) {
+                console.error(err);
+                alert('Échec de l\'enregistrement en ligne.\n' + (err.message || err) +
+                    '\n\nÊtes-vous bien connecté en mode admin ?');
+            }
+            return;
+        }
+        return saveToJson(name, data, options);
     }
 
     // Exposition globale (pas de bundler : on attache l'API à window).
