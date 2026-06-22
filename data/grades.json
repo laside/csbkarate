@@ -1,0 +1,223 @@
+{
+    "grades": [
+        {
+            "id": 5,
+            "type": "kyu",
+            "grade": "5ème Kyu",
+            "ceinture": "Jaune",
+            "couleurHex": "#F2C94C",
+            "hidden": false,
+            "katas": [
+                "Pinan Nidan"
+            ],
+            "kihonIpponKumite": [
+                "Jodan Uke"
+            ],
+            "sanbonKumite": [
+                "Chudan Uke : Ipponme (n°1), Nihonme (n°2)"
+            ],
+            "ohyoKumite": []
+        },
+        {
+            "id": 4,
+            "type": "kyu",
+            "grade": "4ème Kyu",
+            "ceinture": "Orange",
+            "couleurHex": "#E8833A",
+            "hidden": false,
+            "katas": [
+                "Pinan Nidan",
+                "Pinan Shodan"
+            ],
+            "kihonIpponKumite": [
+                "Jodan Uke",
+                "Chudan Uke"
+            ],
+            "sanbonKumite": [
+                "Chudan Uke : n°1, n°2",
+                "Jodan Uke : Ipponme (n°1), Nihonme (n°2)"
+            ],
+            "ohyoKumite": []
+        },
+        {
+            "id": 3,
+            "type": "kyu",
+            "grade": "3ème Kyu",
+            "ceinture": "Verte",
+            "couleurHex": "#2E9E5B",
+            "hidden": false,
+            "katas": [
+                "Pinan Nidan",
+                "Pinan Shodan",
+                "Pinan Sandan"
+            ],
+            "kihonIpponKumite": [
+                "Jodan Uke",
+                "Chudan Uke",
+                "Maegeri Uke"
+            ],
+            "sanbonKumite": [
+                "Chudan Uke : n°1, n°2",
+                "Jodan Uke : Sanbonme (n°3), Yonhonme (n°4)",
+                "Maegeri Uke : Ipponme (n°1), Nihonme (n°2)"
+            ],
+            "ohyoKumite": [
+                "Ipponme (n°1)",
+                "Nihonme (n°2)",
+                "Sanbonme (n°3)"
+            ]
+        },
+        {
+            "id": 2,
+            "type": "kyu",
+            "grade": "2ème Kyu",
+            "ceinture": "Bleue",
+            "couleurHex": "#2F73C9",
+            "hidden": false,
+            "katas": [
+                "Pinan Nidan",
+                "Pinan Shodan",
+                "Pinan Sandan",
+                "Pinan Yodan"
+            ],
+            "kihonIpponKumite": [
+                "Jodan Uke",
+                "Chudan Uke",
+                "Maegeri Uke",
+                "Mawashigeri Uke"
+            ],
+            "sanbonKumite": [
+                "Chudan Uke : n°1, n°2",
+                "Jodan Uke : n°1, n°3",
+                "Maegeri Uke : Sanbonme (n°3), Yonhonme (n°4)"
+            ],
+            "ohyoKumite": [
+                "Yonhonme (n°4)",
+                "Gohonme (n°5)"
+            ]
+        },
+        {
+            "id": 1,
+            "type": "kyu",
+            "grade": "1er Kyu",
+            "ceinture": "Marron",
+            "couleurHex": "#6F4528",
+            "hidden": false,
+            "katas": [
+                "Pinan Nidan",
+                "Pinan Shodan",
+                "Pinan Sandan",
+                "Pinan Yodan",
+                "Pinan Godan"
+            ],
+            "kihonIpponKumite": [
+                "Jodan Uke",
+                "Chudan Uke",
+                "Maegeri Uke",
+                "Mawashigeri Uke",
+                "Sokutogeri Chudan Uke"
+            ],
+            "sanbonKumite": [
+                "Chudan Uke : n°1, n°2",
+                "Jodan Uke : n°2, n°4",
+                "Maegeri Uke : Gohonme (n°5), Ropponme (n°6)"
+            ],
+            "ohyoKumite": [
+                "Ropponme (n°6)",
+                "Nanahonme (n°7)",
+                "Napponme (n°8)"
+            ]
+        },
+        {
+            "id": 101,
+            "type": "dan",
+            "grade": "1er Dan",
+            "ceinture": "Noire",
+            "couleurHex": "#0D1B2A",
+            "hidden": false,
+            "ageMinimum": "14 ans",
+            "tempsAttente": "Ceinture marron (1er Kyu) validée",
+            "licences": "3 licences d'entraînement",
+            "katas": [
+                "Pinan Nidan",
+                "Pinan Shodan",
+                "Pinan Sandan",
+                "Pinan Yodan",
+                "Pinan Godan",
+                "Naïfanchi Shodan"
+            ]
+        },
+        {
+            "id": 102,
+            "type": "dan",
+            "grade": "2ème Dan",
+            "ceinture": "Noire",
+            "couleurHex": "#0D1B2A",
+            "hidden": false,
+            "ageMinimum": "17 ans",
+            "tempsAttente": "2 ans d'intervalle depuis le 1er Dan",
+            "licences": "2 licences post-1er Dan",
+            "katas": [
+                "Bassai",
+                "Kushanku",
+                "Seishan",
+                "Jion",
+                "Wanshu"
+            ]
+        },
+        {
+            "id": 103,
+            "type": "dan",
+            "grade": "3ème Dan",
+            "ceinture": "Noire",
+            "couleurHex": "#0D1B2A",
+            "hidden": false,
+            "ageMinimum": "21 ans",
+            "tempsAttente": "3 ans d'intervalle depuis le 2ème Dan",
+            "licences": "3 licences post-2ème Dan",
+            "katas": [
+                "Kushanku",
+                "Chinto",
+                "Niseishi",
+                "Jitte",
+                "Rohai"
+            ]
+        },
+        {
+            "id": 104,
+            "type": "dan",
+            "grade": "4ème Dan",
+            "ceinture": "Noire",
+            "couleurHex": "#0D1B2A",
+            "hidden": false,
+            "ageMinimum": "25 ans",
+            "tempsAttente": "4 ans d'intervalle depuis le 3ème Dan",
+            "licences": "4 licences post-3ème Dan",
+            "katas": [
+                "Kushanku",
+                "Seishan",
+                "Chinto",
+                "Niseishi",
+                "Jitte"
+            ]
+        },
+        {
+            "id": 105,
+            "type": "dan",
+            "grade": "5ème Dan",
+            "ceinture": "Noire",
+            "couleurHex": "#0D1B2A",
+            "hidden": false,
+            "ageMinimum": "30 ans",
+            "tempsAttente": "5 ans d'intervalle depuis le 4ème Dan",
+            "licences": "5 licences post-4ème Dan",
+            "katas": [
+                "Jion",
+                "Rohai",
+                "Bassai",
+                "Seishan",
+                "Naihanchi"
+            ]
+        }
+    ]
+}

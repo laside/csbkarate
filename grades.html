@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grades | CSB Karaté</title>
+    <title>Passage de Grades | CSB Karaté</title>
+    <meta name="description" content="Programme technique officiel des grades Wadō-Ryū (FFK) : katas, kihon et kumite du 5ème Kyu au 5ème Dan, conditions de passage et critères de notation.">
+
     <link rel="stylesheet" href="./assets/css/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="./assets/js/tailwind.js"></script>
     <script src="./assets/js/main.js" defer></script>
+    <script src="./assets/js/grades.js" defer></script>
 
     <!-- Vercel Web Analytics -->
     <script>
@@ -16,15 +19,287 @@
     <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body class="bg-csb-washi text-csb-encre font-sans antialiased min-h-screen flex flex-col">
+
     <div id="header-placeholder"></div>
 
-    <main class="flex-grow flex items-center justify-center py-32 px-6">
-        <div class="bento-card max-w-2xl w-full text-center border-t-4 border-t-csb-corail">
-            <span class="text-6xl mb-6 block">⛩️</span>
-            <h1 class="font-serif text-4xl md:text-5xl text-csb-encre mb-4">Passage de Grades</h1>
-            <p class="font-condensed uppercase tracking-widest text-csb-corail font-bold mb-8">Page en construction</p>
-            <p class="text-gray-600 mb-10">Les programmes techniques (Kihon, Kata) pour chaque ceinture seront bientôt disponibles.</p>
-            <a href="./index.html" class="inline-block bg-csb-encre text-white px-8 py-3 rounded-full font-condensed uppercase tracking-wider hover:bg-opacity-90 transition">Retour au Dojo</a>
+    <main class="flex-grow pt-20">
+
+        <!-- ============================================================= -->
+        <!-- HERO                                                          -->
+        <!-- ============================================================= -->
+        <section class="relative bg-csb-dojo py-24 md:py-28 border-b-4 border-csb-corail text-white overflow-hidden">
+            <!-- Idéogramme « Dan » (段, échelon) en filigrane -->
+            <span aria-hidden="true" class="pointer-events-none select-none absolute -right-6 top-1/2 -translate-y-1/2 font-serif text-[16rem] md:text-[22rem] leading-none text-white/5">段</span>
+            <div class="relative max-w-7xl mx-auto px-6">
+                <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm mb-4 block">Programme technique officiel · FFK</span>
+                <h1 class="font-serif text-5xl md:text-7xl mb-6 leading-tight">Le Passage<br>des Grades.</h1>
+                <p class="text-xl text-gray-300 max-w-2xl">De la ceinture blanche au grade de <strong class="text-white">Dan</strong>, chaque échelon valide des postures, des katas et des formes de travail à deux de plus en plus dynamiques. Voici le chemin technique du karatéka en <strong class="text-white">Wadō-Ryū</strong>.</p>
+                <div class="flex flex-wrap gap-3 mt-8 font-condensed uppercase tracking-wider text-xs">
+                    <span class="px-4 py-1.5 rounded-full bg-white/10 border border-white/20">5ème → 1er Kyu</span>
+                    <span class="px-4 py-1.5 rounded-full bg-white/10 border border-white/20">1er → 5ème Dan</span>
+                    <span class="px-4 py-1.5 rounded-full bg-csb-corail/90">Réglementation CSDGE</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="max-w-7xl mx-auto px-6 py-20 space-y-24">
+
+            <!-- ========================================================= -->
+            <!-- 01 · LES 5 CONCEPTS DU WADŌ (statique)                    -->
+            <!-- ========================================================= -->
+            <section id="concepts" class="scroll-mt-28">
+                <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm">01 · L'esprit de l'école</span>
+                <h2 class="font-serif text-4xl text-csb-encre mt-2 mb-4 border-b border-csb-tatami pb-4">Les 5 Concepts de Gestion de l'Attaque</h2>
+                <p class="text-lg text-gray-700 leading-relaxed mb-8 max-w-3xl">L'efficacité martiale du Wadō-Ryū ne repose pas sur la force opposée à la force, mais sur cinq principes qui irriguent chaque grade — de la première parade au combat libre.</p>
+                <div class="bento-grid">
+                    <div class="bento-card bg-white border-b-4 border-csb-dojo">
+                        <h3 class="font-condensed uppercase tracking-wider text-lg text-csb-encre mb-2">Nagasu</h3>
+                        <p class="text-sm text-gray-600">L'aspiration de la force d'attaque par le retrait millimétré du corps hors de la ligne de frappe.</p>
+                    </div>
+                    <div class="bento-card bg-white border-b-4 border-csb-corail">
+                        <h3 class="font-condensed uppercase tracking-wider text-lg text-csb-encre mb-2">Inasu</h3>
+                        <p class="text-sm text-gray-600">La déviation de l'attaque par une rotation fluide et rapide du tronc et des hanches, sans opposition directe.</p>
+                    </div>
+                    <div class="bento-card bg-white border-b-4 border-csb-dojo">
+                        <h3 class="font-condensed uppercase tracking-wider text-lg text-csb-encre mb-2">Kawasu</h3>
+                        <p class="text-sm text-gray-600">L'esquive par un déplacement tridimensionnel hors de l'axe offensif, rendant l'attaque stérile.</p>
+                    </div>
+                    <div class="bento-card bg-white border-b-4 border-csb-corail">
+                        <h3 class="font-condensed uppercase tracking-wider text-lg text-csb-encre mb-2">Noru</h3>
+                        <p class="text-sm text-gray-600">L'accompagnement intime du mouvement adverse, liant défense et contre-attaque en une seule impulsion.</p>
+                    </div>
+                    <div class="bento-card bg-white border-b-4 border-csb-dojo">
+                        <h3 class="font-condensed uppercase tracking-wider text-lg text-csb-encre mb-2">Toru</h3>
+                        <p class="text-sm text-gray-600">Le contrôle physique direct de l'adversaire par des saisies, des luxations ou des projections.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- 02 · PROGRESSION DES CEINTURES — GRADES KYU (CMS)         -->
+            <!-- ========================================================= -->
+            <section id="kyu" class="scroll-mt-28 relative">
+                <!-- Bouton Admin discret -->
+                <button id="btn-open-login" class="absolute top-0 right-0 bg-gray-200 text-gray-500 hover:bg-csb-dojo hover:text-white px-3 py-1 rounded text-xs font-bold transition">Admin</button>
+
+                <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm">02 · Ceintures de couleur</span>
+                <h2 class="font-serif text-4xl text-csb-encre mt-2 mb-4 border-b border-csb-tatami pb-4">La Progression des Grades Kyu</h2>
+                <p class="text-lg text-gray-700 leading-relaxed mb-8 max-w-3xl">Du 5ème au 1er Kyu, le programme intègre progressivement les katas fondamentaux (les <em>Pinan</em>), le travail conventionnel (<em>Kihon Ippon Kumite</em>), les combats sur trois pas (<em>Sanbon Kumite</em>) et les enchaînements dynamiques d'application (<em>Ohyo Kumite</em>).</p>
+
+                <!-- Cartes injectées par grades.js -->
+                <div class="bento-grid" id="kyu-grid"></div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- 03 · GRADES DAN (CMS)                                     -->
+            <!-- ========================================================= -->
+            <section id="dan" class="scroll-mt-28">
+                <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm">03 · Ceintures noires</span>
+                <h2 class="font-serif text-4xl text-csb-encre mt-2 mb-4 border-b border-csb-tatami pb-4">Les Grades Dan</h2>
+                <p class="text-lg text-gray-700 leading-relaxed mb-8 max-w-3xl">Au-delà du 1er Kyu, la délivrance des grades relève exclusivement de la Commission Spécialisée des Dans et Grades Équivalents (CSDGE) de la FFK. Chaque passage exige des conditions strictes d'âge, de temps de pratique et d'historique de licences.</p>
+
+                <!-- Cartes injectées par grades.js -->
+                <div class="bento-grid" id="dan-grid"></div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- 04 · STRUCTURE DE L'EXAMEN DAN — 6 UV (statique)          -->
+            <!-- ========================================================= -->
+            <section id="examen" class="scroll-mt-28">
+                <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm">04 · Voie traditionnelle</span>
+                <h2 class="font-serif text-4xl text-csb-encre mt-2 mb-4 border-b border-csb-tatami pb-4">Les 6 Épreuves de l'Examen Dan</h2>
+                <p class="text-lg text-gray-700 leading-relaxed mb-8 max-w-3xl">Du 1er au 3ème Dan, l'examen se déroule à huis clos devant un jury de trois juges. Le candidat valide six Unités de Valeur (UV), chacune notée sur 20 points : la moyenne de <strong>10/20</strong> (soit <strong>60/120</strong>) est indispensable à l'obtention du grade.</p>
+                <div class="bento-grid">
+                    <div class="bento-card bg-white">
+                        <span class="font-condensed text-csb-corail font-bold text-3xl">01</span>
+                        <h3 class="font-condensed uppercase tracking-wider text-lg text-csb-encre mt-1 mb-2">Kihon</h3>
+                        <p class="text-sm text-gray-600">Test technique en trois parties : déplacements aller-retour sur trois pas, enchaînements multidirectionnels ou avec sursauts, et travail de précision sur cibles.</p>
+                    </div>
+                    <div class="bento-card bg-white">
+                        <span class="font-condensed text-csb-corail font-bold text-3xl">02</span>
+                        <h3 class="font-condensed uppercase tracking-wider text-lg text-csb-encre mt-1 mb-2">Kata</h3>
+                        <p class="text-sm text-gray-600">Exécution individuelle de deux katas issus de la liste officielle du Dan présenté.</p>
+                    </div>
+                    <div class="bento-card bg-white">
+                        <span class="font-condensed text-csb-corail font-bold text-3xl">03</span>
+                        <h3 class="font-condensed uppercase tracking-wider text-lg text-csb-encre mt-1 mb-2">Bunkai</h3>
+                        <p class="text-sm text-gray-600">Application des séquences des katas de la liste officielle, démontrée avec un partenaire.</p>
+                    </div>
+                    <div class="bento-card bg-white">
+                        <span class="font-condensed text-csb-corail font-bold text-3xl">04</span>
+                        <h3 class="font-condensed uppercase tracking-wider text-lg text-csb-encre mt-1 mb-2">Kihon Ippon Kumite</h3>
+                        <p class="text-sm text-gray-600">Enchaînement d'assauts d'école codifiés, basés sur une attaque unique et une contre-attaque libre et précise.</p>
+                    </div>
+                    <div class="bento-card bg-white">
+                        <span class="font-condensed text-csb-corail font-bold text-3xl">05</span>
+                        <h3 class="font-condensed uppercase tracking-wider text-lg text-csb-encre mt-1 mb-2">Jiyu Ippon Kumite</h3>
+                        <p class="text-sm text-gray-600">Combat semi-libre fondé sur une seule attaque dynamique annoncée au préalable.</p>
+                    </div>
+                    <div class="bento-card bg-white">
+                        <span class="font-condensed text-csb-corail font-bold text-3xl">06</span>
+                        <h3 class="font-condensed uppercase tracking-wider text-lg text-csb-encre mt-1 mb-2">Ju Kumite (Randori)</h3>
+                        <p class="text-sm text-gray-600">Assaut souple de deux minutes maximum, évaluant la fluidité, le contrôle technique de l'impact et l'aisance dans l'esquive.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- 05 · GRILLES DE NOTATION & BARÈMES (statique, tables)     -->
+            <!-- ========================================================= -->
+            <section id="notation" class="scroll-mt-28">
+                <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm">05 · Barèmes officiels</span>
+                <h2 class="font-serif text-4xl text-csb-encre mt-2 mb-4 border-b border-csb-tatami pb-4">Les Grilles de Notation</h2>
+                <p class="text-lg text-gray-700 leading-relaxed mb-10 max-w-3xl">Pour garantir l'équité des examens, les jurys s'appuient sur des critères de notation rigoureux, articulés autour de l'alignement corporel, de la gestion de l'énergie et — en opposition — du timing et de l'intégrité physique du partenaire.</p>
+
+                <div class="grid lg:grid-cols-2 gap-8 items-start">
+
+                    <!-- Grille A : prestations individuelles -->
+                    <div class="bento-card bg-white p-0 overflow-hidden">
+                        <h3 class="font-condensed uppercase tracking-wider text-lg text-white bg-csb-dojo px-6 py-4">Prestations individuelles — Kihon &amp; Kata</h3>
+                        <table class="w-full text-sm">
+                            <caption class="sr-only">Critères et barèmes des épreuves individuelles de Kihon et de Kata</caption>
+                            <thead>
+                                <tr class="text-left font-condensed uppercase tracking-wider text-[11px] text-gray-400 border-b border-csb-tatami">
+                                    <th scope="col" class="px-6 py-3 font-semibold">Critère</th>
+                                    <th scope="col" class="px-6 py-3 font-semibold text-right whitespace-nowrap">Barème</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-csb-tatami/70">
+                                <tr><td class="px-6 py-3 text-gray-700">Attitude corporelle générale</td><td class="px-6 py-3 text-right font-bold text-csb-encre whitespace-nowrap">3 pts</td></tr>
+                                <tr><td class="px-6 py-3 text-gray-700">Équilibre et stabilité</td><td class="px-6 py-3 text-right font-bold text-csb-encre whitespace-nowrap">3 pts</td></tr>
+                                <tr><td class="px-6 py-3 text-gray-700">Détermination et Kime</td><td class="px-6 py-3 text-right font-bold text-csb-encre whitespace-nowrap">3 pts</td></tr>
+                                <tr><td class="px-6 py-3 text-gray-700">Puissance et vitesse d'exécution</td><td class="px-6 py-3 text-right font-bold text-csb-encre whitespace-nowrap">3 pts</td></tr>
+                                <tr><td class="px-6 py-3 text-gray-700">Aisance, déplacements et correction des postures</td><td class="px-6 py-3 text-right font-bold text-csb-encre whitespace-nowrap">3 pts</td></tr>
+                                <tr><td class="px-6 py-3 text-gray-700">Gestion de l'impact et contrôle <span class="text-gray-400">(Kihon sur cible)</span></td><td class="px-6 py-3 text-right font-bold text-csb-encre whitespace-nowrap">3 pts</td></tr>
+                                <tr><td class="px-6 py-3 text-gray-700">Cérémonial et étiquette <span class="text-gray-400">(Kata)</span></td><td class="px-6 py-3 text-right font-bold text-csb-encre whitespace-nowrap">2 pts</td></tr>
+                                <tr><td class="px-6 py-3 text-gray-700">Rythme, respiration et expression du Kiai <span class="text-gray-400">(Kata)</span></td><td class="px-6 py-3 text-right font-bold text-csb-encre whitespace-nowrap">6 pts</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Grille B : épreuves de combat -->
+                    <div class="bento-card bg-white p-0 overflow-hidden">
+                        <h3 class="font-condensed uppercase tracking-wider text-lg text-white bg-csb-corail px-6 py-4">Épreuves de combat — Kumite &amp; Bunkai</h3>
+                        <table class="w-full text-sm">
+                            <caption class="sr-only">Critères et barèmes des épreuves d'opposition avec partenaire</caption>
+                            <thead>
+                                <tr class="text-left font-condensed uppercase tracking-wider text-[11px] text-gray-400 border-b border-csb-tatami">
+                                    <th scope="col" class="px-6 py-3 font-semibold">Critère</th>
+                                    <th scope="col" class="px-6 py-3 font-semibold text-right whitespace-nowrap">Barème</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-csb-tatami/70">
+                                <tr><td class="px-6 py-3 text-gray-700">Contrôle technique absolu</td><td class="px-6 py-3 text-right font-bold text-csb-encre whitespace-nowrap">4 pts</td></tr>
+                                <tr><td class="px-6 py-3 text-gray-700">Maîtrise de la distance (Maai)</td><td class="px-6 py-3 text-right font-bold text-csb-encre whitespace-nowrap">3 pts</td></tr>
+                                <tr><td class="px-6 py-3 text-gray-700">Zanshin et vigilance continue</td><td class="px-6 py-3 text-right font-bold text-csb-encre whitespace-nowrap">2 à 3 pts</td></tr>
+                                <tr><td class="px-6 py-3 text-gray-700">Timing et opportunité de contre <span class="text-gray-400">(sen no sen, go no sen)</span></td><td class="px-6 py-3 text-right font-bold text-csb-encre whitespace-nowrap">2 à 3 pts</td></tr>
+                                <tr><td class="px-6 py-3 text-gray-700">Variété technique et créativité</td><td class="px-6 py-3 text-right font-bold text-csb-encre whitespace-nowrap">4 à 5 pts</td></tr>
+                            </tbody>
+                        </table>
+                        <p class="text-xs text-gray-400 px-6 py-4 border-t border-csb-tatami">Les travaux d'opposition privilégient l'adaptabilité, le timing et le respect absolu de l'intégrité physique du partenaire.</p>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- ============================================== -->
+        <!-- MODALES D'ADMINISTRATION (Cachées par défaut)  -->
+        <!-- ============================================== -->
+
+        <!-- 1. Modale de Connexion -->
+        <div id="modal-login" class="fixed inset-0 bg-csb-encre/90 z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
+            <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full relative">
+                <button id="btn-close-login" class="absolute top-4 right-4 text-gray-400 hover:text-csb-corail">✕</button>
+                <h3 class="font-condensed text-2xl uppercase tracking-wider mb-4">Accès Bureau</h3>
+                <input type="password" id="admin-password" placeholder="Mot de passe" class="w-full border border-csb-tatami rounded p-3 mb-4 font-sans focus:outline-none focus:border-csb-dojo">
+                <button id="btn-login" class="w-full bg-csb-dojo text-white font-bold py-3 rounded hover:bg-csb-corail transition">Se connecter</button>
+                <p id="login-error" class="text-csb-corail text-sm mt-2 hidden">Mot de passe incorrect.</p>
+            </div>
+        </div>
+
+        <!-- 2. Modale Dashboard Admin -->
+        <div id="modal-admin" class="fixed inset-0 bg-csb-washi z-50 overflow-y-auto hidden opacity-0 transition-opacity">
+            <div class="max-w-5xl mx-auto p-6 pt-20">
+                <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
+                    <h2 class="font-serif text-4xl text-csb-encre">Gestion des Grades</h2>
+                    <div class="flex gap-4">
+                        <button id="btn-export" class="bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700 transition shadow-lg">💾 Télécharger grades.json</button>
+                        <button id="btn-close-admin" class="bg-gray-200 text-csb-encre px-6 py-2 rounded font-bold hover:bg-gray-300 transition">Fermer</button>
+                    </div>
+                </div>
+
+                <p class="text-sm text-gray-500 mb-8 max-w-3xl">
+                    Modifiez, ajoutez ou masquez un grade, puis cliquez sur
+                    <strong>Télécharger grades.json</strong>. Déposez ensuite ce fichier dans le dossier
+                    <code class="bg-gray-100 px-1">data/</code> sur Github. Dans les champs à listes, saisissez
+                    <strong>une entrée par ligne</strong>.
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-8 items-start">
+
+                    <!-- Formulaire Ajout/Édition -->
+                    <div class="md:col-span-1 bg-white p-6 rounded-xl border border-csb-tatami shadow-sm h-fit md:sticky md:top-24">
+                        <h3 id="form-title" class="font-condensed text-xl uppercase tracking-wider mb-4 text-csb-corail">Ajouter un grade</h3>
+                        <input type="hidden" id="grade-id">
+
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Type de grade</label>
+                        <select id="grade-type" class="w-full border border-csb-tatami rounded p-2 mb-3 text-sm bg-white">
+                            <option value="kyu">Kyu (ceinture de couleur)</option>
+                            <option value="dan">Dan (ceinture noire)</option>
+                        </select>
+
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">Nom du grade</label>
+                                <input type="text" id="grade-name" placeholder="ex: 5ème Kyu" class="w-full border border-csb-tatami rounded p-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">Couleur (nom)</label>
+                                <input type="text" id="grade-ceinture" placeholder="ex: Jaune" class="w-full border border-csb-tatami rounded p-2 text-sm">
+                            </div>
+                        </div>
+
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Couleur (pastille)</label>
+                        <input type="color" id="grade-color" value="#E63946" class="w-full h-10 border border-csb-tatami rounded p-1 mb-3 bg-white cursor-pointer">
+
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Katas à maîtriser</label>
+                        <textarea id="grade-katas" rows="4" placeholder="Une entrée par ligne&#10;ex: Pinan Nidan" class="w-full border border-csb-tatami rounded p-2 mb-3 text-sm"></textarea>
+
+                        <!-- Champs propres aux Kyu -->
+                        <div id="kyu-fields">
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Kihon Ippon Kumite</label>
+                            <textarea id="grade-kihon" rows="3" placeholder="Une entrée par ligne&#10;ex: Jodan Uke" class="w-full border border-csb-tatami rounded p-2 mb-3 text-sm"></textarea>
+
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Sanbon Kumite</label>
+                            <textarea id="grade-sanbon" rows="3" placeholder="Une entrée par ligne&#10;ex: Chudan Uke : n°1, n°2" class="w-full border border-csb-tatami rounded p-2 mb-3 text-sm"></textarea>
+
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Ohyo Kumite <span class="font-normal text-gray-400">(vide = « Non requis »)</span></label>
+                            <textarea id="grade-ohyo" rows="3" placeholder="Une entrée par ligne&#10;ex: Ipponme (n°1)" class="w-full border border-csb-tatami rounded p-2 mb-3 text-sm"></textarea>
+                        </div>
+
+                        <!-- Champs propres aux Dan -->
+                        <div id="dan-fields" class="hidden">
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Âge minimum</label>
+                            <input type="text" id="grade-age" placeholder="ex: 14 ans" class="w-full border border-csb-tatami rounded p-2 mb-3 text-sm">
+
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Temps d'attente requis</label>
+                            <input type="text" id="grade-temps" placeholder="ex: 2 ans d'intervalle depuis le 1er Dan" class="w-full border border-csb-tatami rounded p-2 mb-3 text-sm">
+
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Licences requises</label>
+                            <input type="text" id="grade-licences" placeholder="ex: 3 licences d'entraînement" class="w-full border border-csb-tatami rounded p-2 mb-3 text-sm">
+                        </div>
+
+                        <button id="btn-save-grade" class="w-full bg-csb-dojo text-white font-bold py-2 rounded hover:bg-csb-corail transition">Enregistrer le grade</button>
+                        <button id="btn-cancel-edit" class="w-full bg-gray-100 text-gray-600 font-bold py-2 rounded mt-2 hidden hover:bg-gray-200 transition">Annuler l'édition</button>
+                    </div>
+
+                    <!-- Liste des grades -->
+                    <div class="md:col-span-2 space-y-4" id="admin-grade-list">
+                        <!-- Généré par grades.js -->
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
