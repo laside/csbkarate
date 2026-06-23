@@ -27,36 +27,39 @@
     <div class="bg-dojo p-8 rounded-xl shadow-lg glassmorphism max-w-lg w-full text-center">
         <h1 class="text-corail">Site en construction</h1>
         <p class="text-lg mb-6 text-tatami">Nous travaillons dur pour vous offrir une meilleure expérience. Revenez bientôt !</p>
-        <p class="text-md mb-4 text-tatami">Pour les membres du bureau, veuillez entrer le mot de passe pour accéder au site :</p>
-        <input type="password" id="passwordInput" class="w-full p-3 rounded-lg bg-washi text-encre border border-tatami focus:border-corail focus:ring focus:ring-corail focus:ring-opacity-50 transition-all duration-300 mb-4" placeholder="Mot de passe">
-        <button id="accessButton" class="bg-corail text-washi font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-colors duration-300 uppercase tracking-wider">Accéder</button>
-        <p id="errorMessage" class="text-red-400 mt-4 hidden">Mot de passe incorrect. Veuillez réessayer.</p>
+ <!-- Formulaire d'accès réservé au bureau -->
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Accès réservé (Membres du bureau)</h3>
+        <form id="login-form" class="space-y-4">
+            <div>
+                <input type="password" id="site-password" placeholder="Mot de passe" 
+                    class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-600">
+            </div>
+            <button type="submit" class="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition">
+                Accéder au site
+            </button>
+            <p id="error-message" class="text-red-500 text-sm hidden mt-2">Mot de passe incorrect.</p>
+        </form>
     </div>
-
-    <script defer>
-        document.addEventListener('DOMContentLoaded', () => {
-            const passwordInput = document.getElementById('passwordInput');
-            const accessButton = document.getElementById('accessButton');
-            const errorMessage = document.getElementById('errorMessage');
-            const correctPassword = 'CSB'; // Using the same password as admin mode for consistency
-
-            accessButton.addEventListener('click', () => {
-                if (passwordInput.value === correctPassword) {
-                    sessionStorage.setItem('site_access_granted', 'true');
-                    window.location.href = 'index.html';
-                } else {
-                    errorMessage.classList.remove('hidden');
-                    passwordInput.value = '';
-                }
-            });
-
-            // Allow pressing Enter in the password field
-            passwordInput.addEventListener('keypress', (event) => {
-                if (event.key === 'Enter') {
-                    accessButton.click();
-                }
-            });
-        });
-    </script>
+    <script>
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+        e.preventDefault(); // Empêche le rechargement de la page
+        
+        const passwordInput = document.getElementById('site-password').value;
+        const errorMessage = document.getElementById('error-message');
+        
+        // Remplacez "CSB2024!" par le mot de passe que vous souhaitez donner au bureau
+        const motDePasseSecret = "CSB2024!"; 
+        
+        if (passwordInput === motDePasseSecret) {
+            // Le mot de passe est bon, on enregistre l'autorisation pour la session
+            sessionStorage.setItem('csb_access_granted', 'true');
+            // On redirige vers la page d'accueil
+            window.location.href = 'index.html';
+        } else {
+            // Mot de passe incorrect, on affiche l'erreur
+            errorMessage.classList.remove('hidden');
+        }
+    });
+</script>
 </body>
 </html>
