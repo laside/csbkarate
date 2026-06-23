@@ -71,3 +71,58 @@ display: none;
 -ms-overflow-style: none;
 scrollbar-width: none;
 }
+
+/* STREAMING_CHUNK:Cartes à retournement (disciplines)... */
+/* Flip 3D : Tailwind CDN ne fournit pas preserve-3d / backface-hidden, on
+   centralise donc la mécanique ici. Empilement par grille : les deux faces
+   partagent la même cellule (grid-area 1/1), la carte prend automatiquement
+   la hauteur de la face la plus grande — aucune hauteur codée en dur. */
+.flip-card {
+perspective: 1200px;
+cursor: pointer;
+}
+
+/* Pas de mouvement au survol (ni lift, ni autre transform) : le seul
+   mouvement attendu est la rotation déclenchée par le clic, ci-dessous. */
+
+.flip-card:focus-visible {
+outline: 2px solid #E63946; /* Corail */
+outline-offset: 4px;
+border-radius: 12px;
+}
+
+.flip-card-inner {
+display: grid;
+height: 100%;
+transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+transform-style: preserve-3d;
+-webkit-transform-style: preserve-3d;
+}
+
+.flip-card.is-flipped .flip-card-inner {
+transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+grid-area: 1 / 1; /* empilement : même cellule de grille */
+-webkit-backface-visibility: hidden;
+backface-visibility: hidden;
+}
+
+.flip-card-back {
+transform: rotateY(180deg);
+}
+
+/* Le lift est géré au niveau de .flip-card : on neutralise celui du bento
+   sur chaque face, sinon il casserait le rendu 3D pendant la rotation. */
+.flip-card .bento-card:hover {
+transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+.flip-card,
+.flip-card-inner {
+transition: none;
+}
+}
