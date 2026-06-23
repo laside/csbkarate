@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // CONFIGURATION
     // ============================================================
-    const ADMIN_PASSWORD = "CSB";
     const BASE = "./assets/photos/galerie";
 
     // Correspondance clé de section -> nom réel du dossier sur le disque.
@@ -40,17 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnLbPrev = document.getElementById('lightbox-prev');
     const btnLbNext = document.getElementById('lightbox-next');
 
-    // Admin - connexion
-    const btnOpenLogin = document.getElementById('btn-open-login');
-    const modalLogin = document.getElementById('modal-login');
-    const btnCloseLogin = document.getElementById('btn-close-login');
-    const btnLogin = document.getElementById('btn-login');
-    const inputPassword = document.getElementById('admin-password');
-    const loginError = document.getElementById('login-error');
-
-    // Admin - dashboard
-    const modalAdmin = document.getElementById('modal-admin');
-    const btnCloseAdmin = document.getElementById('btn-close-admin');
+    // Admin - dashboard (login/modales gérés par admin.js)
     const btnExport = document.getElementById('btn-export');
 
     // Admin - gestion des photos
@@ -75,11 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // CHARGEMENT DES DONNÉES
     // ============================================================
-    fetch('./data/galerie.json')
-        .then(response => {
-            if (!response.ok) throw new Error("Erreur réseau");
-            return response.json();
-        })
+    Store.loadCollection('galerie')
         .then(data => {
             if (data && data.sections) galleryData = data;
             renderTabs();
@@ -95,6 +80,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // OUTILS
     // ============================================================
+    // Échappe le HTML pour injecter du contenu utilisateur en toute sécurité.
+    const esc = (str) => String(str ?? '').replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
     // Construit le chemin d'une photo (gère l'espace de "le club" via encodeURI).
     function photoSrc(section, filename, stageDossier) {
         const path = (section === 'stages')
@@ -153,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             <button type="button" class="gallery-tile group block aspect-square overflow-hidden rounded-xl bg-csb-tatami border border-csb-tatami hover:border-csb-corail transition"
                     data-group="${groupId}" data-index="${index}">
-                <img src="${src}" alt="${caption}" loading="lazy"
+                <img src="${src}" alt="${esc(caption)}" loading="lazy"
                      class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                      onerror="this.parentElement.classList.add('hidden')">
             </button>`;
@@ -206,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `
                 <div class="mb-12">
                     <div class="flex items-center gap-4 mb-5">
-                        <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre">${stage.nom}</h3>
+                        <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre">${esc(stage.nom)}</h3>
                         <span class="font-sans text-xs text-gray-400">${(stage.photos || []).length} photo(s)</span>
                         <span class="flex-grow h-px bg-csb-tatami"></span>
                     </div>
@@ -279,41 +268,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // ADMIN — Connexion
     // ============================================================
-    if (btnOpenLogin) {
-        btnOpenLogin.addEventListener('click', () => {
-            modalLogin.classList.remove('hidden');
-            setTimeout(() => modalLogin.classList.remove('opacity-0'), 10);
-        });
-    }
-    if (btnCloseLogin) {
-        btnCloseLogin.addEventListener('click', () => {
-            modalLogin.classList.add('opacity-0');
-            setTimeout(() => modalLogin.classList.add('hidden'), 300);
-        });
-    }
-    if (btnLogin) {
-        btnLogin.addEventListener('click', () => {
-            if (inputPassword.value === ADMIN_PASSWORD) {
-                inputPassword.value = '';
-                loginError.classList.add('hidden');
-                modalLogin.classList.add('hidden', 'opacity-0');
-                modalAdmin.classList.remove('hidden');
-                setTimeout(() => modalAdmin.classList.remove('opacity-0'), 10);
-                refreshAdmin();
-            } else {
-                loginError.classList.remove('hidden');
-            }
-        });
-    }
-    if (btnCloseAdmin) {
-        btnCloseAdmin.addEventListener('click', () => {
-            modalAdmin.classList.add('opacity-0');
-            setTimeout(() => modalAdmin.classList.add('hidden'), 300);
-            // Rafraîchit l'affichage public avec les éventuelles modifications.
-            renderTabs();
-            renderSection(activeSection);
-        });
-    }
+    // Mode admin : connexion + dashboard (logique factorisée dans admin.js).
+    Admin.init({
+        onUnlock: refreshAdmin,
+        onCloseAdmin: () => { renderTabs(); renderSection(activeSection); }
+    });
 
     // ============================================================
     // ADMIN — Gestion des photos
@@ -322,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function refreshStageOptions() {
         if (!selectStage) return;
         selectStage.innerHTML = (galleryData.sections.stages || [])
-            .map((s, i) => `<option value="${i}">${s.nom}</option>`).join('');
+            .map((s, i) => `<option value="${i}">${esc(s.nom)}</option>`).join('');
     }
 
     // Affiche/masque le sélecteur de stage selon la section choisie.
@@ -351,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         adminPhotoList.innerHTML = arr.map((f, i) => `
             <div class="flex justify-between items-center gap-3 bg-white border border-csb-tatami rounded px-3 py-2">
-                <span class="text-sm text-csb-dojo truncate" title="${f}">${f}</span>
+                <span class="text-sm text-csb-dojo truncate" title="${esc(f)}">${esc(f)}</span>
                 <button type="button" class="btn-del-photo px-2 py-1 bg-red-100 text-csb-corail rounded hover:bg-csb-corail hover:text-white transition text-xs" data-index="${i}">Suppr.</button>
             </div>`).join('');
 
@@ -400,8 +359,8 @@ document.addEventListener('DOMContentLoaded', () => {
         adminStageList.innerHTML = stages.map((s, i) => `
             <div class="flex justify-between items-center gap-3 bg-white border border-csb-tatami rounded px-3 py-2">
                 <div class="truncate">
-                    <span class="text-sm font-bold text-csb-dojo">${s.nom}</span>
-                    <span class="block text-[10px] text-gray-400">${s.dossier} · ${(s.photos || []).length} photo(s)</span>
+                    <span class="text-sm font-bold text-csb-dojo">${esc(s.nom)}</span>
+                    <span class="block text-[10px] text-gray-400">${esc(s.dossier)} · ${(s.photos || []).length} photo(s)</span>
                 </div>
                 <button type="button" class="btn-del-stage px-2 py-1 bg-red-100 text-csb-corail rounded hover:bg-csb-corail hover:text-white transition text-xs" data-index="${i}">Suppr.</button>
             </div>`).join('');
@@ -448,17 +407,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     if (btnExport) {
         btnExport.addEventListener('click', () => {
-            const dataStr = JSON.stringify(galleryData, null, 4);
-            const blob = new Blob([dataStr], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = "galerie.json";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            alert("Fichier galerie.json téléchargé !\nRemplacez l'ancien fichier dans data/ sur votre dépôt Github.");
+            // L'export passe désormais par la couche d'accès aux données (store.js).
+            Store.saveCollection('galerie', galleryData);
         });
     }
 });

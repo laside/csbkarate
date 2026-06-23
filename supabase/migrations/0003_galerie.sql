@@ -1,0 +1,224 @@
+-- =============================================================
+-- Migration 0003 — Table `galerie` (document JSONB, singleton)
+-- =============================================================
+-- À exécuter dans Supabase : Dashboard > SQL Editor > New query > Run.
+-- Idempotent : ré-exécutable sans casse (IF NOT EXISTS / ON CONFLICT).
+--
+-- La galerie est une structure IMBRIQUÉE (sections plates + stages). Plutôt
+-- que de la normaliser, on la stocke telle quelle dans UNE ligne JSONB :
+-- store.js lit/écrit ce document sans le décomposer, galerie.js inchangé.
+--
+-- NOTE STORAGE : cette migration ne déplace que la STRUCTURE de la galerie
+-- (quelles photos, dans quelle section/stage). Les fichiers images restent
+-- pour l'instant dans assets/photos/galerie/ et sont référencés par leur nom.
+-- Le passage à Supabase Storage (upload réel des images) est une étape à part.
+-- =============================================================
+
+-- 1) Table singleton (une seule ligne, id = 1) ----------------
+create table if not exists public.galerie (
+    id         smallint primary key default 1,
+    data       jsonb not null default '{"sections":{"club":[],"competitions":[],"entrainement":[],"stages":[]}}'::jsonb,
+    updated_at timestamptz not null default now(),
+    constraint galerie_singleton check (id = 1)
+);
+
+-- 2) Row Level Security ---------------------------------------
+alter table public.galerie enable row level security;
+
+drop policy if exists "galerie_select_public" on public.galerie;
+create policy "galerie_select_public"
+    on public.galerie for select
+    to anon, authenticated
+    using (true);
+
+drop policy if exists "galerie_insert_auth" on public.galerie;
+create policy "galerie_insert_auth"
+    on public.galerie for insert
+    to authenticated
+    with check (true);
+
+drop policy if exists "galerie_update_auth" on public.galerie;
+create policy "galerie_update_auth"
+    on public.galerie for update
+    to authenticated
+    using (true) with check (true);
+
+-- 3) Reprise des données existantes (data/galerie.json) -------
+-- Dollar-quoting ($json$ ... $json$) : aucun échappement à gérer.
+insert into public.galerie (id, data) values (1, $json$
+{
+    "sections": {
+        "club": [],
+        "competitions": [
+            "4939_1182789329973_1235409397_483775_7867040_n.jpg",
+            "IMG_2615-b.jpg",
+            "IMG_4279.JPG",
+            "IMG_4904b.jpg",
+            "IMG_5704.JPG",
+            "Im-Laetitia.jpg"
+        ],
+        "entrainement": [
+            "Alexis-et-math-kata-3.jpg",
+            "IMG_4398b.jpg",
+            "IMG_4405b.jpg",
+            "IMG_4406b.jpg",
+            "IMG_4407b.jpg",
+            "IMG_4411b.jpg",
+            "IMG_4416b.jpg",
+            "IMG_4421b.jpg",
+            "IMG_4423b.jpg",
+            "IMG_4425b.jpg",
+            "IMG_4453b.jpg",
+            "IMG_4466b.jpg",
+            "IMG_4491b.jpg",
+            "IMG_4492b.jpg",
+            "IMG_4516b.jpg",
+            "IMG_4574b.jpg",
+            "IMG_4592.JPG",
+            "P1070459.JPG",
+            "P1070462-b.JPG",
+            "Photo-decembre-2011.jpg"
+        ],
+        "stages": [
+            {
+                "nom": "Stage Enfants 2014",
+                "dossier": "Stage_enfants_2014",
+                "photos": ["Stage_enfants_2014_03.jpg"]
+            },
+            {
+                "nom": "Stage 2014 Baby",
+                "dossier": "Stage_2014_baby",
+                "photos": [
+                    "Stage_2014_baby_03.jpg",
+                    "Stage_2014_baby_04.jpg",
+                    "Stage_2014_baby_05.jpg",
+                    "Stage_2014_baby_06.jpg",
+                    "Stage_2014_baby_07.jpg"
+                ]
+            },
+            {
+                "nom": "Stage 2014",
+                "dossier": "Stage_2014",
+                "photos": [
+                    "Stage_2014_03.jpg",
+                    "Stage_2014_04.jpg",
+                    "Stage_2014_05.jpg",
+                    "Stage_2014_06.jpg",
+                    "Stage_2014_07.jpg"
+                ]
+            },
+            {
+                "nom": "Stage 2013 Baby",
+                "dossier": "Stage_2013_baby",
+                "photos": [
+                    "Stage_2013_baby_03.jpg",
+                    "Stage_2013_baby_04.jpg",
+                    "Stage_2013_baby_05.jpg",
+                    "Stage_2013_baby_06.jpg",
+                    "Stage_2013_baby_07.jpg",
+                    "Stage_2013_baby_08.jpg",
+                    "Stage_2013_baby_09.jpg",
+                    "Stage_2013_baby_10.jpg"
+                ]
+            },
+            {
+                "nom": "Stage 2013",
+                "dossier": "Stage_2013",
+                "photos": [
+                    "Stage_2013_03.jpg",
+                    "Stage_2013_04.jpg",
+                    "Stage_2013_05.jpg",
+                    "Stage_2013_06.jpg",
+                    "Stage_2013_07.jpg",
+                    "Stage_2013_08.jpg",
+                    "Stage_2013_09.jpg"
+                ]
+            },
+            {
+                "nom": "Stage 2012 Baby",
+                "dossier": "Stage_2012_Baby",
+                "photos": [
+                    "Stage_2012_Baby_03.jpg",
+                    "Stage_2012_Baby_04.jpg",
+                    "Stage_2012_Baby_05.jpg"
+                ]
+            },
+            {
+                "nom": "Stage 2012",
+                "dossier": "Stage_2012",
+                "photos": [
+                    "Stage_2012_03.jpg",
+                    "Stage_2012_04.jpg",
+                    "Stage_2012_05.jpg",
+                    "Stage_2012_06.jpg",
+                    "Stage_2012_07.jpg",
+                    "Stage_2012_08.jpg",
+                    "Stage_2012_09.jpg",
+                    "Stage_2012_10.jpg",
+                    "Stage_2012_11.jpg",
+                    "Stage_2012_12.jpg",
+                    "Stage_2012_13.jpg",
+                    "Stage_2012_14.jpg",
+                    "Stage_2012_15.jpg",
+                    "Stage_2012_16.jpg",
+                    "Stage_2012_17.jpg",
+                    "Stage_2012_18.jpg",
+                    "Stage_2012_19.jpg",
+                    "Stage_2012_20.jpg"
+                ]
+            },
+            {
+                "nom": "Stage 2011",
+                "dossier": "Stage_2011",
+                "photos": [
+                    "Stage_2011_03.jpg",
+                    "Stage_2011_04.jpg",
+                    "Stage_2011_05.jpg",
+                    "Stage_2011_06.jpg",
+                    "Stage_2011_07.jpg",
+                    "Stage_2011_08.jpg",
+                    "Stage_2011_09.jpg",
+                    "Stage_2011_10.jpg"
+                ]
+            },
+            {
+                "nom": "Stage 2010",
+                "dossier": "Stage_2010",
+                "photos": [
+                    "Stage_2010_03.jpg",
+                    "Stage_2010_04.jpg",
+                    "Stage_2010_05.jpg",
+                    "Stage_2010_06.jpg",
+                    "Stage_2010_07.jpg",
+                    "Stage_2010_08.jpg"
+                ]
+            },
+            {
+                "nom": "Stage 2009",
+                "dossier": "Stage_2009",
+                "photos": [
+                    "Stage_2009_03.jpg",
+                    "Stage_2009_04.jpg",
+                    "Stage_2009_05.jpg",
+                    "Stage_2009_06.jpg",
+                    "Stage_2009_07.jpg",
+                    "Stage_2009_08.jpg"
+                ]
+            },
+            {
+                "nom": "Initiation Self-Défense Féminine",
+                "dossier": "Initiation_self_defense",
+                "photos": [
+                    "Initiation_self_defense_03.jpg",
+                    "Initiation_self_defense_04.jpg",
+                    "Initiation_self_defense_05.jpg",
+                    "Initiation_self_defense_06.jpg",
+                    "Initiation_self_defense_07.jpg",
+                    "Initiation_self_defense_08.jpg"
+                ]
+            }
+        ]
+    }
+}
+$json$::jsonb)
+on conflict (id) do nothing;

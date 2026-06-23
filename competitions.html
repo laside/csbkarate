@@ -9,6 +9,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="./assets/js/tailwind.js"></script>
     <script src="./assets/js/main.js" defer></script>
+    <script type="module" src="./assets/js/supabase.js"></script>
+    <script src="./assets/js/store.js" defer></script>
+    <script src="./assets/js/admin.js" defer></script>
 
     <!-- Vercel Web Analytics -->
     <script>
@@ -78,7 +81,7 @@
                     <h2 class="font-serif text-4xl text-csb-encre">Gestion du Palmarès</h2>
                     <div class="flex gap-4">
                         <button id="btn-export" class="bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700 transition shadow-lg flex items-center gap-2">
-                            <span>💾</span> Télécharger JSON
+                            <span>💾</span> Enregistrer en ligne
                         </button>
                         <button id="btn-close-admin" class="bg-gray-200 text-csb-encre px-6 py-2 rounded font-bold hover:bg-gray-300 transition">Fermer</button>
                     </div>
@@ -132,21 +135,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             
             let compData = [];
-            const ADMIN_PASSWORD = "CSB";
             
             // DOM Elements
             const feed = document.getElementById('competitions-feed');
+
+            // Échappe le HTML pour injecter du contenu utilisateur en toute sécurité.
+            const esc = (str) => String(str ?? '').replace(/[&<>"']/g, c =>
+                ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
             
-            // Admin DOM
-            const btnOpenLogin = document.getElementById('btn-open-login');
-            const modalLogin = document.getElementById('modal-login');
-            const btnCloseLogin = document.getElementById('btn-close-login');
-            const btnLogin = document.getElementById('btn-login');
-            const inputPassword = document.getElementById('admin-password');
-            const loginError = document.getElementById('login-error');
-            
-            const modalAdmin = document.getElementById('modal-admin');
-            const btnCloseAdmin = document.getElementById('btn-close-admin');
+            // Admin DOM (login/modales gérés par admin.js)
             const adminList = document.getElementById('admin-comp-list');
             
             // Form DOM
@@ -205,11 +202,7 @@
             ];
 
             try {
-                fetch('./data/competitions.json')
-                    .then(response => {
-                        if (!response.ok) throw new Error("Erreur réseau");
-                        return response.json();
-                    })
+                Store.loadCollection('competitions')
                     .then(data => {
                         compData = data;
                         renderPublicFeed();
@@ -288,11 +281,11 @@
                         const textAlignment = isEven ? 'md:text-right md:pr-12' : 'md:text-left md:pl-12';
                         const carouselSpacing = isEven ? 'md:pl-12' : 'md:pr-12';
 
-                        const resultsHTML = resultsArray.map(res => `<li class="mb-2 flex items-start gap-2 ${isEven ? 'md:flex-row-reverse' : ''}"><span class="${colorAccent} font-bold opacity-50">▸</span> <span>${res}</span></li>`).join('');
+                        const resultsHTML = resultsArray.map(res => `<li class="mb-2 flex items-start gap-2 ${isEven ? 'md:flex-row-reverse' : ''}"><span class="${colorAccent} font-bold opacity-50">▸</span> <span>${esc(res)}</span></li>`).join('');
 
                         const carouselInner = images.map(img => `
                             <div class="w-full shrink-0 snap-center h-64 md:h-80 relative">
-                                <img src="./assets/photos/${img}" alt="Podium ${comp.title}" class="w-full h-full object-cover rounded-xl shadow-md bg-csb-tatami" onerror="this.style.display='none'">
+                                <img src="./assets/photos/${esc(img)}" alt="Podium ${esc(comp.title)}" class="w-full h-full object-cover rounded-xl shadow-md bg-csb-tatami" onerror="this.style.display='none'">
                             </div>
                         `).join('');
 
@@ -320,14 +313,14 @@
                                     <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-csb-tatami hover:shadow-xl hover:border-csb-corail transition duration-300">
                                         <div class="flex flex-col ${isEven ? 'md:items-end' : 'md:items-start'} mb-4">
                                             <span class="inline-block px-3 py-1 bg-csb-washi text-gray-500 rounded text-xs font-bold uppercase tracking-wider mb-2 font-condensed border border-csb-tatami">
-                                                ${comp.date}
+                                                ${esc(comp.date)}
                                             </span>
-                                            <h3 class="font-serif text-2xl md:text-3xl text-csb-encre leading-tight mb-1">${comp.title}</h3>
+                                            <h3 class="font-serif text-2xl md:text-3xl text-csb-encre leading-tight mb-1">${esc(comp.title)}</h3>
                                             <p class="text-sm text-gray-500 font-sans flex items-center gap-1 ${isEven ? 'md:flex-row-reverse' : ''}">
-                                                <span>📍</span> ${comp.location}
+                                                <span>📍</span> ${esc(comp.location)}
                                             </p>
                                         </div>
-                                        
+
                                         <div class="bg-csb-washi rounded-xl p-5 border border-csb-tatami mt-4 text-left">
                                             <h4 class="font-condensed uppercase tracking-widest text-xs font-bold mb-3 ${colorAccent} ${isEven ? 'md:text-right' : ''}">Palmarès</h4>
                                             <ul class="text-sm font-sans text-gray-700 leading-relaxed ${isEven ? 'md:text-right' : ''}">
@@ -342,7 +335,7 @@
                         `;
                     } else {
                         // MISE EN PAGE : SANS PHOTO (PLEINE LARGEUR)
-                        const resultsHTML = resultsArray.map(res => `<li class="mb-2 flex items-start gap-2 break-inside-avoid"><span class="${colorAccent} font-bold opacity-50">▸</span> <span>${res}</span></li>`).join('');
+                        const resultsHTML = resultsArray.map(res => `<li class="mb-2 flex items-start gap-2 break-inside-avoid"><span class="${colorAccent} font-bold opacity-50">▸</span> <span>${esc(res)}</span></li>`).join('');
 
                         return `
                             <div class="relative flex w-full fade-in ml-8 md:ml-0 justify-center">
@@ -354,12 +347,12 @@
                                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-csb-tatami pb-4">
                                             <div class="text-left">
                                                 <span class="inline-block px-3 py-1 bg-csb-washi text-gray-500 rounded text-xs font-bold uppercase tracking-wider mb-2 font-condensed border border-csb-tatami">
-                                                    ${comp.date}
+                                                    ${esc(comp.date)}
                                                 </span>
-                                                <h3 class="font-serif text-2xl md:text-3xl text-csb-encre leading-tight mb-1">${comp.title}</h3>
+                                                <h3 class="font-serif text-2xl md:text-3xl text-csb-encre leading-tight mb-1">${esc(comp.title)}</h3>
                                             </div>
                                             <p class="text-sm text-gray-500 font-sans flex items-center gap-1 bg-csb-washi px-3 py-2 rounded-lg border border-csb-tatami whitespace-nowrap">
-                                                <span>📍</span> ${comp.location}
+                                                <span>📍</span> ${esc(comp.location)}
                                             </p>
                                         </div>
                                         
@@ -403,39 +396,10 @@
             }
             setTimeout(observeFadeIn, 100);
 
-            // --- LOGIQUE ADMIN (Ouverture / Fermeture) ---
-            if(btnOpenLogin) {
-                btnOpenLogin.addEventListener('click', () => {
-                    modalLogin.classList.remove('hidden');
-                    setTimeout(() => modalLogin.classList.remove('opacity-0'), 10);
-                });
-            }
-
-            btnCloseLogin.addEventListener('click', () => {
-                modalLogin.classList.add('opacity-0');
-                setTimeout(() => modalLogin.classList.add('hidden'), 300);
-            });
-
-            btnLogin.addEventListener('click', () => {
-                if (inputPassword.value === ADMIN_PASSWORD) {
-                    inputPassword.value = '';
-                    loginError.classList.add('hidden');
-                    modalLogin.classList.add('opacity-0');
-                    setTimeout(() => {
-                        modalLogin.classList.add('hidden');
-                        modalAdmin.classList.remove('hidden');
-                        setTimeout(() => modalAdmin.classList.remove('opacity-0'), 10);
-                        renderAdminList();
-                    }, 300);
-                } else {
-                    loginError.classList.remove('hidden');
-                }
-            });
-
-            btnCloseAdmin.addEventListener('click', () => {
-                modalAdmin.classList.add('opacity-0');
-                setTimeout(() => modalAdmin.classList.add('hidden'), 300);
-                renderPublicFeed();
+            // --- LOGIQUE ADMIN (connexion + dashboard, factorisée dans admin.js) ---
+            Admin.init({
+                onUnlock: renderAdminList,
+                onCloseAdmin: renderPublicFeed
             });
 
             // --- RENDER LISTE ADMIN ---
@@ -446,9 +410,9 @@
                 adminList.innerHTML = sortedData.map(comp => `
                     <div class="bg-white p-4 rounded-xl border border-csb-tatami flex justify-between items-center gap-4 hover:border-csb-dojo transition">
                         <div class="flex-grow">
-                            <span class="text-xs text-csb-corail font-bold uppercase tracking-wider">${comp.date}</span>
-                            <h4 class="font-bold text-csb-encre text-lg">${comp.title}</h4>
-                            <p class="text-sm text-gray-500 line-clamp-1">${comp.results.replace(/\n/g, ' | ')}</p>
+                            <span class="text-xs text-csb-corail font-bold uppercase tracking-wider">${esc(comp.date)}</span>
+                            <h4 class="font-bold text-csb-encre text-lg">${esc(comp.title)}</h4>
+                            <p class="text-sm text-gray-500 line-clamp-1">${esc(comp.results.replace(/\n/g, ' | '))}</p>
                         </div>
                         <div class="flex flex-col sm:flex-row gap-2">
                             <button class="btn-edit px-3 py-1.5 bg-gray-100 text-gray-600 font-bold rounded hover:bg-csb-dojo hover:text-white transition text-xs" data-id="${comp.id}">Éditer</button>
@@ -535,19 +499,8 @@
 
             // --- EXPORT JSON ---
             btnExport.addEventListener('click', () => {
-                const dataStr = JSON.stringify(compData, null, 4);
-                const blob = new Blob([dataStr], { type: "application/json" });
-                const url = URL.createObjectURL(blob);
-                
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = "competitions.json";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                alert("Le fichier competitions.json a été téléchargé.\nN'oubliez pas de le remplacer dans votre dossier data/ sur Github !");
+                // L'export passe désormais par la couche d'accès aux données (store.js).
+                Store.saveCollection('competitions', compData);
             });
         });
     </script>

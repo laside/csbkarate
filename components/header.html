@@ -1,7 +1,7 @@
 <header class="fixed top-0 w-full bg-white/90 backdrop-blur-md z-50 border-b border-gray-200 transition-all duration-300">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-20">
-            
+
             <!-- Logo avec intégration Wado-Ryu -->
             <a href="./index.html" class="flex items-center space-x-3 group">
                 <img src="./logo-wadoryu.png" alt="Logo Wado-Ryu" class="w-12 h-12 object-contain group-hover:scale-105 transition-transform" onerror="this.style.display='none'">
@@ -9,11 +9,11 @@
                     CSB <span class="text-csb-corail">Karaté</span>
                 </span>
             </a>
-            
+
             <nav class="hidden lg:flex space-x-8 font-condensed text-lg uppercase tracking-wider text-csb-encre">
                 <a href="./index.html#accueil" class="nav-link hover:text-csb-corail">Accueil</a>
                 <a href="./index.html#disciplines" class="nav-link hover:text-csb-corail">Disciplines</a>
-                
+
                 <!-- Menu Déroulant -->
                 <div class="relative group">
                     <button class="flex items-center gap-1 nav-link hover:text-csb-corail pb-1">
@@ -37,11 +37,40 @@
                 <a href="./wadoryu.html" class="nav-link text-csb-dojo hover:text-csb-corail">Le Wado-Ryu</a>
             </nav>
 
-            <div class="hidden md:flex">
-                <a href="#infos" class="bg-csb-corail text-white px-6 py-2 rounded-full font-condensed uppercase tracking-wider hover:bg-opacity-90 transition shadow-lg shadow-csb-corail/30">
-                    Nous rejoindre
-                </a>
+            <!-- Côté droit : CTA (tablette+) + bouton hamburger (mobile) -->
+            <div class="flex items-center gap-3">
+                <div class="hidden md:flex">
+                    <a href="./index.html#infos" class="bg-csb-corail text-white px-6 py-2 rounded-full font-condensed uppercase tracking-wider hover:bg-opacity-90 transition shadow-lg shadow-csb-corail/30">
+                        Nous rejoindre
+                    </a>
+                </div>
+
+                <button id="btn-burger" type="button"
+                        class="lg:hidden inline-flex items-center justify-center w-11 h-11 rounded-lg text-csb-encre hover:bg-csb-washi hover:text-csb-corail transition"
+                        aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="mobile-menu">
+                    <svg id="burger-open" class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    <svg id="burger-close" class="w-7 h-7 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
         </div>
+    </div>
+
+    <!-- Menu mobile déroulant (injecté/affiché sous la barre, géré par main.js) -->
+    <div id="mobile-menu"
+         class="lg:hidden hidden opacity-0 -translate-y-3 transition-all duration-200 border-t border-csb-tatami bg-white/95 backdrop-blur-md max-h-[calc(100vh-5rem)] overflow-y-auto">
+        <nav class="max-w-7xl mx-auto px-6 py-4 flex flex-col font-condensed uppercase tracking-wider text-csb-encre">
+            <a href="./index.html#accueil" class="py-3 border-b border-csb-tatami/60 hover:text-csb-corail transition">Accueil</a>
+            <a href="./index.html#disciplines" class="py-3 border-b border-csb-tatami/60 hover:text-csb-corail transition">Disciplines</a>
+            <a href="./wadoryu.html" class="py-3 border-b border-csb-tatami/60 text-csb-dojo hover:text-csb-corail transition">Le Wado-Ryu</a>
+
+            <span class="pt-4 pb-1 text-xs text-gray-400">Le club</span>
+            <a href="./club.html" class="py-3 border-b border-csb-tatami/60 hover:text-csb-corail transition">Découvrir le club</a>
+            <a href="./competitions.html" class="py-3 border-b border-csb-tatami/60 hover:text-csb-corail transition">Compétitions</a>
+            <a href="./grades.html" class="py-3 border-b border-csb-tatami/60 hover:text-csb-corail transition">Passage de grade</a>
+            <a href="./galerie.html" class="py-3 border-b border-csb-tatami/60 hover:text-csb-corail transition">Galerie</a>
+            <a href="./news.html" class="py-3 hover:text-csb-corail transition">Actualités &amp; News</a>
+
+            <a href="./index.html#infos" class="mt-4 bg-csb-corail text-white text-center px-6 py-3 rounded-full hover:bg-opacity-90 transition shadow-lg shadow-csb-corail/30">Nous rejoindre</a>
+        </nav>
     </div>
 </header>
