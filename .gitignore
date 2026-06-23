@@ -1,0 +1,10 @@
+# Variables d'environnement (jamais commitées)
+.env
+.env.local
+
+# Vercel CLI (cache local)
+.vercel
+
+# Système
+.DS_Store
+Thumbs.db
