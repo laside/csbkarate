@@ -16,6 +16,9 @@
     <script type="module" src="./assets/js/supabase.js"></script>
     <!-- Couche d'accès aux données (routage Supabase / JSON + export) -->
     <script src="./assets/js/store.js" defer></script>
+    <!-- Mode admin (login + modales) + édition de la saison (horaires/tarifs) -->
+    <script src="./assets/js/admin.js" defer></script>
+    <script src="./assets/js/saison.js" defer></script>
 
     <!-- Vercel Web Analytics -->
     <script>
@@ -41,7 +44,7 @@
             <div class="max-w-7xl mx-auto">
                 <div class="grid md:grid-cols-2 gap-16 items-center">
                     <div class="fade-in z-10">
-                        <span class="inline-block px-3 py-1 bg-red-100 text-csb-corail rounded-full text-xs font-bold mb-6 font-condensed uppercase tracking-wider">Saison 2024-2025</span>
+                        <span id="saison-badge" class="inline-block px-3 py-1 bg-red-100 text-csb-corail rounded-full text-xs font-bold mb-6 font-condensed uppercase tracking-wider">Saison 2026-2027</span>
                         <h1 class="font-serif text-6xl md:text-8xl leading-tight text-csb-encre mb-8">L'Art de la <br><span class="text-csb-corail">Précision.</span></h1>
                         <p class="text-xl text-gray-600 leading-relaxed max-w-lg font-sans mb-8">
                             Plus qu'un simple club, le CSB Karaté est une institution de rigueur et de respect. Pratiquez le Karaté Wado-Ryu et la Self-Défense Féminine à Brétigny-sur-Orge.
@@ -115,30 +118,30 @@
 
                 <div class="bento-grid">
                     <!-- Enfants -->
-                    <div class="bento-card group border-t-4 border-t-csb-encre">
-                        <div class="w-16 h-16 bg-white border border-csb-tatami shadow-sm rounded-xl flex items-center justify-center mb-6">
-                            <img src="./icon-kids.png" alt="Enfants" class="w-10 h-10 object-contain" onerror="this.style.display='none'">
+                    <div class="bento-card group border-t-4 border-t-csb-encre p-8 rounded-2xl shadow-lg bg-csb-washi flex flex-col items-center text-center">
+                        <div class="w-32 h-32 bg-white border border-csb-tatami shadow-sm rounded-full flex items-center justify-center mb-6">
+                            <img src="./assets/photos/kkt2.png" alt="Enfants" class="w-24 h-24 object-contain" onerror="this.style.display='none'">
                         </div>
-                        <h3 class="font-condensed text-2xl uppercase tracking-wider mb-3 text-csb-encre">Karaté Enfants</h3>
-                        <p class="text-gray-600 font-sans">Des baby-karaté aux minimes. Développement de la motricité, du respect et de la concentration dans un cadre ludique et sécurisé.</p>
+                        <h3 class="font-condensed text-3xl uppercase tracking-wider mb-3 text-csb-encre">Karaté Enfants</h3>
+                        <p class="text-gray-600 font-sans text-lg">Des baby-karaté aux minimes. Développement de la motricité, du respect et de la concentration dans un cadre ludique et sécurisé.</p>
                     </div>
 
                     <!-- Adultes -->
-                    <div class="bento-card group border-t-4 border-t-csb-corail">
-                        <div class="w-16 h-16 bg-red-50 rounded-xl flex items-center justify-center mb-6">
-                            <img src="./icon-kick.png" alt="Adultes" class="w-10 h-10 object-contain" onerror="this.style.display='none'">
+                    <div class="bento-card group border-t-4 border-t-csb-corail p-8 rounded-2xl shadow-lg bg-csb-washi flex flex-col items-center text-center">
+                        <div class="w-32 h-32 bg-red-50 rounded-full flex items-center justify-center mb-6">
+                            <img src="./assets/photos/mm2.png" alt="Adultes" class="w-24 h-24 object-contain" onerror="this.style.display='none'">
                         </div>
-                        <h3 class="font-condensed text-2xl uppercase tracking-wider mb-3 text-csb-corail">Karaté Adultes</h3>
-                        <p class="text-gray-600 font-sans">Étude des katas, travail technique (Kihon) et combat (Kumite). Amélioration de la condition physique et préparation aux grades.</p>
+                        <h3 class="font-condensed text-3xl uppercase tracking-wider mb-3 text-csb-corail">Karaté Adultes</h3>
+                        <p class="text-gray-600 font-sans text-lg">Étude des katas, travail technique (Kihon) et combat (Kumite). Amélioration de la condition physique et préparation aux grades.</p>
                     </div>
 
                     <!-- Self-Défense Féminine -->
-                    <div class="bento-card group border-t-4 border-t-csb-tatami bg-csb-dojo text-white">
-                        <div class="w-16 h-16 bg-white/10 rounded-xl flex items-center justify-center mb-6">
-                            <img src="./icon-fist.png" alt="Self" class="w-10 h-10 object-contain brightness-0 invert" onerror="this.style.display='none'">
+                    <div class="bento-card group border-t-4 border-t-csb-tatami bg-csb-dojo text-white p-8 rounded-2xl shadow-lg flex flex-col items-center text-center">
+                        <div class="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center mb-6">
+                            <img src="./assets/photos/ff2.png" alt="Self" class="w-24 h-24 object-contain brightness-0 invert" onerror="this.style.display='none'">
                         </div>
-                        <h3 class="font-condensed text-2xl uppercase tracking-wider mb-3 text-white">Self-Défense Féminine</h3>
-                        <p class="text-gray-300 font-sans">Apprentissage de techniques simples et efficaces pour les femmes, pour se protéger et gagner en confiance face aux situations du quotidien.</p>
+                        <h3 class="font-condensed text-3xl uppercase tracking-wider mb-3 text-white">Self-Défense Féminine</h3>
+                        <p class="text-gray-300 font-sans text-lg">Apprentissage de techniques simples et efficaces pour les femmes, pour se protéger et gagner en confiance face aux situations du quotidien.</p>
                     </div>
                 </div>
             </div>
@@ -146,20 +149,24 @@
 
         <!-- SECTION 4 : INFORMATIONS PRATIQUES (Fond Bleu Dojo) -->
         <section id="infos" class="py-24 bg-csb-dojo text-white border-t border-csb-encre">
-            <div class="max-w-7xl mx-auto px-6">
+            <div class="max-w-7xl mx-auto px-6 relative">
+                <!-- Bouton Admin discret (édition horaires & tarifs) -->
+                <button id="btn-open-login" class="absolute top-0 right-6 bg-white/10 text-gray-300 hover:bg-csb-corail hover:text-white px-3 py-1 rounded text-xs font-bold transition">Admin</button>
+
                 <div class="text-center mb-16">
                     <h2 class="text-5xl font-condensed uppercase tracking-wider mb-4">02. Informations Pratiques</h2>
-                    <p class="text-gray-300 max-w-2xl mx-auto font-sans">Lieux, horaires d'entraînements, tarifs et modalités d'inscription pour la saison 2024/2025.</p>
+                    <p class="text-gray-300 max-w-2xl mx-auto font-sans">Lieux, horaires d'entraînements, tarifs et modalités d'inscription pour la saison <span id="saison-infos-label">2026/2027</span>.</p>
                 </div>
 
                 <div class="bento-grid">
                     <!-- Grande Carte : Horaires -->
                     <div class="bento-card md:col-span-2 bg-white text-csb-encre">
-                        <div class="flex justify-between items-start mb-8">
-                            <h3 class="text-2xl font-bold font-condensed uppercase tracking-wider">Horaires 2024/2025</h3>
-                            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase font-sans">Saison Active</span>
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-2xl font-bold font-condensed uppercase tracking-wider">Horaires <span id="horaires-label">2026/2027</span></h3>
+                            <span id="saison-statut" class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase font-sans">Saison active</span>
                         </div>
-                        <div class="space-y-4 font-sans text-sm md:text-base">
+                        <p id="saison-plage" class="text-xs text-gray-400 mb-6 font-sans"></p>
+                        <div id="horaires-list" class="space-y-4 font-sans text-sm md:text-base">
                             <!-- Baby & Enfants 1 -->
                             <div class="flex flex-col md:flex-row justify-between border-b border-csb-tatami pb-3">
                                 <div>
@@ -210,18 +217,18 @@
                     <!-- Petite Carte : Tarifs & Essai -->
                     <div class="bento-card bg-csb-corail text-white border-none flex flex-col justify-between">
                         <div>
-                            <h3 class="text-2xl font-bold font-condensed uppercase tracking-wider mb-2">Tarifs 2024</h3>
-                            <p class="text-sm opacity-90 mb-4 font-sans">Des remises familles sont appliquées (de -10€ à -70€ selon le nombre d'inscrits).</p>
+                            <h3 class="text-2xl font-bold font-condensed uppercase tracking-wider mb-2">Tarifs <span id="tarifs-label">2027</span></h3>
+                            <p id="tarifs-note" class="text-sm opacity-90 mb-4 font-sans">Des remises familles sont appliquées (de -10€ à -70€ selon le nombre d'inscrits).</p>
                         </div>
                         <div>
                             <div class="border-t border-white/20 pt-3 mt-3">
-                                <ul class="text-sm opacity-90 font-sans mt-1 space-y-2">
+                                <ul id="tarifs-list" class="text-sm opacity-90 font-sans mt-1 space-y-2">
                                     <li class="flex justify-between"><span>Baby Karaté</span> <strong>183 €</strong></li>
                                     <li class="flex justify-between"><span>Enfants</span> <strong>203 €</strong></li>
                                     <li class="flex justify-between"><span>Ados / Adultes</span> <strong>233 €</strong></li>
                                     <li class="flex justify-between"><span>Self-Défense Féminine</span> <strong>133 €</strong></li>
                                 </ul>
-                                <p class="text-[10px] opacity-75 mt-3 italic">* Prévoir 37€ supplémentaires pour la licence FFK.</p>
+                                <p id="tarifs-licence" class="text-[10px] opacity-75 mt-3 italic">* Prévoir 37€ supplémentaires pour la licence FFK.</p>
                             </div>
                         </div>
                     </div>
@@ -238,7 +245,7 @@
                                 DÉMARRER L'INSCRIPTION →
                             </a>
                             <!-- LIEN 2 : Fiche de renseignements PDF -->
-                            <a href="./assets/docs/2024-09-04-fiche-renseignements-2024-2025.pdf" target="_blank" class="block w-full text-center border-2 border-csb-tatami bg-white text-csb-encre py-3 rounded-lg font-bold text-sm tracking-wide hover:border-csb-encre transition flex items-center justify-center gap-2">
+                            <a href="./assets/docs/2024-09-04-fiche-renseignements-2026-2027.pdf" target="_blank" class="block w-full text-center border-2 border-csb-tatami bg-white text-csb-encre py-3 rounded-lg font-bold text-sm tracking-wide hover:border-csb-encre transition flex items-center justify-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                 Fiche Renseignements
                             </a>
@@ -290,6 +297,87 @@
                 </div>
             </div>
         </section>
+        <!-- ============================================== -->
+        <!-- MODALES D'ADMINISTRATION (Cachées par défaut)  -->
+        <!-- ============================================== -->
+
+        <!-- 1. Modale de Connexion -->
+        <div id="modal-login" class="fixed inset-0 bg-csb-encre/90 z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
+            <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full relative">
+                <button id="btn-close-login" class="absolute top-4 right-4 text-gray-400 hover:text-csb-corail">✕</button>
+                <h3 class="font-condensed text-2xl uppercase tracking-wider mb-4">Accès Bureau</h3>
+                <input type="password" id="admin-password" placeholder="Mot de passe" class="w-full border border-csb-tatami rounded p-3 mb-4 font-sans focus:outline-none focus:border-csb-dojo">
+                <button id="btn-login" class="w-full bg-csb-dojo text-white font-bold py-3 rounded hover:bg-csb-corail transition">Se connecter</button>
+                <p id="login-error" class="text-csb-corail text-sm mt-2 hidden">Mot de passe incorrect.</p>
+                <a href="#" id="btn-forgot-password" class="text-sm text-gray-500 hover:text-csb-corail block text-center mt-4">Mot de passe oublié ?</a>
+            </div>
+        </div>
+
+        <!-- 2. Modale Dashboard Admin — Édition de la saison -->
+        <div id="modal-admin" class="fixed inset-0 bg-csb-washi z-50 overflow-y-auto hidden opacity-0 transition-opacity text-csb-encre">
+            <div class="max-w-4xl mx-auto p-6 pt-20">
+                <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
+                    <h2 class="font-serif text-4xl text-csb-encre">Gestion de la Saison</h2>
+                    <div class="flex gap-4">
+                        <button id="btn-export" class="bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700 transition shadow-lg">💾 Enregistrer en ligne</button>
+                        <button id="btn-close-admin" class="bg-gray-200 text-csb-encre px-6 py-2 rounded font-bold hover:bg-gray-300 transition">Fermer</button>
+                    </div>
+                </div>
+
+                <p class="text-sm text-gray-500 mb-8 max-w-3xl">
+                    Modifiez le libellé de la saison, sa plage de dates, les horaires et les tarifs,
+                    puis cliquez sur <strong>Enregistrer en ligne</strong> (sauvegarde directe en base).
+                    Le statut « Saison active / Saison terminée » est calculé automatiquement à partir de la date de fin.
+                </p>
+
+                <div class="space-y-8">
+
+                    <!-- Bloc 1 : La saison -->
+                    <section class="bg-white p-6 rounded-xl border border-csb-tatami shadow-sm">
+                        <h3 class="font-condensed text-xl uppercase tracking-wider mb-4 text-csb-dojo">La saison</h3>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">Libellé (ex : 2026/2027)</label>
+                                <input type="text" id="saison-input-label" placeholder="2026/2027" class="w-full border border-csb-tatami rounded p-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">Début de saison</label>
+                                <input type="date" id="saison-input-debut" class="w-full border border-csb-tatami rounded p-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">Fin de saison</label>
+                                <input type="date" id="saison-input-fin" class="w-full border border-csb-tatami rounded p-2 text-sm">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Bloc 2 : Horaires -->
+                    <section class="bg-csb-washi p-6 rounded-xl border border-csb-tatami">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-condensed text-xl uppercase tracking-wider text-csb-dojo">Horaires</h3>
+                            <button id="btn-add-horaire" type="button" class="bg-csb-dojo text-white px-4 py-1.5 rounded text-sm font-bold hover:bg-csb-corail transition">+ Ajouter un créneau</button>
+                        </div>
+                        <div id="admin-horaires-list" class="space-y-4"></div>
+                    </section>
+
+                    <!-- Bloc 3 : Tarifs -->
+                    <section class="bg-csb-washi p-6 rounded-xl border border-csb-tatami">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-condensed text-xl uppercase tracking-wider text-csb-dojo">Tarifs</h3>
+                            <button id="btn-add-tarif" type="button" class="bg-csb-dojo text-white px-4 py-1.5 rounded text-sm font-bold hover:bg-csb-corail transition">+ Ajouter un tarif</button>
+                        </div>
+                        <div id="admin-tarifs-list" class="space-y-3 mb-6"></div>
+
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Note « remises familles »</label>
+                        <textarea id="saison-input-tarifs-note" rows="2" placeholder="Des remises familles sont appliquées…" class="w-full border border-csb-tatami rounded p-2 mb-4 text-sm"></textarea>
+
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Note « licence FFK »</label>
+                        <input type="text" id="saison-input-licence-note" placeholder="* Prévoir 37€ supplémentaires pour la licence FFK." class="w-full border border-csb-tatami rounded p-2 text-sm">
+                    </section>
+
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- C'est ici que le JS va injecter components/footer.html -->
