@@ -53,8 +53,10 @@
         if (passwordInput === motDePasseSecret) {
             // Le mot de passe est bon, on enregistre l'autorisation pour la session
             sessionStorage.setItem('csb_access_granted', 'true');
-            // On redirige vers la page d'accueil
-            window.location.href = 'index.html';
+            // On redirige vers la page d'accueil, en préservant le hash (#...) :
+            // un lien de récupération de mot de passe Supabase (#access_token=...&type=recovery)
+            // a pu transiter jusqu'ici via main.js, il doit survivre jusqu'à index.html.
+            window.location.href = 'index.html' + window.location.hash;
         } else {
             // Mot de passe incorrect, on affiche l'erreur
             errorMessage.classList.remove('hidden');
