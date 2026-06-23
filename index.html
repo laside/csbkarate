@@ -116,32 +116,111 @@
                     <p class="text-gray-500 max-w-2xl mx-auto font-sans text-lg">Une approche pédagogique adaptée à chaque âge et à chaque objectif, du développement moteur à la maîtrise de soi.</p>
                 </div>
 
+                <!-- Cartes à retournement : clic = la discipline se retourne et révèle la section (cf. club.html) -->
                 <div class="bento-grid">
                     <!-- Enfants -->
-                    <div class="bento-card group border-t-4 border-t-csb-encre p-8 rounded-2xl shadow-lg bg-csb-washi flex flex-col items-center text-center">
-                        <div class="w-32 h-32 bg-white border border-csb-tatami shadow-sm rounded-full flex items-center justify-center mb-6">
-                            <img src="./assets/photos/kkt2.PNG" alt="Enfants" class="w-24 h-24 object-contain" onerror="this.style.display='none'">
+                    <div class="flip-card" role="button" tabindex="0" aria-pressed="false" aria-label="Karaté Enfants : afficher le détail de la section">
+                        <div class="flip-card-inner">
+                            <!-- Recto : discipline -->
+                            <div class="flip-card-front bento-card border-t-4 border-t-csb-encre p-8 rounded-2xl shadow-lg bg-csb-washi flex flex-col items-center text-center">
+                                <div class="w-32 h-32 bg-white border border-csb-tatami shadow-sm rounded-full flex items-center justify-center mb-6">
+                                    <img src="./assets/photos/kkt2.PNG" alt="Enfants" class="w-24 h-24 object-contain" onerror="this.style.display='none'">
+                                </div>
+                                <h3 class="font-condensed text-3xl uppercase tracking-wider mb-3 text-csb-encre">Karaté Enfants</h3>
+                                <p class="text-gray-600 font-sans text-lg">Des baby-karaté aux minimes. Développement de la motricité, du respect et de la concentration dans un cadre ludique et sécurisé.</p>
+                                <span class="mt-auto pt-6 inline-flex items-center gap-2 text-xs font-condensed uppercase tracking-widest text-csb-corail">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    Voir la section
+                                </span>
+                            </div>
+                            <!-- Verso : section (Enfants & Ados) -->
+                            <div class="flip-card-back bento-card border-t-4 border-t-csb-dojo p-8 rounded-2xl shadow-lg bg-white flex flex-col text-left">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre">Enfants &amp; Ados</h3>
+                                    <span class="text-sm font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Dès 4 ans</span>
+                                </div>
+                                <p class="text-sm text-csb-dojo font-bold mb-4">Motricité, respect &amp; concentration</p>
+                                <ul class="space-y-2 text-sm text-gray-600 font-sans">
+                                    <li class="flex items-start gap-2"><span class="text-csb-dojo mt-1">▸</span> Éveil et coordination par le jeu (Baby Karaté)</li>
+                                    <li class="flex items-start gap-2"><span class="text-csb-dojo mt-1">▸</span> Développement de la concentration et du respect</li>
+                                    <li class="flex items-start gap-2"><span class="text-csb-dojo mt-1">▸</span> Compétitions proposées (jamais imposées)</li>
+                                </ul>
+                                <span class="mt-auto pt-6 inline-flex items-center gap-2 text-xs font-condensed uppercase tracking-widest text-csb-corail">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    Retour
+                                </span>
+                            </div>
                         </div>
-                        <h3 class="font-condensed text-3xl uppercase tracking-wider mb-3 text-csb-encre">Karaté Enfants</h3>
-                        <p class="text-gray-600 font-sans text-lg">Des baby-karaté aux minimes. Développement de la motricité, du respect et de la concentration dans un cadre ludique et sécurisé.</p>
                     </div>
 
                     <!-- Adultes -->
-                    <div class="bento-card group border-t-4 border-t-csb-corail p-8 rounded-2xl shadow-lg bg-csb-washi flex flex-col items-center text-center">
-                        <div class="w-32 h-32 bg-red-50 rounded-full flex items-center justify-center mb-6">
-                            <img src="./assets/photos/mm2.PNG" alt="Adultes" class="w-24 h-24 object-contain" onerror="this.style.display='none'">
+                    <div class="flip-card" role="button" tabindex="0" aria-pressed="false" aria-label="Karaté Adultes : afficher le détail de la section">
+                        <div class="flip-card-inner">
+                            <!-- Recto : discipline -->
+                            <div class="flip-card-front bento-card border-t-4 border-t-csb-corail p-8 rounded-2xl shadow-lg bg-csb-washi flex flex-col items-center text-center">
+                                <div class="w-32 h-32 bg-red-50 rounded-full flex items-center justify-center mb-6">
+                                    <img src="./assets/photos/mm2.PNG" alt="Adultes" class="w-24 h-24 object-contain" onerror="this.style.display='none'">
+                                </div>
+                                <h3 class="font-condensed text-3xl uppercase tracking-wider mb-3 text-csb-corail">Karaté Adultes</h3>
+                                <p class="text-gray-600 font-sans text-lg">Étude des katas, travail technique (Kihon) et combat (Kumite). Amélioration de la condition physique et préparation aux grades.</p>
+                                <span class="mt-auto pt-6 inline-flex items-center gap-2 text-xs font-condensed uppercase tracking-widest text-csb-corail">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    Voir la section
+                                </span>
+                            </div>
+                            <!-- Verso : section (Ados & Adultes) -->
+                            <div class="flip-card-back bento-card border-t-4 border-t-csb-corail p-8 rounded-2xl shadow-lg bg-white flex flex-col text-left">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre">Ados &amp; Adultes</h3>
+                                    <span class="text-sm font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Dès 14 ans</span>
+                                </div>
+                                <p class="text-sm text-csb-corail font-bold mb-4">Condition physique &amp; maîtrise de soi</p>
+                                <ul class="space-y-2 text-sm text-gray-600 font-sans">
+                                    <li class="flex items-start gap-2"><span class="text-csb-corail mt-1">▸</span> Recherche de l'esthétique du mouvement (Katas)</li>
+                                    <li class="flex items-start gap-2"><span class="text-csb-corail mt-1">▸</span> Travail technique (Kihon) et combat (Kumite)</li>
+                                    <li class="flex items-start gap-2"><span class="text-csb-corail mt-1">▸</span> Passages de grades réguliers</li>
+                                </ul>
+                                <span class="mt-auto pt-6 inline-flex items-center gap-2 text-xs font-condensed uppercase tracking-widest text-csb-corail">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    Retour
+                                </span>
+                            </div>
                         </div>
-                        <h3 class="font-condensed text-3xl uppercase tracking-wider mb-3 text-csb-corail">Karaté Adultes</h3>
-                        <p class="text-gray-600 font-sans text-lg">Étude des katas, travail technique (Kihon) et combat (Kumite). Amélioration de la condition physique et préparation aux grades.</p>
                     </div>
 
                     <!-- Self-Défense Féminine -->
-                    <div class="bento-card group border-t-4 border-t-csb-tatami bg-csb-dojo text-white p-8 rounded-2xl shadow-lg flex flex-col items-center text-center">
-                        <div class="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center mb-6">
-                            <img src="./assets/photos/ff2.PNG" alt="Self" class="w-24 h-24 object-contain brightness-0 invert" onerror="this.style.display='none'">
+                    <div class="flip-card" role="button" tabindex="0" aria-pressed="false" aria-label="Self-Défense Féminine : afficher le détail de la section">
+                        <div class="flip-card-inner">
+                            <!-- Recto : discipline -->
+                            <div class="flip-card-front bento-card border-t-4 border-t-csb-tatami bg-csb-dojo text-white p-8 rounded-2xl shadow-lg flex flex-col items-center text-center">
+                                <div class="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center mb-6">
+                                    <img src="./assets/photos/ff2.PNG" alt="Self" class="w-24 h-24 object-contain brightness-0 invert" onerror="this.style.display='none'">
+                                </div>
+                                <h3 class="font-condensed text-3xl uppercase tracking-wider mb-3 text-white">Self-Défense Féminine</h3>
+                                <p class="text-gray-300 font-sans text-lg">Apprentissage de techniques simples et efficaces pour les femmes, pour se protéger et gagner en confiance face aux situations du quotidien.</p>
+                                <span class="mt-auto pt-6 inline-flex items-center gap-2 text-xs font-condensed uppercase tracking-widest text-csb-corail">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    Voir la section
+                                </span>
+                            </div>
+                            <!-- Verso : section (Self-Défense Féminine) -->
+                            <div class="flip-card-back bento-card border-t-4 border-t-csb-corail bg-csb-dojo text-white p-8 rounded-2xl shadow-lg flex flex-col text-left">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-condensed text-2xl uppercase tracking-wider text-white">Self-Défense</h3>
+                                    <span class="text-sm font-bold text-white/70 bg-white/10 px-2 py-1 rounded">Adultes</span>
+                                </div>
+                                <p class="text-sm text-csb-corail font-bold mb-4">Sécurité &amp; confiance en soi</p>
+                                <ul class="space-y-2 text-sm text-gray-300 font-sans">
+                                    <li class="flex items-start gap-2"><span class="text-csb-corail mt-1">▸</span> Techniques simples et efficaces de Self-Défense</li>
+                                    <li class="flex items-start gap-2"><span class="text-csb-corail mt-1">▸</span> Savoir gérer les situations du quotidien</li>
+                                    <li class="flex items-start gap-2"><span class="text-csb-corail mt-1">▸</span> Gagner en confiance et en assurance</li>
+                                </ul>
+                                <span class="mt-auto pt-6 inline-flex items-center gap-2 text-xs font-condensed uppercase tracking-widest text-csb-corail">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    Retour
+                                </span>
+                            </div>
                         </div>
-                        <h3 class="font-condensed text-3xl uppercase tracking-wider mb-3 text-white">Self-Défense Féminine</h3>
-                        <p class="text-gray-300 font-sans text-lg">Apprentissage de techniques simples et efficaces pour les femmes, pour se protéger et gagner en confiance face aux situations du quotidien.</p>
                     </div>
                 </div>
             </div>
@@ -442,6 +521,18 @@
             
             document.querySelectorAll('section').forEach(section => {
                 observer.observe(section);
+            });
+
+            // Cartes disciplines : retournement au clic (et au clavier pour l'accessibilité).
+            document.querySelectorAll('.flip-card').forEach(card => {
+                const toggle = () => {
+                    const flipped = card.classList.toggle('is-flipped');
+                    card.setAttribute('aria-pressed', flipped ? 'true' : 'false');
+                };
+                card.addEventListener('click', toggle);
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+                });
             });
         });
     </script>
