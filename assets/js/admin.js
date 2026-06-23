@@ -40,6 +40,7 @@
         login: 'btn-login',
         password: 'admin-password',
         loginError: 'login-error',
+        forgotPassword: 'btn-forgot-password',
         modalAdmin: 'modal-admin',
         closeAdmin: 'btn-close-admin'
     };
@@ -112,6 +113,26 @@
                     console.error(err);
                 }
                 if (typeof hooks.onCloseAdmin === 'function') hooks.onCloseAdmin();
+            });
+        }
+
+        // Demande de réinitialisation de mot de passe depuis le site
+        if (el.forgotPassword) {
+            el.forgotPassword.addEventListener('click', async (e) => {
+                e.preventDefault();
+                if (!confirm("Voulez-vous recevoir un e-mail pour réinitialiser le mot de passe administrateur ?")) return;
+                
+                try {
+                    const { error } = await global.sb.auth.resetPasswordForEmail(global.CSB_ADMIN_EMAIL, {
+                        redirectTo: window.location.origin
+                    });
+                    if (error) throw error;
+                    alert("Un e-mail de réinitialisation a été envoyé à l'adresse de l'administrateur.");
+                    hide(el.modalLogin); // On peut fermer la modale
+                } catch (err) {
+                    console.error(err);
+                    alert("Erreur lors de l'envoi de l'e-mail : " + (err.message || err));
+                }
             });
         }
     }
