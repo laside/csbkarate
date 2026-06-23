@@ -72,6 +72,73 @@ display: none;
 scrollbar-width: none;
 }
 
+/* STREAMING_CHUNK:Formulaires (module gestion / inscription)... */
+/* Le CDN Tailwind « Play » ne gère pas @apply dans un .css externe :
+   ces helpers sont donc en CSS pur, mais respectent la charte. */
+
+.lbl {
+display: block;
+font-family: 'Barlow Condensed', sans-serif;
+text-transform: uppercase;
+letter-spacing: 0.05em;
+font-size: 0.875rem;
+color: #0D1B2A; /* encre */
+margin-bottom: 0.25rem;
+}
+
+.inp {
+width: 100%;
+border: 1px solid #E0E1DD; /* tatami */
+border-radius: 0.5rem;
+padding: 0.7rem 0.75rem;
+font-family: 'Inter', sans-serif;
+background: #fff;
+color: #0D1B2A;
+transition: border-color 0.2s, box-shadow 0.2s;
+}
+.inp:focus {
+outline: none;
+border-color: #1B263B; /* dojo */
+box-shadow: 0 0 0 3px rgba(27, 38, 59, 0.12);
+}
+
+/* Ligne de consentement : case à cocher + libellé alignés en haut. */
+.consent {
+display: flex;
+align-items: flex-start;
+gap: 0.6rem;
+font-family: 'Inter', sans-serif;
+font-size: 0.9rem;
+line-height: 1.4;
+color: #0D1B2A;
+cursor: pointer;
+}
+
+.chk {
+flex: 0 0 auto;
+width: 1.15rem;
+height: 1.15rem;
+margin-top: 0.1rem;
+accent-color: #E63946; /* corail */
+cursor: pointer;
+}
+
+/* Stepper : état de la pastille d'étape (piloté par inscription.js). */
+.step-bubble {
+border-color: #E0E1DD;
+color: #9aa1ab;
+background: #fff;
+}
+.step-item.is-active .step-bubble {
+border-color: #E63946;
+color: #E63946;
+}
+.step-item.is-done .step-bubble {
+border-color: #1B263B;
+background: #1B263B;
+color: #fff;
+}
+
 /* STREAMING_CHUNK:Cartes à retournement (disciplines)... */
 /* Flip 3D : Tailwind CDN ne fournit pas preserve-3d / backface-hidden, on
    centralise donc la mécanique ici. Empilement par grille : les deux faces

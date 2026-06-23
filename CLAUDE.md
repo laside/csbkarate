@@ -142,6 +142,52 @@ Déverrouillage (construction.html) : La page de construction contient un formul
 **TODO restants :**
 - [ ] Insérer le lien HelloAsso définitif dans la section "Informations Pratiques" de l'accueil (placeholder `#lien-vers-helloasso-ou-form` dans `index.html`)
 - [ ] Remplacer les `[À REMPLIR]` dans `mentions-legales.html` (éditeur/président, adresse, téléphone, email)
+- [ ] Tester en local la migration `grades` (re-fetch sur login, ordre préservé, `hidden` filtré par RLS) — pas encore vérifié manuellement.
+- [ ] Supabase **Storage** pour les photos de la galerie (aujourd'hui dépôt manuel dans `assets/photos/galerie/`) — non commencé.
+
+## Module Gestion de club (branche `feature-gestion`) — EN COURS
+
+Système d'information du club inspiré de **MonClub**, intégré au site. Spécifié à partir d'un rapport Gemini (donné comme direction, **pas pris au pied de la lettre**) + du **dossier d'inscription papier 2022/2023** (source de vérité pour les champs et les tarifs). Objectif : **simplicité + coût 0 €/mois**.
+
+### Décisions verrouillées (22/06/2026)
+- **Compte membre créé à l'inscription** (Supabase Auth) : les écritures d'inscription se font **sous la session du référent**, scopées par RLS à sa seule famille (pas d'écriture anonyme).
+- **Paiement « au club » d'abord** (chèque/espèces validés par le bureau). HelloAsso (paiement en ligne) = phase ultérieure, via une **petite fonction serverless Vercel `/api/`** (le `client_secret` HelloAsso ne peut PAS vivre dans le navigateur). Cette fonction n'altère pas le site statique (pas de build front).
+- **On démarre par l'Inscription en ligne.**
+
+### Coupes de périmètre validées (vs rapport Gemini)
+- ❌ **Appli mobile + notifications push** → remplacées par **web responsive + email** (il n'y aura jamais d'appli native, ça casserait les contraintes).
+- ❌ **Boutique / Karategi**.
+- ❌ **Comptabilité avancée** → réduite à un **export CSV** des paiements pour le bilan d'AG.
+- ⚠️ **Relances auto de documents manquants** → démarrer par un **bouton « relancer » manuel** ; automatisation plus tard.
+
+### Rôles (auth multi-utilisateurs, nouveau vs l'ancien admin unique)
+`bureau` (secrétariat/admin, accès total) · `enseignant` (valide les grades) · `adhérent` (voit son dossier). Géré par une table `profiles` (user_id → role, famille_id) + RLS par utilisateur.
+
+### Tarifs (source = dossier papier, PAS les chiffres de Gemini qui étaient faux)
+- Cotisations (licence/assurance **incluse**, pas de ligne séparée) : **Adulte 210 € · Enfant 180 € · Self-défense 130 €**.
+- **Membre du bureau : 37 € fixe** (remplace le tarif de cours).
+- **Remise famille** (sur N inscrits dans le panier) : **2→10 € · 3→30 € · 4→50 € · 5+→70 €**.
+- **Remise Pass'Sport : 50 €** (⚠️ change chaque année → **valeur configurable** par le bureau).
+- Acompte 30 € = vestige de la pré-inscription papier en 2 temps → **supprimé du flux en ligne** (on paie le total d'un coup).
+- Règlement **3× max par chèque uniquement**, chèques libellés à *CSB Karaté*, encaissés mensuellement.
+- **Règle d'or attestation CE/CAF** : PDF d'attestation **bloqué tant que le règlement n'est pas complet** (toutes les échéances encaissées).
+
+### RGPD (non négociable)
+Données de **mineurs** (photos, contact d'urgence, santé) → Storage en **bucket PRIVÉ** (≠ galerie publique), RLS étanche, traçabilité des consentements (règlement intérieur, droit à l'image, autorisation parentale).
+
+### Roadmap (chaque phase livrable + testable)
+- **Phase 0 — Fondations** ✅ migration prête : `supabase/migrations/0006_gestion_foundations.sql` (renumérotée depuis `0005_*` lors de la fusion avec `main`, qui avait déjà pris ce numéro pour `0005_saison.sql`) (tables `profiles`/`tarifs`/`familles`/`adherents`/`dossiers`/`paiements` + RLS multi-rôles + bucket privé `dossiers` + trigger profil auto + seed tarifs `2026-2027`). **À exécuter dans le SQL Editor.** Montants en **centimes** partout. Le module gestion N'utilise PAS `store.js` (CRUD relationnel avec auth, pattern différent du CMS) → ses propres modules JS.
+  - **Verrou sécurité clé** : écriture `paiements` réservée au `bureau` (un membre ne peut pas s'auto-encaisser → règle d'or des attestations inviolable).
+  - **1er compte bureau** = l'email admin historique (`marsella.lorenzo@gmail.com`, promu par le 5c du SQL) — adapter si différent.
+- **Phase 1 — Inscription en ligne** ✅ LIVRÉ (à tester en local) : `inscription.html` (wizard 4 étapes : famille → adhérents 1→5 → autorisations → récap), logique dans `assets/js/inscription.js`, **moteur de tarif** pur et testable dans `assets/js/tarifs.js` (`window.CSBTarifs`, tout en **centimes**). Règles d'âge au 1er sept. (Self ≥13 ans bloquant ; <18 → autorisation parentale dynamique à l'étape 3). Photos uploadées dans le bucket privé `dossiers` (chemin `<uid>/...`). **Flux de soumission** : `auth.signUp` (référent) → `upsert familles` → `insert adherents` (+ photos) → `insert dossiers` (statut `attente_paiement`). **Aucun `paiements` créé ici** (réservé au bureau). Migration complémentaire **`0007_adherents_passsport.sql`** (colonnes `pass_sport` / `pass_sport_code` sur `adherents`) — **à exécuter**. Le moteur de tarif réutilise la ligne `tarifs` Supabase (fallback `DEFAULT_CONFIG`). Pré-requis Auth : **« Confirm email » désactivé** (sinon pas de session post-signUp → l'insert RLS échoue). Limite connue Phase 1 : pas de rollback transactionnel si une étape échoue après le `signUp` (message invitant à contacter le club plutôt que resoumettre) ; la page n'est encore liée dans aucun menu (accès direct `/inscription.html`).
+- **Phase 2 — Espace Bureau (CRM)** : liste des dossiers, filtres par statut, validation documents + encaissements, `Incomplet → Validé`.
+- **Phase 3 — Paiement HelloAsso** : fonction `/api/checkout` (1×/3×) + retour de paiement.
+- **Phase 4 — Espace Adhérent** : dossier/statut/ceinture + **attestation PDF** (jsPDF CDN, gated règlement complet).
+- **Phase 5 — Grades par l'enseignant** : validation d'un grade en 1 clic (réutilise les données de référence de `grades`).
+- **Phase 6 (optionnel)** : planning + alertes email, présences, export compta CSV.
+
+### Coût visé : 0 €/mois
+HelloAsso 0 % · Supabase free · Vercel Hobby (fonctions + Cron inclus) · jsPDF CDN · emails via free tier (ex. Resend). Piège : pause Supabase après ~1 sem. d'inactivité → **ping Vercel Cron** gratuit.
 
 ## Dette technique connue (audit du 22/06/2026)
 Détail et priorisation dans l'historique de conversation ; points saillants à traiter :
