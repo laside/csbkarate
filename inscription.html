@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription en ligne | CSB Karaté</title>
+
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./assets/js/tailwind.js"></script>
+    <script src="./assets/js/main.js" defer></script>
+    <script type="module" src="./assets/js/supabase.js"></script>
+    <script src="./assets/js/tarifs.js" defer></script>
+    <script src="./assets/js/inscription.js" defer></script>
+
+    <!-- Vercel Web Analytics -->
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="bg-csb-washi text-csb-encre font-sans antialiased min-h-screen flex flex-col">
+
+    <div id="header-placeholder"></div>
+
+    <main class="flex-grow pt-32 pb-24">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6">
+
+            <!-- En-tête -->
+            <div class="text-center mb-10">
+                <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm mb-3 block">Saison 2026 — 2027</span>
+                <h1 class="font-serif text-4xl md:text-5xl text-csb-encre mb-4">Inscription en ligne</h1>
+                <p class="text-lg text-gray-500 max-w-2xl mx-auto">
+                    Inscrivez jusqu'à 5 membres d'une même famille en quelques minutes.
+                    Le règlement se fait ensuite au club (chèque ou espèces).
+                </p>
+            </div>
+
+            <!-- Indicateur d'étapes -->
+            <ol id="stepper" class="flex items-center justify-center gap-2 sm:gap-4 mb-10 font-condensed uppercase tracking-wider text-sm">
+                <li class="step-item flex items-center gap-2" data-step-indicator="1">
+                    <span class="step-bubble w-9 h-9 rounded-full border-2 flex items-center justify-center font-bold transition">1</span>
+                    <span class="hidden sm:inline">Famille</span>
+                </li>
+                <li class="w-6 sm:w-10 h-px bg-csb-tatami"></li>
+                <li class="step-item flex items-center gap-2" data-step-indicator="2">
+                    <span class="step-bubble w-9 h-9 rounded-full border-2 flex items-center justify-center font-bold transition">2</span>
+                    <span class="hidden sm:inline">Adhérents</span>
+                </li>
+                <li class="w-6 sm:w-10 h-px bg-csb-tatami"></li>
+                <li class="step-item flex items-center gap-2" data-step-indicator="3">
+                    <span class="step-bubble w-9 h-9 rounded-full border-2 flex items-center justify-center font-bold transition">3</span>
+                    <span class="hidden sm:inline">Autorisations</span>
+                </li>
+                <li class="w-6 sm:w-10 h-px bg-csb-tatami"></li>
+                <li class="step-item flex items-center gap-2" data-step-indicator="4">
+                    <span class="step-bubble w-9 h-9 rounded-full border-2 flex items-center justify-center font-bold transition">4</span>
+                    <span class="hidden sm:inline">Récapitulatif</span>
+                </li>
+            </ol>
+
+            <div class="grid lg:grid-cols-3 gap-8 items-start">
+
+                <!-- Colonne formulaire -->
+                <form id="form-inscription" class="lg:col-span-2 space-y-6" novalidate>
+
+                    <!-- ======================= ÉTAPE 1 — FAMILLE ======================= -->
+                    <section data-step="1" class="bg-white rounded-2xl shadow-sm border border-csb-tatami p-6 sm:p-8">
+                        <h2 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-1">Le référent & la famille</h2>
+                        <p class="text-gray-500 text-sm mb-6">
+                            Le référent (un parent pour les mineurs) crée le compte qui suivra le dossier.
+                        </p>
+
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div class="sm:col-span-2">
+                                <label class="lbl" for="ref-nom">Nom et prénom du référent</label>
+                                <input id="ref-nom" data-field="nomReferent" type="text" autocomplete="name" class="inp" required>
+                            </div>
+                            <div>
+                                <label class="lbl" for="ref-email">Email (identifiant de connexion)</label>
+                                <input id="ref-email" data-field="email" type="email" autocomplete="email" class="inp" required>
+                            </div>
+                            <div>
+                                <label class="lbl" for="ref-tel">Téléphone d'urgence</label>
+                                <input id="ref-tel" data-field="telephone" type="tel" autocomplete="tel" class="inp" required>
+                            </div>
+                            <div>
+                                <label class="lbl" for="ref-pwd">Mot de passe</label>
+                                <input id="ref-pwd" data-field="password" type="password" autocomplete="new-password" minlength="6" class="inp" required>
+                                <p class="text-xs text-gray-400 mt-1">6 caractères minimum.</p>
+                            </div>
+                            <div>
+                                <label class="lbl" for="ref-pwd2">Confirmer le mot de passe</label>
+                                <input id="ref-pwd2" data-field="password2" type="password" autocomplete="new-password" class="inp" required>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="lbl" for="ref-adresse">Adresse</label>
+                                <input id="ref-adresse" data-field="adresse" type="text" autocomplete="street-address" class="inp">
+                            </div>
+                            <div>
+                                <label class="lbl" for="ref-cp">Code postal</label>
+                                <input id="ref-cp" data-field="codePostal" type="text" inputmode="numeric" autocomplete="postal-code" class="inp">
+                            </div>
+                            <div>
+                                <label class="lbl" for="ref-ville">Ville</label>
+                                <input id="ref-ville" data-field="ville" type="text" autocomplete="address-level2" class="inp">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ======================= ÉTAPE 2 — ADHÉRENTS ======================= -->
+                    <section data-step="2" class="hidden space-y-4">
+                        <div id="adherents-container" class="space-y-4"><!-- cartes injectées par JS --></div>
+
+                        <button type="button" id="btn-add-adherent"
+                                class="w-full border-2 border-dashed border-csb-tatami rounded-2xl py-4 font-condensed uppercase tracking-wider text-csb-dojo hover:border-csb-corail hover:text-csb-corail transition">
+                            + Ajouter un adhérent <span class="text-gray-400 normal-case font-sans text-sm">(5 max)</span>
+                        </button>
+                    </section>
+
+                    <!-- ======================= ÉTAPE 3 — AUTORISATIONS ======================= -->
+                    <section data-step="3" class="hidden bg-white rounded-2xl shadow-sm border border-csb-tatami p-6 sm:p-8 space-y-6">
+                        <div>
+                            <h2 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-1">Autorisations & consentements</h2>
+                            <p class="text-gray-500 text-sm">Obligatoires pour valider le dossier (cf. règlement intérieur).</p>
+                        </div>
+
+                        <!-- Autorisations parentales (mineurs) — injectées selon les adhérents -->
+                        <div id="parental-container" class="space-y-3"></div>
+
+                        <label class="consent">
+                            <input type="checkbox" id="consent-reglement" class="chk" required>
+                            <span>J'ai lu et j'accepte le
+                                <a href="./mentions-legales.html" target="_blank" class="text-csb-corail underline">règlement intérieur</a>
+                                du club.</span>
+                        </label>
+
+                        <label class="consent">
+                            <input type="checkbox" id="consent-medical" class="chk" required>
+                            <span>Je m'engage à fournir un certificat médical de non contre-indication
+                                (ou une attestation QS-Sport) avant le début des cours.</span>
+                        </label>
+
+                        <label class="consent">
+                            <input type="checkbox" id="consent-urgence" class="chk" required>
+                            <span>J'autorise les responsables du club à prendre toute mesure d'urgence
+                                (médecin, hospitalisation) en cas d'accident.</span>
+                        </label>
+                    </section>
+
+                    <!-- ======================= ÉTAPE 4 — RÉCAP & PAIEMENT ======================= -->
+                    <section data-step="4" class="hidden bg-white rounded-2xl shadow-sm border border-csb-tatami p-6 sm:p-8 space-y-6">
+                        <h2 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre">Validation & règlement</h2>
+
+                        <div class="bg-csb-washi rounded-xl p-4 text-sm text-gray-600 space-y-2">
+                            <p class="font-bold text-csb-encre">Règlement au club</p>
+                            <p>Le paiement se fait sur place, par chèque (à l'ordre de <strong>CSB Karaté</strong>)
+                               ou en espèces. Possibilité de régler en <strong>3 fois maximum, par chèque</strong>
+                               (encaissements mensuels).</p>
+                            <p class="text-xs text-gray-400">Le paiement en ligne sera proposé ultérieurement.</p>
+                        </div>
+
+                        <div>
+                            <label class="lbl" for="paiement-split">Souhait de règlement</label>
+                            <select id="paiement-split" class="inp">
+                                <option value="1">En 1 fois</option>
+                                <option value="3">En 3 fois (chèques)</option>
+                            </select>
+                            <p class="text-xs text-gray-400 mt-1">Indicatif : le bureau enregistrera les chèques à la remise du dossier.</p>
+                        </div>
+
+                        <!-- Récap détaillé (miroir de l'aside, pour mobile + impression) -->
+                        <div id="recap-full"></div>
+
+                        <div id="submit-status" class="hidden rounded-xl p-4 text-sm"></div>
+
+                        <button type="submit" id="btn-submit"
+                                class="w-full bg-csb-corail text-white font-condensed uppercase tracking-wider text-lg py-4 rounded-full hover:bg-opacity-90 transition shadow-lg shadow-csb-corail/30">
+                            Valider mon inscription
+                        </button>
+                    </section>
+
+                    <!-- ======================= ÉCRAN DE SUCCÈS ======================= -->
+                    <section id="success-panel" class="hidden bg-white rounded-2xl shadow-sm border border-green-200 p-8 text-center">
+                        <div class="text-5xl mb-4">🥋</div>
+                        <h2 class="font-serif text-3xl text-csb-encre mb-3">Inscription enregistrée !</h2>
+                        <p class="text-gray-600 max-w-md mx-auto mb-6">
+                            Votre dossier est créé en statut <strong>« en attente de paiement »</strong>.
+                            Présentez-vous au club pour régler la cotisation et déposer les pièces
+                            (certificat médical, photo).
+                        </p>
+                        <a href="./index.html" class="inline-block bg-csb-dojo text-white font-condensed uppercase tracking-wider px-8 py-3 rounded-full hover:bg-csb-corail transition">
+                            Retour à l'accueil
+                        </a>
+                    </section>
+
+                    <!-- Navigation -->
+                    <div id="nav-buttons" class="flex items-center justify-between gap-4 pt-2">
+                        <button type="button" id="btn-prev"
+                                class="px-6 py-3 rounded-full font-condensed uppercase tracking-wider border border-csb-tatami text-csb-encre hover:bg-white transition invisible">
+                            ← Précédent
+                        </button>
+                        <button type="button" id="btn-next"
+                                class="px-8 py-3 rounded-full font-condensed uppercase tracking-wider bg-csb-dojo text-white hover:bg-csb-corail transition shadow-lg">
+                            Suivant →
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Colonne récapitulatif (sticky sur desktop) -->
+                <aside class="lg:sticky lg:top-28">
+                    <div class="bg-csb-dojo text-white rounded-2xl shadow-lg p-6">
+                        <h3 class="font-condensed text-xl uppercase tracking-wider mb-4 border-b border-white/15 pb-3">Récapitulatif</h3>
+                        <div id="recap-aside" class="text-sm"></div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-3 px-1">
+                        La licence et l'assurance fédérale sont incluses dans la cotisation.
+                    </p>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <!-- ===================== TEMPLATE — CARTE ADHÉRENT ===================== -->
+    <template id="adherent-template">
+        <div class="adherent-card bg-white rounded-2xl shadow-sm border border-csb-tatami p-6 sm:p-8">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="font-condensed text-xl uppercase tracking-wider text-csb-encre">
+                    Adhérent <span data-role="num">1</span>
+                </h3>
+                <button type="button" data-role="remove"
+                        class="text-gray-400 hover:text-csb-corail text-sm font-condensed uppercase tracking-wider transition">
+                    Retirer
+                </button>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="lbl">Prénom</label>
+                    <input data-field="prenom" type="text" class="inp" required>
+                </div>
+                <div>
+                    <label class="lbl">Nom</label>
+                    <input data-field="nom" type="text" class="inp" required>
+                </div>
+                <div>
+                    <label class="lbl">Date de naissance</label>
+                    <input data-field="dateNaissance" type="date" class="inp" required>
+                </div>
+                <div>
+                    <label class="lbl">Genre</label>
+                    <select data-field="genre" class="inp" required>
+                        <option value="">—</option>
+                        <option value="M">Masculin</option>
+                        <option value="F">Féminin</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="lbl">Type de cours</label>
+                    <select data-field="coursType" class="inp" required>
+                        <option value="">—</option>
+                        <option value="Enfant">Enfant</option>
+                        <option value="Adulte">Adulte</option>
+                        <option value="Self-Defense">Self-défense</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="lbl">Grade actuel</label>
+                    <select data-field="grade" class="inp">
+                        <option>Ceinture Blanche</option>
+                        <option>Ceinture Jaune</option>
+                        <option>Ceinture Orange</option>
+                        <option>Ceinture Verte</option>
+                        <option>Ceinture Bleue</option>
+                        <option>Ceinture Marron</option>
+                        <option>1er Dan</option>
+                        <option>2e Dan</option>
+                        <option>3e Dan</option>
+                        <option>4e Dan</option>
+                        <option>5e Dan</option>
+                    </select>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="lbl">N° de passeport FFK <span class="text-gray-400 normal-case font-sans">(si déjà licencié)</span></label>
+                    <input data-field="numeroPasseport" type="text" class="inp">
+                </div>
+            </div>
+
+            <!-- Message dynamique (âge / éligibilité) -->
+            <p data-role="hint" class="hidden mt-3 text-sm rounded-lg px-3 py-2"></p>
+
+            <!-- Options & cases -->
+            <div class="mt-5 space-y-3 border-t border-csb-tatami pt-5">
+                <label class="consent">
+                    <input data-field="membreBureau" type="checkbox" class="chk">
+                    <span>Membre du bureau <span class="text-gray-400">(tarif réduit 37 €)</span></span>
+                </label>
+                <label class="consent">
+                    <input data-field="droitImage" type="checkbox" class="chk" checked>
+                    <span>J'autorise la diffusion de photos/vidéos de cet adhérent (site, réseaux du club).</span>
+                </label>
+                <label class="consent">
+                    <input data-field="passSport" type="checkbox" class="chk">
+                    <span>Bénéficie du <strong>Pass'Sport</strong> (aide de l'État, −50 €).</span>
+                </label>
+                <div data-role="passsport-code" class="hidden pl-7">
+                    <label class="lbl">Code Pass'Sport</label>
+                    <input data-field="passSportCode" type="text" class="inp">
+                </div>
+            </div>
+
+            <!-- Photo d'identité (bucket privé) -->
+            <div class="mt-5">
+                <label class="lbl">Photo d'identité <span class="text-gray-400 normal-case font-sans">(optionnel, modifiable plus tard)</span></label>
+                <input data-field="photo" type="file" accept="image/*"
+                       class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-csb-washi file:text-csb-dojo file:font-condensed file:uppercase file:tracking-wider hover:file:bg-csb-tatami transition">
+            </div>
+        </div>
+    </template>
+
+    <div id="footer-placeholder"></div>
+
+</body>
+</html>
