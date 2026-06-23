@@ -1,3 +1,14 @@
+// --- SYSTÈME DE BLOCAGE DE PAGE (En construction) ---
+// On vérifie si l'utilisateur est sur la page de construction
+const isOnConstructionPage = window.location.pathname.includes('construction.html');
+
+// On vérifie s'il a l'autorisation dans sa session
+const hasAccess = sessionStorage.getItem('csb_access_granted') === 'true';
+
+// S'il n'est PAS sur la page de construction ET qu'il n'a PAS l'accès -> Redirection forcée
+if (!isOnConstructionPage && !hasAccess) {
+    window.location.href = 'construction.html';
+}
 // Ce script s'exécute dès que la page HTML a fini de charger
 document.addEventListener("DOMContentLoaded", () => {
     

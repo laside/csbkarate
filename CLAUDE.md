@@ -127,6 +127,18 @@ Présent sur `news.html`, `competitions.html`, `galerie.html` et `grades.html`.
 - galerie.html ✅ — données (structure) sur Supabase, admin via Supabase Auth, photos toujours manuelles
 - grades.html ✅ — données sur Supabase (Kyu + Dan), admin via Supabase Auth
 
+## Fonctionnalité temporaire : Mode "En Construction" (Restriction d'accès)
+Le site n'étant pas encore prêt pour le grand public, un système de restriction d'accès "léger" (front-end) a été mis en place pour bloquer les visiteurs tout en permettant aux membres du bureau de tester le site.
+
+Comment fonctionne le blocage :
+
+Vérification Globale (assets/js/main.js) : Au tout début du chargement de chaque page, le script vérifie la présence de la variable csb_access_granted dans le sessionStorage du navigateur.
+
+Redirection Forcée : Si l'utilisateur n'a pas cette autorisation et tente d'accéder à une page autre que construction.html, il est instantanément redirigé vers construction.html.
+
+Déverrouillage (construction.html) : La page de construction contient un formulaire de connexion. Si le membre du bureau entre le bon mot de passe (défini dans le script de la page, par ex: CSB2024!), la variable sessionStorage est créée et l'utilisateur est redirigé vers index.html. Il peut ensuite naviguer librement jusqu'à la fermeture de son navigateur.
+
+
 **TODO restants :**
 - [ ] Insérer le lien HelloAsso définitif dans la section "Informations Pratiques" de l'accueil (placeholder `#lien-vers-helloasso-ou-form` dans `index.html`)
 - [ ] Remplacer les `[À REMPLIR]` dans `mentions-legales.html` (éditeur/président, adresse, téléphone, email)
