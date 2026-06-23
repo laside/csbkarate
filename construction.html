@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site en construction - CSB Karaté Brétigny</title>
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./assets/js/tailwind.js"></script>
+    <style type="text/tailwindcss">
+        @layer base {
+            h1 {
+                font-family: 'Cormorant Garamond', serif;
+                @apply text-5xl md:text-6xl lg:text-7xl font-bold text-center mb-8;
+            }
+            h2, h3 {
+                font-family: 'Barlow Condensed', sans-serif;
+                @apply uppercase tracking-wider;
+            }
+            body {
+                font-family: 'Inter', sans-serif;
+            }
+        }
+    </style>
+</head>
+<body class="bg-washi text-encre min-h-screen flex items-center justify-center p-4">
+    <div class="bg-dojo p-8 rounded-xl shadow-lg glassmorphism max-w-lg w-full text-center">
+        <h1 class="text-corail">Site en construction</h1>
+        <p class="text-lg mb-6 text-tatami">Nous travaillons dur pour vous offrir une meilleure expérience. Revenez bientôt !</p>
+        <p class="text-md mb-4 text-tatami">Pour les membres du bureau, veuillez entrer le mot de passe pour accéder au site :</p>
+        <input type="password" id="passwordInput" class="w-full p-3 rounded-lg bg-washi text-encre border border-tatami focus:border-corail focus:ring focus:ring-corail focus:ring-opacity-50 transition-all duration-300 mb-4" placeholder="Mot de passe">
+        <button id="accessButton" class="bg-corail text-washi font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-colors duration-300 uppercase tracking-wider">Accéder</button>
+        <p id="errorMessage" class="text-red-400 mt-4 hidden">Mot de passe incorrect. Veuillez réessayer.</p>
+    </div>
+
+    <script defer>
+        document.addEventListener('DOMContentLoaded', () => {
+            const passwordInput = document.getElementById('passwordInput');
+            const accessButton = document.getElementById('accessButton');
+            const errorMessage = document.getElementById('errorMessage');
+            const correctPassword = 'CSB'; // Using the same password as admin mode for consistency
+
+            accessButton.addEventListener('click', () => {
+                if (passwordInput.value === correctPassword) {
+                    sessionStorage.setItem('site_access_granted', 'true');
+                    window.location.href = 'index.html';
+                } else {
+                    errorMessage.classList.remove('hidden');
+                    passwordInput.value = '';
+                }
+            });
+
+            // Allow pressing Enter in the password field
+            passwordInput.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    accessButton.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
