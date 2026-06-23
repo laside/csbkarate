@@ -1,5 +1,5 @@
 -- =============================================================
--- Migration 0006 — Pass'Sport au niveau adhérent
+-- Migration 0007 — Pass'Sport au niveau adhérent
 -- =============================================================
 -- À exécuter dans Supabase : Dashboard > SQL Editor > New query > Run.
 -- Idempotent (ADD COLUMN IF NOT EXISTS).

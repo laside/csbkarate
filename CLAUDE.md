@@ -106,7 +106,7 @@ Cartes avec coins arrondis, effet glassmorphism subtil, ombres légères.
 ## Mode Administrateur (CMS sans serveur)
 
 Présent sur `news.html`, `competitions.html`, `galerie.html` et `grades.html`.
-- Déverrouillage : bouton discret + **connexion Supabase Auth** (`signInWithPassword`, géré dans `admin.js`). L'email admin est constant (`window.CSB_ADMIN_EMAIL` dans `supabase.js`) ; l'admin ne saisit que son mot de passe. La session Auth autorise ensuite les écritures en base (RLS).
+- Déverrouillage : bouton discret + **connexion Supabase Auth** (`signInWithPassword`, géré dans `admin.js`). L'email admin est constant (`window.CSB_ADMIN_EMAIL` dans `supabase.js`) ; l'admin ne saisit que son mot de passe. La session Auth autorise ensuite les écritures en base (RLS). Fonction de **réinitialisation de mot de passe** intégrée avec redirection dynamique (`window.location.origin`) pour supporter localhost/preview/prod.
 - Permet ajout/modif/suppression d'entrées, enregistrement direct en base (bouton « Enregistrer en ligne ») pour les 4 collections.
 - Exception : sur `galerie.html`, seule la **structure** (quelle photo dans quelle section/stage) est enregistrée en ligne — les **fichiers images** doivent toujours être déposés manuellement dans `assets/photos/galerie/` sur GitHub (Storage pas encore migré).
 
@@ -126,6 +126,18 @@ Présent sur `news.html`, `competitions.html`, `galerie.html` et `grades.html`.
 **Pages terminées :** `index.html`, `wadoryu.html`, `news.html`, `club.html`, `competitions.html`, `mentions-legales.html`, `galerie.html`, `grades.html`
 - galerie.html ✅ — données (structure) sur Supabase, admin via Supabase Auth, photos toujours manuelles
 - grades.html ✅ — données sur Supabase (Kyu + Dan), admin via Supabase Auth
+
+## Fonctionnalité temporaire : Mode "En Construction" (Restriction d'accès)
+Le site n'étant pas encore prêt pour le grand public, un système de restriction d'accès "léger" (front-end) a été mis en place pour bloquer les visiteurs tout en permettant aux membres du bureau de tester le site.
+
+Comment fonctionne le blocage :
+
+Vérification Globale (assets/js/main.js) : Au tout début du chargement de chaque page, le script vérifie la présence de la variable csb_access_granted dans le sessionStorage du navigateur.
+
+Redirection Forcée : Si l'utilisateur n'a pas cette autorisation et tente d'accéder à une page autre que construction.html, il est instantanément redirigé vers construction.html.
+
+Déverrouillage (construction.html) : La page de construction contient un formulaire de connexion. Si le membre du bureau entre le bon mot de passe (défini dans le script de la page, par ex: CSB2024!), la variable sessionStorage est créée et l'utilisateur est redirigé vers index.html. Il peut ensuite naviguer librement jusqu'à la fermeture de son navigateur.
+
 
 **TODO restants :**
 - [ ] Insérer le lien HelloAsso définitif dans la section "Informations Pratiques" de l'accueil (placeholder `#lien-vers-helloasso-ou-form` dans `index.html`)
@@ -164,10 +176,10 @@ Système d'information du club inspiré de **MonClub**, intégré au site. Spéc
 Données de **mineurs** (photos, contact d'urgence, santé) → Storage en **bucket PRIVÉ** (≠ galerie publique), RLS étanche, traçabilité des consentements (règlement intérieur, droit à l'image, autorisation parentale).
 
 ### Roadmap (chaque phase livrable + testable)
-- **Phase 0 — Fondations** ✅ migration prête : `supabase/migrations/0005_gestion_foundations.sql` (tables `profiles`/`tarifs`/`familles`/`adherents`/`dossiers`/`paiements` + RLS multi-rôles + bucket privé `dossiers` + trigger profil auto + seed tarifs `2026-2027`). **À exécuter dans le SQL Editor.** Montants en **centimes** partout. Le module gestion N'utilise PAS `store.js` (CRUD relationnel avec auth, pattern différent du CMS) → ses propres modules JS.
+- **Phase 0 — Fondations** ✅ migration prête : `supabase/migrations/0006_gestion_foundations.sql` (renumérotée depuis `0005_*` lors de la fusion avec `main`, qui avait déjà pris ce numéro pour `0005_saison.sql`) (tables `profiles`/`tarifs`/`familles`/`adherents`/`dossiers`/`paiements` + RLS multi-rôles + bucket privé `dossiers` + trigger profil auto + seed tarifs `2026-2027`). **À exécuter dans le SQL Editor.** Montants en **centimes** partout. Le module gestion N'utilise PAS `store.js` (CRUD relationnel avec auth, pattern différent du CMS) → ses propres modules JS.
   - **Verrou sécurité clé** : écriture `paiements` réservée au `bureau` (un membre ne peut pas s'auto-encaisser → règle d'or des attestations inviolable).
   - **1er compte bureau** = l'email admin historique (`marsella.lorenzo@gmail.com`, promu par le 5c du SQL) — adapter si différent.
-- **Phase 1 — Inscription en ligne** ✅ LIVRÉ (à tester en local) : `inscription.html` (wizard 4 étapes : famille → adhérents 1→5 → autorisations → récap), logique dans `assets/js/inscription.js`, **moteur de tarif** pur et testable dans `assets/js/tarifs.js` (`window.CSBTarifs`, tout en **centimes**). Règles d'âge au 1er sept. (Self ≥13 ans bloquant ; <18 → autorisation parentale dynamique à l'étape 3). Photos uploadées dans le bucket privé `dossiers` (chemin `<uid>/...`). **Flux de soumission** : `auth.signUp` (référent) → `upsert familles` → `insert adherents` (+ photos) → `insert dossiers` (statut `attente_paiement`). **Aucun `paiements` créé ici** (réservé au bureau). Migration complémentaire **`0006_adherents_passsport.sql`** (colonnes `pass_sport` / `pass_sport_code` sur `adherents`) — **à exécuter**. Le moteur de tarif réutilise la ligne `tarifs` Supabase (fallback `DEFAULT_CONFIG`). Pré-requis Auth : **« Confirm email » désactivé** (sinon pas de session post-signUp → l'insert RLS échoue). Limite connue Phase 1 : pas de rollback transactionnel si une étape échoue après le `signUp` (message invitant à contacter le club plutôt que resoumettre) ; la page n'est encore liée dans aucun menu (accès direct `/inscription.html`).
+- **Phase 1 — Inscription en ligne** ✅ LIVRÉ (à tester en local) : `inscription.html` (wizard 4 étapes : famille → adhérents 1→5 → autorisations → récap), logique dans `assets/js/inscription.js`, **moteur de tarif** pur et testable dans `assets/js/tarifs.js` (`window.CSBTarifs`, tout en **centimes**). Règles d'âge au 1er sept. (Self ≥13 ans bloquant ; <18 → autorisation parentale dynamique à l'étape 3). Photos uploadées dans le bucket privé `dossiers` (chemin `<uid>/...`). **Flux de soumission** : `auth.signUp` (référent) → `upsert familles` → `insert adherents` (+ photos) → `insert dossiers` (statut `attente_paiement`). **Aucun `paiements` créé ici** (réservé au bureau). Migration complémentaire **`0007_adherents_passsport.sql`** (colonnes `pass_sport` / `pass_sport_code` sur `adherents`) — **à exécuter**. Le moteur de tarif réutilise la ligne `tarifs` Supabase (fallback `DEFAULT_CONFIG`). Pré-requis Auth : **« Confirm email » désactivé** (sinon pas de session post-signUp → l'insert RLS échoue). Limite connue Phase 1 : pas de rollback transactionnel si une étape échoue après le `signUp` (message invitant à contacter le club plutôt que resoumettre) ; la page n'est encore liée dans aucun menu (accès direct `/inscription.html`).
 - **Phase 2 — Espace Bureau (CRM)** : liste des dossiers, filtres par statut, validation documents + encaissements, `Incomplet → Validé`.
 - **Phase 3 — Paiement HelloAsso** : fonction `/api/checkout` (1×/3×) + retour de paiement.
 - **Phase 4 — Espace Adhérent** : dossier/statut/ceinture + **attestation PDF** (jsPDF CDN, gated règlement complet).
@@ -185,6 +197,9 @@ Détail et priorisation dans l'historique de conversation ; points saillants à 
 - **Tailwind via CDN** (`cdn.tailwindcss.com`) : avertissement console + perf en prod. Candidat à un build CSS *si* un jour on accepte une étape de build (sinon laisser tel quel, cf. contraintes).
 - ~~**Logique CMS dupliquée** sur 4 pages~~ ✅ **Factorisée** : l'**accès aux données** (lecture JSON + export) est dans `assets/js/store.js`, et le **mode admin** (login + modales) dans `assets/js/admin.js` (`Admin.init({ onUnlock, onCloseAdmin })`). Chaque page ne garde que son rendu et son CRUD. Mot de passe `CSB` centralisé dans `admin.js`.
 - Typo corrigée : « Self-Défense Féminine Féminine » (index.html).
+- ~~**Refonte des icônes de disciplines sur index.html**~~ ✅ **Corrigé** : La section "Nos Disciplines" sur `index.html` a été mise à jour avec des icônes plus grandes, un design en tuiles "Bento" amélioré (padding, ombres, coins arrondis), des tailles de texte ajustées et des couleurs de fond/texte alignées avec la charte graphique. Les chemins des images (`kkt2.png`, `mm2.png`, `ff2.png`) ont été mis à jour pour pointer vers `assets/photos/`.
+- ~~**Dates de saison obsolètes (2024-2025)**~~ ✅ **Corrigé** : Remplacées par la saison actuelle "2026-2027" sur la page d'accueil et le lien du document PDF d'inscription.
+- ~~**Lien Mot de passe oublié manquant**~~ ✅ **Corrigé** : Intégration de `resetPasswordForEmail` de Supabase avec `redirectTo: window.location.origin` dans `admin.js` et ajout du bouton sur toutes les modales de connexion.
 
 ## Ce qu'il ne faut PAS faire
 

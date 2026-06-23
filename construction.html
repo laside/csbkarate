@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site en construction - CSB Karaté Brétigny</title>
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./assets/js/tailwind.js"></script>
+    <style type="text/tailwindcss">
+        @layer base {
+            h1 {
+                font-family: 'Cormorant Garamond', serif;
+                @apply text-5xl md:text-6xl lg:text-7xl font-bold text-center mb-8;
+            }
+            h2, h3 {
+                font-family: 'Barlow Condensed', sans-serif;
+                @apply uppercase tracking-wider;
+            }
+            body {
+                font-family: 'Inter', sans-serif;
+            }
+        }
+    </style>
+</head>
+<body class="bg-washi text-encre min-h-screen flex items-center justify-center p-4">
+    <div class="bg-dojo p-8 rounded-xl shadow-lg glassmorphism max-w-lg w-full text-center">
+        <h1 class="text-corail">Site en construction</h1>
+        <p class="text-lg mb-6 text-tatami">Nous travaillons dur pour vous offrir une meilleure expérience. Revenez bientôt !</p>
+ <!-- Formulaire d'accès réservé au bureau -->
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Accès réservé (Membres du bureau)</h3>
+        <form id="login-form" class="space-y-4">
+            <div>
+                <input type="password" id="site-password" placeholder="Mot de passe" 
+                    class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-600">
+            </div>
+            <button type="submit" class="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition">
+                Accéder au site
+            </button>
+            <p id="error-message" class="text-red-500 text-sm hidden mt-2">Mot de passe incorrect.</p>
+        </form>
+    </div>
+    <script>
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+        e.preventDefault(); // Empêche le rechargement de la page
+        
+        const passwordInput = document.getElementById('site-password').value;
+        const errorMessage = document.getElementById('error-message');
+        
+        // Remplacez "CSB2024!" par le mot de passe que vous souhaitez donner au bureau
+        const motDePasseSecret = "CSB2024!"; 
+        
+        if (passwordInput === motDePasseSecret) {
+            // Le mot de passe est bon, on enregistre l'autorisation pour la session
+            sessionStorage.setItem('csb_access_granted', 'true');
+            // On redirige vers la page d'accueil, en préservant le hash (#...) :
+            // un lien de récupération de mot de passe Supabase (#access_token=...&type=recovery)
+            // a pu transiter jusqu'ici via main.js, il doit survivre jusqu'à index.html.
+            window.location.href = 'index.html' + window.location.hash;
+        } else {
+            // Mot de passe incorrect, on affiche l'erreur
+            errorMessage.classList.remove('hidden');
+        }
+    });
+</script>
+</body>
+</html>

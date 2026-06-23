@@ -1,3 +1,17 @@
+// --- SYSTÈME DE BLOCAGE DE PAGE (En construction) ---
+// On vérifie si l'utilisateur est sur la page de construction
+const isOnConstructionPage = window.location.pathname.includes('construction.html');
+
+// On vérifie s'il a l'autorisation dans sa session
+const hasAccess = sessionStorage.getItem('csb_access_granted') === 'true';
+
+// S'il n'est PAS sur la page de construction ET qu'il n'a PAS l'accès -> Redirection forcée
+// On préserve le hash (#...) de l'URL d'origine : indispensable pour les liens de
+// récupération de mot de passe Supabase (#access_token=...&type=recovery), qui
+// seraient sinon perdus dans ce rebond avant même que supabase.js ne les lise.
+if (!isOnConstructionPage && !hasAccess) {
+    window.location.href = 'construction.html' + window.location.hash;
+}
 // Ce script s'exécute dès que la page HTML a fini de charger
 document.addEventListener("DOMContentLoaded", () => {
     

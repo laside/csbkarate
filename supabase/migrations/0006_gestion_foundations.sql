@@ -1,5 +1,5 @@
 -- =============================================================
--- Migration 0005 — Fondations du module « Gestion de club »
+-- Migration 0006 — Fondations du module « Gestion de club »
 -- =============================================================
 -- À exécuter dans Supabase : Dashboard > SQL Editor > New query > Run.
 -- Idempotent : ré-exécutable sans casse.

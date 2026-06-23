@@ -1,10 +1,10 @@
 // =============================================================
 // MODE ADMINISTRATEUR — admin.js  (factorisation login + modales)
 // =============================================================
-// Centralise la logique du « mode admin » commune aux 4 pages CMS
-// (news, competitions, galerie, grades) : ouverture/fermeture de la
-// modale de connexion, AUTHENTIFICATION, bascule vers le dashboard,
-// fermeture du dashboard (avec déconnexion).
+// Centralise la logique du « mode admin » commune aux pages CMS
+// (news, competitions, galerie, grades, et la saison sur index.html) :
+// ouverture/fermeture de la modale de connexion, AUTHENTIFICATION,
+// bascule vers le dashboard, fermeture du dashboard (avec déconnexion).
 //
 //   Admin.init({ onUnlock, onCloseAdmin })
 //
@@ -14,7 +14,7 @@
 // session Auth qui autorise ensuite les écritures en base (RLS).
 // Le client Supabase est fourni par supabase.js (window.sb).
 //
-// Les 4 pages partagent EXACTEMENT les mêmes IDs (#btn-open-login,
+// Les pages partagent EXACTEMENT les mêmes IDs (#btn-open-login,
 // #modal-login, #btn-login, #admin-password, #login-error,
 // #modal-admin, #btn-close-admin), donc le helper les récupère
 // lui-même. Chaque page ne fournit que 2 callbacks :
@@ -23,13 +23,16 @@
 //                    déjà ouvert quand il est appelé.
 //   - onCloseAdmin : à la fermeture du dashboard (rafraîchir le public).
 //
+// RÉCUPÉRATION DE MOT DE PASSE : enregistrée plus bas, indépendamment de
+// init() — actif sur toute page chargeant ce script, même sans modales.
+//
 // Chargé en vanilla JS via <script defer> : expose un objet global `Admin`.
 // =============================================================
 
 (function (global) {
     'use strict';
 
-    // IDs partagés par les 4 pages CMS.
+    // IDs partagés par les pages CMS.
     const IDS = {
         openLogin: 'btn-open-login',
         modalLogin: 'modal-login',
@@ -37,6 +40,7 @@
         login: 'btn-login',
         password: 'admin-password',
         loginError: 'login-error',
+        forgotPassword: 'btn-forgot-password',
         modalAdmin: 'modal-admin',
         closeAdmin: 'btn-close-admin'
     };
@@ -111,6 +115,57 @@
                 if (typeof hooks.onCloseAdmin === 'function') hooks.onCloseAdmin();
             });
         }
+
+        // Demande de réinitialisation de mot de passe depuis le site
+        if (el.forgotPassword) {
+            el.forgotPassword.addEventListener('click', async (e) => {
+                e.preventDefault();
+                if (!confirm("Voulez-vous recevoir un e-mail pour réinitialiser le mot de passe administrateur ?")) return;
+                
+                try {
+                    const { error } = await global.sb.auth.resetPasswordForEmail(global.CSB_ADMIN_EMAIL, {
+                        redirectTo: window.location.origin
+                    });
+                    if (error) throw error;
+                    alert("Un e-mail de réinitialisation a été envoyé à l'adresse de l'administrateur.");
+                    hide(el.modalLogin); // On peut fermer la modale
+                } catch (err) {
+                    console.error(err);
+                    alert("Erreur lors de l'envoi de l'e-mail : " + (err.message || err));
+                }
+            });
+        }
+    }
+
+    // =========================================================
+    // RÉCUPÉRATION DE MOT DE PASSE (lien e-mail « mot de passe oublié »)
+    // =========================================================
+    // Quand l'admin clique sur le lien reçu par e-mail (envoyé depuis le
+    // dashboard Supabase), il est redirigé vers le site avec un token et
+    // reconnecté avec une session TEMPORAIRE. Supabase émet alors l'événement
+    // PASSWORD_RECOVERY via onAuthStateChange. On demande le nouveau mot de
+    // passe et on l'enregistre via updateUser().
+    //
+    // Indépendant des modales login/dashboard (pas besoin qu'elles existent
+    // sur la page d'arrivée) : enregistré au chargement du script, pas dans
+    // init(). L'ordre des <script> (supabase.js avant admin.js, partout)
+    // garantit que window.sb est déjà prêt à ce stade.
+    if (global.sb) {
+        global.sb.auth.onAuthStateChange(async (event) => {
+            if (event !== 'PASSWORD_RECOVERY') return;
+
+            const nouveauMdp = prompt('Lien de récupération validé.\nSaisissez votre nouveau mot de passe :');
+            if (!nouveauMdp) return; // annulé par l'admin
+
+            try {
+                const { error } = await global.sb.auth.updateUser({ password: nouveauMdp });
+                if (error) throw error;
+                alert('Mot de passe mis à jour ✅\nVous êtes connecté avec votre nouveau mot de passe.');
+            } catch (err) {
+                console.error(err);
+                alert('Échec de la mise à jour du mot de passe.\n' + (err.message || err));
+            }
+        });
     }
 
     // Exposition globale (pas de bundler : on attache l'API à window).
