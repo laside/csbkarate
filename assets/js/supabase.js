@@ -23,10 +23,14 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = 'https://xeagkreeuhppcrqtppfd.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_XdUwPKwx_RwEJXReduSuwA_o4vTYIM6';
 
-// Email du compte admin (créé dans Supabase > Authentication > Users).
-// Un seul bureau : l'admin ne saisit que son mot de passe, l'email est constant.
-// ⚠️ À adapter si le compte Supabase a été créé avec un autre email.
-const ADMIN_EMAIL = 'marsella.lorenzo@gmail.com';
+// Email du compte admin du CMS (boutons « Admin » : l'admin ne saisit que
+// son mot de passe, l'email est constant). Utilisé aussi comme identifiant
+// pré-rempli de l'Espace Bureau.
+// ⚠️ PHASE DE RECETTE : pointé sur le compte de TEST partagé `admin@csbk.com`
+// (mot de passe géré par supabase/setup_test_admin_account.sql), pour que le
+// bureau teste sans utiliser de compte personnel. À repasser sur l'email
+// définitif du club après la phase de test.
+const ADMIN_EMAIL = 'admin@csbk.com';
 
 // --- Client partagé ---
 const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
