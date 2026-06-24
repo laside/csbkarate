@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let dossiers = [];
     let paiements = [];
     let profiles = [];
+    let factures = [];
     let currentUserId = null;
 
     // =========================================================
@@ -133,13 +134,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================
     async function loadAll() {
         rowsEl.innerHTML = '<tr><td colspan="7" class="px-4 py-10 text-center text-gray-400">Chargement…</td></tr>';
-        const [aRes, dRes, pRes, prRes] = await Promise.all([
+        const [aRes, dRes, pRes, prRes, facRes] = await Promise.all([
             sb.from('adherents')
                 .select('id, prenom, nom, date_naissance, genre, cours_type, grade_actuel, statut_dossier, membre_bureau, famille_id, familles(nom_referent, ville)')
                 .order('nom', { ascending: true }),
-            sb.from('dossiers').select('montant_total, statut'),
-            sb.from('paiements').select('montant, encaisse'),
-            sb.from('profiles').select('user_id, email, role')
+            sb.from('dossiers')
+                .select('id, famille_id, saison, montant_total, detail_calcul, statut, created_at, familles(nom_referent, ville)')
+                .order('created_at', { ascending: false }),
+            sb.from('paiements').select('id, dossier_id, montant, mode, numero_cheque, encaisse, date_encaissement'),
+            sb.from('profiles').select('user_id, email, role'),
+            sb.from('factures').select('id, dossier_id, numero, montant, emise_le, snapshot')
         ]);
 
         if (aRes.error) {
@@ -151,9 +155,11 @@ document.addEventListener('DOMContentLoaded', () => {
         dossiers = dRes.data || [];
         paiements = pRes.data || [];
         profiles = prRes.data || [];
+        factures = facRes.data || [];
         renderStats();
         renderRows();
         renderAdmins();
+        renderDossiers();
     }
 
     // =========================================================
@@ -475,6 +481,223 @@ document.addEventListener('DOMContentLoaded', () => {
             showMsg('Erreur : ' + (err.message || err), false);
         } finally {
             adminAddBtn.disabled = false;
+        }
+    });
+
+    // =========================================================
+    // Dossiers & règlements (encaissements + facture)
+    // =========================================================
+    // Source unique de l'état « soldé » : le dossier (panier famille). La
+    // facture (document fiscal numéroté) n'est éditable QUE dossier soldé, et
+    // l'émission est faite côté base (RPC bureau-only) — cf. migration 0009.
+    const dossiersRowsEl = $('#dossiers-rows');
+
+    // Centimes encaissés (lignes `encaisse = true`) d'un dossier.
+    function encaisseDe(dossierId) {
+        return paiements
+            .filter(p => p.dossier_id === dossierId && p.encaisse)
+            .reduce((s, p) => s + (p.montant || 0), 0);
+    }
+    function estSolde(d) {
+        return d.statut === 'valide' || encaisseDe(d.id) >= (d.montant_total || 0);
+    }
+    // Statut dérivé des encaissements (on ne touche jamais un dossier 'annule').
+    function statutDerive(d) {
+        if (d.statut === 'annule') return 'annule';
+        const enc = encaisseDe(d.id);
+        if ((d.montant_total || 0) > 0 && enc >= d.montant_total) return 'valide';
+        return enc > 0 ? 'paye_partiel' : 'attente_paiement';
+    }
+    const DOSSIER_BADGE = {
+        valide: ['Soldé', 'bg-green-50 text-green-700 border-green-300'],
+        paye_partiel: ['Partiel', 'bg-amber-50 text-amber-700 border-amber-300'],
+        attente_paiement: ['En attente', 'bg-gray-50 text-gray-500 border-csb-tatami'],
+        annule: ['Annulé', 'bg-gray-100 text-gray-400 border-csb-tatami']
+    };
+    const PAY_MODE_LABEL = { cheque: 'Chèque', espece: 'Espèces', cb: 'Carte', ancv: 'ANCV', caf: 'CAF' };
+
+    function renderDossiers() {
+        if (!dossiersRowsEl) return;
+        if (!dossiers.length) {
+            dossiersRowsEl.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Aucun dossier d\'inscription.</td></tr>';
+            return;
+        }
+        dossiersRowsEl.innerHTML = dossiers.map(dossierRowHtml).join('');
+    }
+
+    function dossierRowHtml(d) {
+        const enc = encaisseDe(d.id);
+        const reste = Math.max(0, (d.montant_total || 0) - enc);
+        const [txt, cls] = DOSSIER_BADGE[statutDerive(d)] || DOSSIER_BADGE.attente_paiement;
+        const ref = d.familles?.nom_referent || '—';
+        const ville = d.familles?.ville || '';
+        const fac = factures.find(f => f.dossier_id === d.id);
+        const facTag = fac
+            ? `<span class="ml-2 text-[10px] font-bold uppercase tracking-wider text-csb-dojo bg-csb-washi border border-csb-tatami px-2 py-0.5 rounded">Facture ${esc(fac.numero)}</span>`
+            : '';
+        return `
+            <tr data-dossier="${d.id}" class="border-t border-csb-tatami/60 hover:bg-csb-washi/40 transition">
+                <td class="px-4 py-3">
+                    <div class="font-semibold text-csb-encre">${esc(ref)}</div>
+                    <div class="text-xs text-gray-400">${esc(ville)}</div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">${esc(d.saison || '')}</td>
+                <td class="px-4 py-3 text-right whitespace-nowrap">${fmt(d.montant_total)}</td>
+                <td class="px-4 py-3 text-right whitespace-nowrap text-green-700">${fmt(enc)}</td>
+                <td class="px-4 py-3 text-right whitespace-nowrap ${reste > 0 ? 'text-csb-corail font-semibold' : 'text-gray-400'}">${fmt(reste)}</td>
+                <td class="px-4 py-3"><span class="inline-block text-xs font-semibold rounded-full px-3 py-1 border ${cls}">${esc(txt)}</span>${facTag}</td>
+                <td class="px-4 py-3 text-right">
+                    <button type="button" data-pay="${d.id}"
+                            class="px-4 py-1.5 rounded-full font-condensed uppercase tracking-wider border border-csb-dojo text-csb-dojo hover:bg-csb-dojo hover:text-white transition text-xs">
+                        Gérer
+                    </button>
+                </td>
+            </tr>`;
+    }
+
+    // --- Modale d'encaissement ---
+    const payModal = $('#pay-modal');
+    const payTitle = $('#pay-title');
+    const paySummary = $('#pay-summary');
+    const payList = $('#pay-list');
+    const payMsg = $('#pay-msg');
+    const payFactureBtn = $('#pay-facture');
+    let modalDossierId = null;
+
+    function openPayModal(id) {
+        modalDossierId = id;
+        const d = dossiers.find(x => x.id === id);
+        if (!d) return;
+        payTitle.textContent = (d.familles?.nom_referent || 'Dossier') + ' · ' + (d.saison || '');
+        $('#pay-montant').value = '';
+        $('#pay-cheque').value = '';
+        $('#pay-date').value = new Date().toISOString().slice(0, 10);
+        $('#pay-encaisse').checked = true;
+        payMsg.classList.add('hidden');
+        renderPayBody(d);
+        payModal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+    function closePayModal() {
+        modalDossierId = null;
+        payModal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    function renderPayBody(d) {
+        const enc = encaisseDe(d.id);
+        const reste = Math.max(0, (d.montant_total || 0) - enc);
+        const cell = (label, val, color) => `
+            <div class="rounded-xl bg-csb-washi/60 border border-csb-tatami p-3">
+                <p class="text-[10px] uppercase tracking-wider text-gray-400">${label}</p>
+                <p class="text-lg font-bold ${color}">${val}</p>
+            </div>`;
+        paySummary.innerHTML =
+            cell('Total', fmt(d.montant_total), 'text-csb-encre') +
+            cell('Encaissé', fmt(enc), 'text-green-700') +
+            cell('Reste', fmt(reste), reste > 0 ? 'text-csb-corail' : 'text-gray-400');
+
+        // Pré-remplit le champ montant avec le reste (confort de saisie).
+        if (reste > 0) $('#pay-montant').value = (reste / 100).toFixed(2);
+
+        const lignes = paiements.filter(p => p.dossier_id === d.id);
+        payList.innerHTML = lignes.length ? lignes.map(p => `
+            <div class="flex items-center justify-between gap-3 text-sm border border-csb-tatami rounded-lg px-3 py-2">
+                <span>
+                    <strong class="text-csb-encre">${fmt(p.montant)}</strong>
+                    <span class="text-gray-400">· ${esc(PAY_MODE_LABEL[p.mode] || p.mode)}${p.numero_cheque ? ' n°' + esc(p.numero_cheque) : ''}</span>
+                </span>
+                <span class="text-xs font-semibold ${p.encaisse ? 'text-green-600' : 'text-amber-600'}">${p.encaisse ? '✓ encaissé' : 'à encaisser'}</span>
+            </div>`).join('')
+            : '<p class="text-sm text-gray-400">Aucun encaissement enregistré.</p>';
+
+        // Bouton facture : actif seulement si soldé.
+        const fac = factures.find(f => f.dossier_id === d.id);
+        const solde = estSolde(d);
+        payFactureBtn.disabled = !solde;
+        payFactureBtn.title = solde ? '' : 'Disponible une fois le dossier soldé.';
+        payFactureBtn.innerHTML = fac
+            ? `⬇ Télécharger la facture N° ${esc(fac.numero)}`
+            : '⬇ Éditer la facture';
+    }
+
+    dossiersRowsEl && dossiersRowsEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-pay]');
+        if (btn) openPayModal(Number(btn.dataset.pay));
+    });
+    $('#pay-close').addEventListener('click', closePayModal);
+    payModal.addEventListener('click', (e) => { if (e.target === payModal) closePayModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !payModal.classList.contains('hidden')) closePayModal(); });
+
+    // Enregistrer un encaissement (écriture `paiements` : RLS = bureau only).
+    $('#pay-add').addEventListener('click', async () => {
+        const d = dossiers.find(x => x.id === modalDossierId);
+        if (!d) return;
+        const euros = parseFloat($('#pay-montant').value);
+        if (!(euros > 0)) { showPayMsg('Montant invalide.', false); return; }
+        const row = {
+            dossier_id: d.id,
+            montant: Math.round(euros * 100),       // centimes
+            mode: $('#pay-mode').value,
+            numero_cheque: $('#pay-cheque').value.trim(),
+            encaisse: $('#pay-encaisse').checked,
+            date_encaissement: $('#pay-date').value || null
+        };
+        const addBtn = $('#pay-add');
+        addBtn.disabled = true;
+        try {
+            const { data, error } = await sb.from('paiements').insert(row).select().single();
+            if (error) throw error;
+            paiements.push(data);
+            await syncStatutDossier(d);       // bascule le statut si soldé/partiel
+            renderPayBody(d);
+            renderDossiers();
+            renderStats();
+            $('#pay-montant').value = '';
+            $('#pay-cheque').value = '';
+            showPayMsg('Encaissement enregistré.', true);
+        } catch (err) {
+            console.error(err);
+            showPayMsg('Échec : ' + (err.message || err), false);
+        } finally {
+            addBtn.disabled = false;
+        }
+    });
+
+    // Aligne dossiers.statut sur les encaissements (idempotent).
+    async function syncStatutDossier(d) {
+        const cible = statutDerive(d);
+        if (cible === d.statut) return;
+        const { error } = await sb.from('dossiers').update({ statut: cible }).eq('id', d.id);
+        if (!error) d.statut = cible;
+        else console.error(error);
+    }
+
+    function showPayMsg(txt, ok) {
+        payMsg.textContent = txt;
+        payMsg.className = 'text-sm mt-3 ' + (ok ? 'text-green-600' : 'text-csb-corail');
+        payMsg.classList.remove('hidden');
+    }
+
+    // Émission / téléchargement de la facture (RPC atomique, bureau-only).
+    payFactureBtn.addEventListener('click', async () => {
+        const d = dossiers.find(x => x.id === modalDossierId);
+        if (!d) return;
+        payFactureBtn.disabled = true;
+        try {
+            const { data, error } = await sb.rpc('emettre_facture', { p_dossier_id: d.id });
+            if (error) throw error;
+            // La RPC renvoie la ligne `factures` (créée ou existante).
+            const fac = Array.isArray(data) ? data[0] : data;
+            if (!factures.some(f => f.id === fac.id)) factures.push(fac);
+            await CSBPdf.facture(fac);
+            renderPayBody(d);
+            renderDossiers();
+        } catch (err) {
+            console.error(err);
+            showPayMsg('Facture impossible : ' + (err.message || err), false);
+        } finally {
+            payFactureBtn.disabled = false;
         }
     });
 

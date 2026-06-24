@@ -18,6 +18,7 @@
     <!-- Module gestion : parle directement à window.sb (CRUD relationnel + RLS) -->
     <script type="module" src="./assets/js/supabase.js"></script>
     <script src="./assets/js/tarifs.js" defer></script>
+    <script src="./assets/js/pdf.js" defer></script>
     <script src="./assets/js/membres.js" defer></script>
 
     <!-- Vercel Web Analytics -->
@@ -126,8 +127,36 @@
 
                 <p class="text-xs text-gray-400 mt-4">
                     Les modifications (statut, bureau, grade) sont enregistrées automatiquement à chaque changement.
-                    L'enregistrement des règlements (chèques, encaissements) sera ajouté dans une prochaine étape.
                 </p>
+
+                <!-- ===================== DOSSIERS & RÈGLEMENTS ===================== -->
+                <div class="mt-14">
+                    <h2 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-1">Dossiers & règlements</h2>
+                    <p class="text-gray-500 text-sm mb-4 max-w-3xl">
+                        Enregistrez les encaissements (chèques, espèces…) de chaque dossier d'inscription.
+                        Une fois le règlement <strong>complet</strong>, le dossier passe « soldé » et vous pouvez
+                        <strong>éditer la facture</strong> (document fiscal numéroté — réservé au bureau).
+                    </p>
+
+                    <div class="bg-white rounded-2xl border border-csb-tatami overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left font-condensed uppercase tracking-wider text-[11px] text-gray-400 border-b border-csb-tatami bg-csb-washi/60">
+                                        <th class="px-4 py-3 font-semibold">Famille</th>
+                                        <th class="px-4 py-3 font-semibold">Saison</th>
+                                        <th class="px-4 py-3 font-semibold text-right">Total</th>
+                                        <th class="px-4 py-3 font-semibold text-right">Encaissé</th>
+                                        <th class="px-4 py-3 font-semibold text-right">Reste</th>
+                                        <th class="px-4 py-3 font-semibold">Statut</th>
+                                        <th class="px-4 py-3 font-semibold text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dossiers-rows"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- ===================== ADMINISTRATEURS DU SITE ===================== -->
                 <div class="mt-14">
@@ -186,6 +215,73 @@
 
         </div>
     </main>
+
+    <!-- ===================== MODALE ENCAISSEMENT (bureau) ===================== -->
+    <div id="pay-modal" class="hidden fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-xl border border-csb-tatami w-full max-w-lg my-8">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-csb-tatami">
+                <div>
+                    <span class="font-condensed text-csb-corail uppercase tracking-widest text-xs block">Règlements</span>
+                    <h3 id="pay-title" class="font-condensed text-xl uppercase tracking-wider text-csb-encre"></h3>
+                </div>
+                <button id="pay-close" type="button" class="w-9 h-9 rounded-lg text-gray-400 hover:bg-csb-washi hover:text-csb-corail transition" aria-label="Fermer">✕</button>
+            </div>
+
+            <div class="px-6 py-5">
+                <!-- Récap montants -->
+                <div id="pay-summary" class="grid grid-cols-3 gap-3 mb-5 text-center"></div>
+
+                <!-- Échéances déjà saisies -->
+                <p class="font-condensed uppercase tracking-wider text-[11px] text-gray-400 mb-2">Échéances enregistrées</p>
+                <div id="pay-list" class="space-y-2 mb-5"></div>
+
+                <!-- Ajout d'un encaissement -->
+                <div class="bg-csb-washi/60 rounded-xl p-4 border border-csb-tatami">
+                    <p class="font-condensed uppercase tracking-wider text-[11px] text-gray-500 mb-3">Ajouter un encaissement</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="lbl" for="pay-montant">Montant (€)</label>
+                            <input id="pay-montant" type="number" step="0.01" min="0" class="inp">
+                        </div>
+                        <div>
+                            <label class="lbl" for="pay-mode">Mode</label>
+                            <select id="pay-mode" class="inp">
+                                <option value="cheque">Chèque</option>
+                                <option value="espece">Espèces</option>
+                                <option value="cb">Carte</option>
+                                <option value="ancv">ANCV / Coupon</option>
+                                <option value="caf">CAF / Aide</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="lbl" for="pay-cheque">N° chèque (option.)</label>
+                            <input id="pay-cheque" type="text" class="inp">
+                        </div>
+                        <div>
+                            <label class="lbl" for="pay-date">Date d'encaissement</label>
+                            <input id="pay-date" type="date" class="inp">
+                        </div>
+                    </div>
+                    <label class="consent mt-3">
+                        <input id="pay-encaisse" type="checkbox" class="chk" checked>
+                        <span>Encaissé (compte dans le total réglé)</span>
+                    </label>
+                    <button id="pay-add" type="button"
+                            class="mt-3 w-full bg-csb-dojo text-white font-condensed uppercase tracking-wider py-2.5 rounded-full hover:bg-csb-corail transition text-sm">
+                        + Enregistrer l'encaissement
+                    </button>
+                    <p id="pay-msg" class="hidden text-sm mt-3"></p>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 border-t border-csb-tatami flex flex-wrap gap-3 justify-end">
+                <button id="pay-facture" type="button"
+                        class="inline-flex items-center gap-2 border border-csb-dojo text-csb-dojo px-5 py-2.5 rounded-full font-condensed uppercase tracking-wider hover:bg-csb-dojo hover:text-white transition text-sm disabled:opacity-40 disabled:cursor-not-allowed">
+                    ⬇ Éditer la facture
+                </button>
+            </div>
+        </div>
+    </div>
 
     <div id="footer-placeholder" class="min-h-[160px]"></div>
 
