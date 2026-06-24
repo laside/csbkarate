@@ -69,7 +69,7 @@ Code propre, moderne, léger, maintenable. Pédagogique en français.
 
 ├── supabase/
 
-│   ├── migrations/   ← scripts SQL versionnés (tables + RLS) : 0001-0004 collections CMS, 0005 saison, 0006-0008 module gestion
+│   ├── migrations/   ← scripts SQL versionnés (tables + RLS) : 0001-0004 collections CMS, 0005 saison, 0006-0010 module gestion, 0011 storage galerie
 
 │   └── seed_test_adherents.sql ← jeu de test (20 adhérents) — DEV uniquement, hors migrations
 
@@ -125,7 +125,7 @@ Présent sur `news.html`, `competitions.html`, `galerie.html`, `grades.html` et 
 > ⚠️ Ce « Mode Administrateur CMS » (mot de passe admin unique, `admin.js`) est **distinct** du **module Gestion de club** (`membres.html`/`inscription.html`, auth multi-rôles `bureau`/`enseignant`/`adherent`) décrit plus bas. Deux systèmes d'auth Supabase coexistants pour deux usages.
 - Déverrouillage : bouton discret + **connexion Supabase Auth** (`signInWithPassword`, géré dans `admin.js`). L'email admin est constant (`window.CSB_ADMIN_EMAIL` dans `supabase.js`) ; l'admin ne saisit que son mot de passe. La session Auth autorise ensuite les écritures en base (RLS). Fonction de **réinitialisation de mot de passe** intégrée avec redirection dynamique (`window.location.origin`) pour supporter localhost/preview/prod.
 - Permet ajout/modif/suppression d'entrées, enregistrement direct en base (bouton « Enregistrer en ligne ») pour les 5 collections (`news`, `competitions`, `galerie`, `grades`, `saison`).
-- Exception : sur `galerie.html`, seule la **structure** (quelle photo dans quelle section/stage) est enregistrée en ligne — les **fichiers images** doivent toujours être déposés manuellement dans `assets/photos/galerie/` sur GitHub (Storage pas encore migré).
+- Exception : sur `galerie.html`, seule la **structure** (quelle photo dans quelle section/stage) était enregistrée en ligne. Désormais, les **nouvelles images** sont uploadées directement via l'interface admin dans le bucket Supabase `galerie`. (Les anciennes images GitHub sont conservées pour la rétrocompatibilité).
 
 **Ne JAMAIS** :
 - Modifier le compte/mot de passe admin Supabase sans demander
@@ -171,7 +171,7 @@ Le CDN Tailwind (`cdn.tailwindcss.com`) reste la dette technique connue la plus 
 ## État du projet
 
 **Pages terminées :** `index.html`, `wadoryu.html`, `news.html`, `club.html`, `competitions.html`, `mentions-legales.html`, `galerie.html`, `grades.html`
-- galerie.html ✅ — données (structure) sur Supabase, admin via Supabase Auth, photos toujours manuelles
+- galerie.html ✅ — données (structure) sur Supabase, admin via Supabase Auth, photos uploadées sur le bucket public `galerie` (Storage)
 - grades.html ✅ — données sur Supabase (Kyu + Dan), admin via Supabase Auth
 - index.html ✅ — section « Informations Pratiques » (horaires/tarifs) éditable, collection `saison` ; cartes disciplines à retournement (flip) ; carrousel d'actus
 
@@ -193,7 +193,7 @@ Déverrouillage (construction.html) : La page de construction contient un formul
 - ~~Insérer le lien HelloAsso définitif dans la section "Informations Pratiques"~~ ✅ Le bouton « Démarrer l'inscription » pointe désormais vers la page interne `inscription.html` (module Gestion, Phase 1). HelloAsso = paiement en ligne, phase ultérieure (cf. Roadmap Phase 3).
 - [ ] Remplacer les `[À REMPLIR]` dans `mentions-legales.html` (éditeur/président, adresse, téléphone, email)
 - [ ] Tester en local la migration `grades` (re-fetch sur login, ordre préservé, `hidden` filtré par RLS) — pas encore vérifié manuellement.
-- [ ] Supabase **Storage** pour les photos de la galerie (aujourd'hui dépôt manuel dans `assets/photos/galerie/`) — non commencé.
+- ~~[ ] Supabase **Storage** pour les photos de la galerie (aujourd'hui dépôt manuel dans `assets/photos/galerie/`) — non commencé.~~ ✅ **Fait :** Les photos sont uploadées directement via l'admin dans le bucket public `galerie`.
 
 ## Module Gestion de club (branche `feature-gestion`) — EN COURS
 

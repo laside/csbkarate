@@ -98,9 +98,8 @@
 
                 <p class="text-sm text-gray-500 mb-8 max-w-3xl">
                     Ajoutez ou supprimez des photos, créez de nouveaux stages, puis cliquez sur
-                    <strong>Enregistrer en ligne</strong> (sauvegarde directe en base, plus besoin de GitHub).
-                    ⚠️ Les <strong>fichiers images</strong> restent à déposer manuellement dans
-                    <code class="bg-gray-100 px-1">assets/photos/galerie/</code> sur GitHub (respectez la casse des noms de fichiers).
+                    <strong>Enregistrer en ligne</strong> (sauvegarde directe en base).
+                    Les <strong>nouvelles images</strong> sont envoyées automatiquement vers le stockage sécurisé en ligne.
                 </p>
 
                 <div class="grid md:grid-cols-2 gap-8 items-start">
@@ -123,12 +122,13 @@
                             <select id="admin-stage-select" class="w-full border border-csb-tatami rounded p-2 mb-3 text-sm bg-white"></select>
                         </div>
 
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Nom du fichier image</label>
-                        <div class="flex gap-2 mb-2">
-                            <input type="text" id="admin-photo-filename" placeholder="ex: photo.jpg" class="flex-grow border border-csb-tatami rounded p-2 text-sm">
-                            <button id="btn-add-photo" class="bg-csb-dojo text-white px-4 rounded font-bold hover:bg-csb-corail transition text-sm whitespace-nowrap">Ajouter</button>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Télécharger des images</label>
+                        <div class="flex flex-col gap-2 mb-2">
+                            <input type="file" id="admin-photo-files" multiple accept="image/*" class="w-full border border-csb-tatami rounded p-2 text-sm bg-white">
+                            <button id="btn-add-photo" class="bg-csb-dojo text-white py-2 rounded font-bold hover:bg-csb-corail transition text-sm whitespace-nowrap">Envoyer et Ajouter</button>
+                            <p id="upload-status" class="text-xs text-csb-corail hidden"></p>
                         </div>
-                        <p class="text-[10px] text-gray-400 mb-4">Le fichier doit être déposé dans le bon dossier de <code class="bg-gray-100 px-1">assets/photos/galerie/</code>.</p>
+                        <p class="text-[10px] text-gray-400 mb-4">Les images seront hébergées directement sur Supabase. Les anciennes images GitHub sont conservées.</p>
 
                         <div class="border-t border-csb-tatami pt-4">
                             <p class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Photos actuelles</p>
@@ -145,7 +145,7 @@
 
                         <label class="block text-xs font-bold text-gray-500 mb-1">Titre affiché (généré, modifiable)</label>
                         <input type="text" id="admin-stage-nom" placeholder="ex: Stage Noël 2025" class="w-full border border-csb-tatami rounded p-2 mb-2 text-sm">
-                        <p class="text-[10px] text-gray-400 mb-3">Créez le dossier correspondant dans <code class="bg-gray-100 px-1">assets/photos/galerie/stages/</code> sur Github.</p>
+                        <p class="text-[10px] text-gray-400 mb-3">Un dossier virtuel sera créé automatiquement sur le stockage en ligne lors de l'ajout des images.</p>
 
                         <button id="btn-add-stage" class="w-full bg-csb-dojo text-white font-bold py-2 rounded hover:bg-csb-corail transition mb-6">Créer le stage</button>
 

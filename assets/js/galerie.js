@@ -46,7 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectSection = document.getElementById('admin-section-select');
     const stageWrapper = document.getElementById('admin-stage-wrapper');
     const selectStage = document.getElementById('admin-stage-select');
-    const inputPhoto = document.getElementById('admin-photo-filename');
+    const inputPhotoFiles = document.getElementById('admin-photo-files');
+    const uploadStatus = document.getElementById('upload-status');
     const btnAddPhoto = document.getElementById('btn-add-photo');
     const adminPhotoList = document.getElementById('admin-photo-list');
 
@@ -86,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Construit le chemin d'une photo (gère l'espace de "le club" via encodeURI).
     function photoSrc(section, filename, stageDossier) {
+        if (filename.startsWith('http://') || filename.startsWith('https://')) return filename;
         const path = (section === 'stages')
             ? `${BASE}/stages/${stageDossier}/${filename}`
             : `${BASE}/${SECTION_FOLDERS[section]}/${filename}`;
@@ -308,11 +310,14 @@ document.addEventListener('DOMContentLoaded', () => {
             adminPhotoList.innerHTML = '<p class="text-sm text-gray-400">Aucune photo.</p>';
             return;
         }
-        adminPhotoList.innerHTML = arr.map((f, i) => `
+        adminPhotoList.innerHTML = arr.map((f, i) => {
+            const displayName = f.startsWith('http') ? f.split('/').pop() : f;
+            return `
             <div class="flex justify-between items-center gap-3 bg-white border border-csb-tatami rounded px-3 py-2">
-                <span class="text-sm text-csb-dojo truncate" title="${esc(f)}">${esc(f)}</span>
+                <span class="text-sm text-csb-dojo truncate" title="${esc(f)}">${esc(displayName)}</span>
                 <button type="button" class="btn-del-photo px-2 py-1 bg-red-100 text-csb-corail rounded hover:bg-csb-corail hover:text-white transition text-xs" data-index="${i}">Suppr.</button>
-            </div>`).join('');
+            </div>`;
+        }).join('');
 
         adminPhotoList.querySelectorAll('.btn-del-photo').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -324,14 +329,57 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (btnAddPhoto) {
-        btnAddPhoto.addEventListener('click', () => {
-            const filename = inputPhoto.value.trim();
-            if (!filename) { alert("Indiquez le nom du fichier (ex: photo.jpg)."); return; }
+        btnAddPhoto.addEventListener('click', async () => {
+            const files = inputPhotoFiles.files;
+            if (files.length === 0) { alert("Sélectionnez au moins une image."); return; }
             const arr = currentPhotoArray();
             if (!arr) { alert("Sélectionnez d'abord un stage."); return; }
-            arr.push(filename);
-            inputPhoto.value = '';
-            renderAdminPhotoList();
+
+            const section = selectSection.value;
+            let folderPath = SECTION_FOLDERS[section] || section;
+            if (section === 'stages') {
+                const stageId = parseInt(selectStage.value);
+                const stage = galleryData.sections.stages[stageId];
+                if (stage && stage.dossier) folderPath = `stages/${stage.dossier}`;
+            }
+
+            btnAddPhoto.disabled = true;
+            btnAddPhoto.textContent = "Envoi...";
+            if (uploadStatus) {
+                uploadStatus.classList.remove('hidden');
+                uploadStatus.classList.remove('text-green-600');
+                uploadStatus.classList.add('text-csb-corail');
+                uploadStatus.textContent = "Téléchargement en cours...";
+            }
+
+            try {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const safeName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-]/g, '_')}`;
+                    const filePath = `${folderPath}/${safeName}`;
+                    
+                    const { error } = await window.sb.storage.from('galerie').upload(filePath, file);
+                    if (error) throw error;
+                    
+                    const { data: publicUrlData } = window.sb.storage.from('galerie').getPublicUrl(filePath);
+                    arr.push(publicUrlData.publicUrl);
+                }
+                
+                inputPhotoFiles.value = '';
+                if (uploadStatus) {
+                    uploadStatus.textContent = "Images ajoutées avec succès ! N'oubliez pas d'Enregistrer en ligne.";
+                    uploadStatus.classList.replace('text-csb-corail', 'text-green-600');
+                }
+                renderAdminPhotoList();
+            } catch (err) {
+                console.error(err);
+                if (uploadStatus) {
+                    uploadStatus.textContent = "Erreur lors de l'envoi : " + err.message;
+                }
+            } finally {
+                btnAddPhoto.disabled = false;
+                btnAddPhoto.textContent = "Envoyer et Ajouter";
+            }
         });
     }
     if (selectSection) selectSection.addEventListener('change', onSectionChange);
