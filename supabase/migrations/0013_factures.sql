@@ -1,5 +1,5 @@
 -- =============================================================
--- Migration 0009 — Factures (documents fiscaux numérotés)
+-- Migration 0013 — Factures (documents fiscaux numérotés)
 -- =============================================================
 -- À exécuter dans Supabase : Dashboard > SQL Editor > New query > Run.
 -- Idempotent (IF NOT EXISTS / CREATE OR REPLACE / drop policy if exists).
@@ -69,8 +69,11 @@ create policy "factures_select" on public.factures for select to authenticated
 -- =============================================================
 -- Contrat :
 --   - réservé au `bureau` (sinon exception) → respect de la législation ;
---   - refuse si le dossier n'est PAS soldé (statut 'valide' OU somme encaissée
---     >= montant_total) → on ne facture jamais un règlement incomplet ;
+--   - refuse si le dossier n'est PAS soldé (somme encaissée >= montant_total)
+--     → on ne facture jamais un règlement incomplet. Gate VOLONTAIREMENT
+--     découplée du statut combiné « pièces × règlement » (migration 0010) :
+--     une facture concerne l'argent reçu, pas les pièces justificatives —
+--     même logique que l'attestation de paiement côté espace adhérent ;
 --   - IDEMPOTENTE : si une facture existe déjà pour le dossier, on la renvoie
 --     telle quelle (même numéro) → pas de doublon de numérotation ;
 --   - fige un `snapshot` (référent + adresse + adhérents + détail du calcul).
@@ -106,10 +109,10 @@ begin
         return v_facture;
     end if;
 
-    -- 4) Le dossier doit être soldé.
+    -- 4) Le dossier doit être soldé (règlement uniquement, cf. note plus haut).
     select coalesce(sum(montant) filter (where encaisse), 0) into v_paye
     from public.paiements where dossier_id = p_dossier_id;
-    if v_dossier.statut <> 'valide' and v_paye < v_dossier.montant_total then
+    if v_paye < v_dossier.montant_total then
         raise exception 'Dossier non soldé : facture impossible tant que le règlement est incomplet.'
             using errcode = 'P0001';
     end if;

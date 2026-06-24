@@ -218,8 +218,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================
     // Rendu : dossiers (règlement + documents téléchargeables)
     // =========================================================
-    // Un dossier est « soldé » si son statut est 'valide' OU si la somme
-    // encaissée couvre le montant total (filet de sécurité côté lecture).
+    // « Soldé » = somme encaissée >= montant total. Calculé uniquement à partir
+    // des paiements, et délibérément DÉCOUPLÉ de `dossiers.statut` (qui, depuis
+    // la migration 0010, est un état combiné pièces × règlement géré par le
+    // bureau) : l'attestation de paiement ne concerne que l'argent reçu, pas les
+    // pièces justificatives. Exception : 'Annulé' reste un état manuel à
+    // respecter tel quel (il n'est jamais dérivé des encaissements).
     function encaisseDe(dossierId) {
         return paiements
             .filter(p => p.dossier_id === dossierId && p.encaisse)
@@ -232,13 +236,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return dates.length ? dates[dates.length - 1] : null;
     }
     function estSolde(d) {
-        return d.statut === 'valide' || encaisseDe(d.id) >= (d.montant_total || 0);
+        return d.statut !== 'Annulé' && encaisseDe(d.id) >= (d.montant_total || 0);
     }
 
+    function statutPaiement(d) {
+        if (d.statut === 'Annulé') return 'annule';
+        if (estSolde(d)) return 'solde';
+        return encaisseDe(d.id) > 0 ? 'partiel' : 'attente';
+    }
     const STATUT_BADGE = {
-        valide: ['Soldé', 'bg-green-50 text-green-700 border-green-300'],
-        paye_partiel: ['Règlement en cours', 'bg-amber-50 text-amber-700 border-amber-300'],
-        attente_paiement: ['En attente de règlement', 'bg-gray-50 text-gray-500 border-csb-tatami'],
+        solde: ['Soldé', 'bg-green-50 text-green-700 border-green-300'],
+        partiel: ['Règlement en cours', 'bg-amber-50 text-amber-700 border-amber-300'],
+        attente: ['En attente de règlement', 'bg-gray-50 text-gray-500 border-csb-tatami'],
         annule: ['Annulé', 'bg-gray-100 text-gray-400 border-csb-tatami']
     };
 
@@ -256,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const reste = Math.max(0, (d.montant_total || 0) - encaisse);
         const solde = estSolde(d);
         const pct = d.montant_total ? Math.min(100, Math.round((encaisse / d.montant_total) * 100)) : 0;
-        const [badgeTxt, badgeCls] = STATUT_BADGE[solde ? 'valide' : d.statut] || STATUT_BADGE.attente_paiement;
+        const [badgeTxt, badgeCls] = STATUT_BADGE[statutPaiement(d)];
         const facture = factures.find(f => f.dossier_id === d.id);
 
         // Actions documents : attestation (gated soldé) + facture (si émise).
