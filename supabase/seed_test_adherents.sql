@@ -41,30 +41,34 @@ create temporary table _seed (
     uid           uuid not null default gen_random_uuid()
 ) on commit drop;
 
+-- statut = statut de dossier combiné (migration 0010). Les `documents` et
+-- les paiements (étapes 4 et 7) sont alignés pour que le statut DÉRIVÉ par
+-- l'UI corresponde : Validé (pièces+paiement) · En attente paiement (pièces ok,
+-- pas payé) · En attente justificatifs (payé, pièces manquantes) · Incomplet.
 insert into _seed (email, nom, prenom, genre, naissance, cours, grade, statut, membre_bureau, role) values
 -- ---- 7 BUREAU (bureau du club + admin du site) ----
-('president@seed.test',  'Moreau',   'Sylvie',   'F', '1972-04-12', 'Adulte',       '3e Dan',           'Validé',           true,  'bureau'),
-('secretaire@seed.test', 'Lefevre',  'Thomas',   'M', '1980-09-23', 'Adulte',       '2e Dan',           'Validé',           true,  'bureau'),
-('tresorier@seed.test',  'Garcia',   'Nadia',    'F', '1975-01-30', 'Adulte',       '1er Dan',          'Validé',           true,  'bureau'),
-('bureau4@seed.test',    'Petit',    'Karim',    'M', '1983-06-15', 'Adulte',       'Ceinture Marron',  'Validé',           true,  'bureau'),
-('bureau5@seed.test',    'Roux',     'Emilie',   'F', '1978-11-05', 'Self-Defense', 'Ceinture Bleue',   'Validé',           true,  'bureau'),
-('bureau6@seed.test',    'Fontaine', 'Olivier',  'M', '1969-03-19', 'Adulte',       '2e Dan',           'Attente paiement', true,  'bureau'),
-('bureau7@seed.test',    'Girard',   'Sabrina',  'F', '1985-07-28', 'Adulte',       'Ceinture Marron',  'Validé',           true,  'bureau'),
+('president@seed.test',  'Moreau',   'Sylvie',   'F', '1972-04-12', 'Adulte',       '3e Dan',           'Validé',                    true,  'bureau'),
+('secretaire@seed.test', 'Lefevre',  'Thomas',   'M', '1980-09-23', 'Adulte',       '2e Dan',           'Validé',                    true,  'bureau'),
+('tresorier@seed.test',  'Garcia',   'Nadia',    'F', '1975-01-30', 'Adulte',       '1er Dan',          'Validé',                    true,  'bureau'),
+('bureau4@seed.test',    'Petit',    'Karim',    'M', '1983-06-15', 'Adulte',       'Ceinture Marron',  'En attente paiement',       true,  'bureau'),
+('bureau5@seed.test',    'Roux',     'Emilie',   'F', '1978-11-05', 'Self-Defense', 'Ceinture Bleue',   'Validé',                    true,  'bureau'),
+('bureau6@seed.test',    'Fontaine', 'Olivier',  'M', '1969-03-19', 'Adulte',       '2e Dan',           'En attente justificatifs',  true,  'bureau'),
+('bureau7@seed.test',    'Girard',   'Sabrina',  'F', '1985-07-28', 'Adulte',       'Ceinture Marron',  'Validé',                    true,  'bureau'),
 -- ---- 3 ENSEIGNANTS (admin du site, niveau enseignant) ----
-('prof1@seed.test',      'Dubois',   'Herve',    'M', '1965-02-10', 'Adulte',       '4e Dan',           'Validé',           false, 'enseignant'),
-('prof2@seed.test',      'Lemoine',  'Pascal',   'M', '1971-08-17', 'Adulte',       '3e Dan',           'Validé',           false, 'enseignant'),
-('prof3@seed.test',      'Bernard',  'Christine','F', '1974-12-03', 'Adulte',       '2e Dan',           'Validé',           false, 'enseignant'),
+('prof1@seed.test',      'Dubois',   'Herve',    'M', '1965-02-10', 'Adulte',       '4e Dan',           'Validé',                    false, 'enseignant'),
+('prof2@seed.test',      'Lemoine',  'Pascal',   'M', '1971-08-17', 'Adulte',       '3e Dan',           'Validé',                    false, 'enseignant'),
+('prof3@seed.test',      'Bernard',  'Christine','F', '1974-12-03', 'Adulte',       '2e Dan',           'En attente paiement',       false, 'enseignant'),
 -- ---- 10 ADHÉRENTS (rôle adhérent) ----
-('ad1@seed.test',        'Martin',   'Lucas',    'M', '2015-05-14', 'Enfant',       'Ceinture Blanche', 'Attente paiement', false, 'adherent'),
-('ad2@seed.test',        'Martin',   'Lea',      'F', '2017-03-22', 'Enfant',       'Ceinture Blanche', 'Incomplet',        false, 'adherent'),
-('ad3@seed.test',        'Durand',   'Hugo',     'M', '2014-10-08', 'Enfant',       'Ceinture Jaune',   'Validé',           false, 'adherent'),
-('ad4@seed.test',        'Simon',    'Chloe',    'F', '2016-01-19', 'Enfant',       'Ceinture Orange',  'Validé',           false, 'adherent'),
-('ad5@seed.test',        'Laurent',  'Maxime',   'M', '2013-07-30', 'Enfant',       'Ceinture Jaune',   'Attente paiement', false, 'adherent'),
-('ad6@seed.test',        'Michel',   'Ines',     'F', '2009-09-11', 'Self-Defense', 'Ceinture Blanche', 'Validé',           false, 'adherent'),
-('ad7@seed.test',        'Robert',   'Camille',  'F', '1995-04-25', 'Self-Defense', 'Ceinture Jaune',   'Attente paiement', false, 'adherent'),
-('ad8@seed.test',        'Richard',  'Antoine',  'M', '1990-06-07', 'Adulte',       'Ceinture Verte',   'Incomplet',        false, 'adherent'),
-('ad9@seed.test',        'Gauthier', 'Julien',   'M', '2000-02-28', 'Adulte',       'Ceinture Bleue',   'Validé',           false, 'adherent'),
-('ad10@seed.test',       'Mercier',  'Manon',    'F', '2006-11-16', 'Adulte',       'Ceinture Orange',  'Attente paiement', false, 'adherent');
+('ad1@seed.test',        'Martin',   'Lucas',    'M', '2015-05-14', 'Enfant',       'Ceinture Blanche', 'Incomplet',                 false, 'adherent'),
+('ad2@seed.test',        'Martin',   'Lea',      'F', '2017-03-22', 'Enfant',       'Ceinture Blanche', 'Incomplet',                 false, 'adherent'),
+('ad3@seed.test',        'Durand',   'Hugo',     'M', '2014-10-08', 'Enfant',       'Ceinture Jaune',   'Validé',                    false, 'adherent'),
+('ad4@seed.test',        'Simon',    'Chloe',    'F', '2016-01-19', 'Enfant',       'Ceinture Orange',  'En attente justificatifs',  false, 'adherent'),
+('ad5@seed.test',        'Laurent',  'Maxime',   'M', '2013-07-30', 'Enfant',       'Ceinture Jaune',   'En attente paiement',       false, 'adherent'),
+('ad6@seed.test',        'Michel',   'Ines',     'F', '2009-09-11', 'Self-Defense', 'Ceinture Blanche', 'Validé',                    false, 'adherent'),
+('ad7@seed.test',        'Robert',   'Camille',  'F', '1995-04-25', 'Self-Defense', 'Ceinture Jaune',   'En attente justificatifs',  false, 'adherent'),
+('ad8@seed.test',        'Richard',  'Antoine',  'M', '1990-06-07', 'Adulte',       'Ceinture Verte',   'Incomplet',                 false, 'adherent'),
+('ad9@seed.test',        'Gauthier', 'Julien',   'M', '2000-02-28', 'Adulte',       'Ceinture Bleue',   'Validé',                    false, 'adherent'),
+('ad10@seed.test',       'Mercier',  'Manon',    'F', '2006-11-16', 'Adulte',       'Ceinture Orange',  'En attente paiement',       false, 'adherent');
 
 -- 2) Comptes Auth (le trigger on_auth_user_created crée le profil 'adherent').
 insert into auth.users (
@@ -89,11 +93,15 @@ select
     '91220', 'Brétigny-sur-Orge'
 from _seed s;
 
--- 4) Adhérents.
+-- 4) Adhérents. `documents` rempli (pièces complètes) quand le statut visé
+--    suppose la justif OK ; sinon checklist vide.
 insert into public.adherents
-    (famille_id, nom, prenom, date_naissance, genre, email, cours_type, membre_bureau, grade_actuel, statut_dossier)
+    (famille_id, nom, prenom, date_naissance, genre, email, cours_type, membre_bureau, grade_actuel, statut_dossier, documents)
 select
-    f.id, s.nom, s.prenom, s.naissance, s.genre, s.email, s.cours, s.membre_bureau, s.grade, s.statut
+    f.id, s.nom, s.prenom, s.naissance, s.genre, s.email, s.cours, s.membre_bureau, s.grade, s.statut,
+    case when s.statut in ('Validé', 'En attente paiement')
+         then '{"photo":true,"certificat_medical":true,"autorisation_parentale":true,"reglement_interieur":true}'::jsonb
+         else '{}'::jsonb end
 from _seed s
 join public.familles f on f.referent_user_id = s.uid;
 
@@ -104,7 +112,7 @@ from _seed s
 where p.user_id = s.uid and s.role <> 'adherent';
 
 -- 6) Dossiers (panier par famille). Tarif : 37 € pour un membre du bureau,
---    sinon selon le cours. Statut mappé sur celui de l'adhérent.
+--    sinon selon le cours. Statut = vocabulaire unifié (migration 0010).
 insert into public.dossiers (famille_id, saison, montant_total, mode_paiement, statut)
 select
     f.id, '2026-2027',
@@ -115,21 +123,19 @@ select
         else 13000
     end,
     'au_club',
-    case s.statut
-        when 'Validé' then 'valide'
-        else 'attente_paiement'
-    end
+    s.statut
 from _seed s
 join public.familles f on f.referent_user_id = s.uid;
 
--- 7) Encaissements : pour chaque dossier « validé », un chèque encaissé du total.
---    (Alimente la carte « Encaissé / attendu » du dashboard.)
+-- 7) Encaissements : un chèque encaissé du total pour les dossiers réglés
+--    (statut « Validé » = pièces+paiement, ou « En attente justificatifs » = payé
+--    mais pièces manquantes). Alimente la carte « Encaissé / attendu ».
 insert into public.paiements (dossier_id, montant, mode, encaisse, date_encaissement)
 select d.id, d.montant_total, 'cheque', true, current_date
 from public.dossiers d
 join public.familles f on f.id = d.famille_id
 join _seed s on s.uid = f.referent_user_id
-where s.statut = 'Validé';
+where s.statut in ('Validé', 'En attente justificatifs');
 
 commit;
 

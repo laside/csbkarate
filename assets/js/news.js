@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputDate = document.getElementById('news-date');
     const inputCategory = document.getElementById('news-category');
     const inputImage = document.getElementById('news-image');
+    const inputPhotoFile = document.getElementById('news-photo-file');
+    const currentImagePreview = document.getElementById('current-image-preview');
     const inputExcerpt = document.getElementById('news-excerpt');
     const btnSaveNews = document.getElementById('btn-save-news');
     const btnCancelEdit = document.getElementById('btn-cancel-edit');
@@ -49,9 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Gestion de l'image optionnelle
             let imageHTML = '';
             if (news.image && news.image.trim() !== '') {
+                const imgUrl = news.image.startsWith('http') ? esc(news.image) : `./assets/photos/${esc(news.image)}`;
                 imageHTML = `
                     <div class="h-48 w-full mb-4 rounded-lg overflow-hidden bg-csb-tatami">
-                        <img src="./assets/photos/${esc(news.image)}" alt="Illustration" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.style.display='none'">
+                        <img src="${imgUrl}" alt="Illustration" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.style.display='none'">
                     </div>
                 `;
             }
@@ -118,6 +121,16 @@ document.addEventListener('DOMContentLoaded', () => {
         inputDate.value = news.date;
         inputCategory.value = news.category;
         inputImage.value = news.image || '';
+        inputPhotoFile.value = '';
+        
+        if (news.image && news.image.trim() !== '') {
+            const displayName = news.image.startsWith('http') ? news.image.split('/').pop() : news.image;
+            currentImagePreview.innerHTML = `Image actuelle : <strong class="text-csb-dojo">${esc(displayName)}</strong><br><span class="text-xs text-gray-400">(Laissez vide pour conserver)</span>`;
+            currentImagePreview.classList.remove('hidden');
+        } else {
+            currentImagePreview.classList.add('hidden');
+        }
+
         inputExcerpt.value = news.excerpt;
         
         btnCancelEdit.classList.remove('hidden');
@@ -133,6 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
         inputDate.value = '';
         inputCategory.value = '';
         inputImage.value = '';
+        inputPhotoFile.value = '';
+        currentImagePreview.classList.add('hidden');
         inputExcerpt.value = '';
         
         btnCancelEdit.classList.add('hidden');
@@ -140,33 +155,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnCancelEdit.addEventListener('click', resetForm);
 
-    btnSaveNews.addEventListener('click', () => {
+    btnSaveNews.addEventListener('click', async () => {
         // Validation basique
         if(!inputTitle.value || !inputDate.value || !inputCategory.value || !inputExcerpt.value) {
             alert("Veuillez remplir tous les champs obligatoires.");
             return;
         }
 
-        const newsObj = {
-            id: inputId.value ? parseInt(inputId.value) : Date.now(), // ID unique basique
-            date: inputDate.value,
-            category: inputCategory.value,
-            title: inputTitle.value,
-            excerpt: inputExcerpt.value,
-            image: inputImage.value.trim()
-        };
+        btnSaveNews.disabled = true;
+        const originalText = btnSaveNews.textContent;
+        btnSaveNews.textContent = "Enregistrement...";
 
-        if(inputId.value) {
-            // Mode Mise à jour
-            const index = newsData.findIndex(n => n.id === parseInt(inputId.value));
-            if(index !== -1) newsData[index] = newsObj;
-        } else {
-            // Mode Ajout (On l'ajoute au tout début de la liste)
-            newsData.unshift(newsObj);
+        try {
+            let finalImageUrl = inputImage.value.trim();
+
+            // Gestion de l'upload de la nouvelle image si présente
+            if (inputPhotoFile.files.length > 0) {
+                const file = inputPhotoFile.files[0];
+                const safeName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-]/g, '_')}`;
+                
+                const { error } = await window.sb.storage.from('news').upload(safeName, file);
+                if (error) throw error;
+                
+                const { data: publicUrlData } = window.sb.storage.from('news').getPublicUrl(safeName);
+                finalImageUrl = publicUrlData.publicUrl;
+            }
+
+            const newsObj = {
+                id: inputId.value ? parseInt(inputId.value) : Date.now(), // ID unique basique
+                date: inputDate.value,
+                category: inputCategory.value,
+                title: inputTitle.value,
+                excerpt: inputExcerpt.value,
+                image: finalImageUrl
+            };
+
+            if(inputId.value) {
+                // Mode Mise à jour
+                const index = newsData.findIndex(n => n.id === parseInt(inputId.value));
+                if(index !== -1) newsData[index] = newsObj;
+            } else {
+                // Mode Ajout (On l'ajoute au tout début de la liste)
+                newsData.unshift(newsObj);
+            }
+
+            resetForm();
+            renderAdminList();
+            renderPublicGrid();
+        } catch (err) {
+            console.error("Erreur lors de l'enregistrement :", err);
+            alert("Une erreur est survenue lors de l'enregistrement ou de l'upload de l'image.");
+        } finally {
+            btnSaveNews.disabled = false;
+            btnSaveNews.textContent = originalText;
         }
-
-        resetForm();
-        renderAdminList();
     });
 
     btnExport.addEventListener('click', () => {

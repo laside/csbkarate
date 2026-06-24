@@ -21,8 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
     ));
     const fmt = (c) => CSBTarifs.formatEuros(c);
 
-    // --- Listes de référence (alignées sur les CHECK de la migration 0006) ---
-    const STATUTS = ['Incomplet', 'Attente paiement', 'Validé'];
+    // --- Listes de référence ---
+    // Le statut de dossier (Incomplet / En attente paiement / En attente
+    // justificatifs / Validé — migration 0010) n'est PAS une liste éditable :
+    // il est CALCULÉ (cf. computeDossierStatus), à partir des pièces (par
+    // adhérent) et du règlement (par dossier).
     const GRADES = [
         'Ceinture Blanche', 'Ceinture Jaune', 'Ceinture Orange', 'Ceinture Verte',
         'Ceinture Bleue', 'Ceinture Marron', '1er Dan', '2e Dan', '3e Dan', '4e Dan', '5e Dan'
@@ -53,8 +56,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let dossiers = [];
     let paiements = [];
     let profiles = [];
-    let factures = [];
     let currentUserId = null;
+    // Agrégats par famille, recalculés à chaque chargement (cf. buildFamilleIndex) :
+    let familleAgg = {};        // famille_id -> { du, encaisse } (centimes)
+    let familleStatusMap = {};  // famille_id -> statut dossier combiné (dérivé)
 
     // =========================================================
     // Authentification (gate bureau)
@@ -134,16 +139,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================
     async function loadAll() {
         rowsEl.innerHTML = '<tr><td colspan="7" class="px-4 py-10 text-center text-gray-400">Chargement…</td></tr>';
-        const [aRes, dRes, pRes, prRes, facRes] = await Promise.all([
+        const [aRes, dRes, pRes, prRes] = await Promise.all([
             sb.from('adherents')
-                .select('id, prenom, nom, date_naissance, genre, cours_type, grade_actuel, statut_dossier, membre_bureau, famille_id, familles(nom_referent, ville)')
+                .select('id, prenom, nom, date_naissance, genre, cours_type, grade_actuel, statut_dossier, membre_bureau, documents, famille_id, familles(nom_referent, ville)')
                 .order('nom', { ascending: true }),
-            sb.from('dossiers')
-                .select('id, famille_id, saison, montant_total, detail_calcul, statut, created_at, familles(nom_referent, ville)')
-                .order('created_at', { ascending: false }),
-            sb.from('paiements').select('id, dossier_id, montant, mode, numero_cheque, encaisse, date_encaissement'),
-            sb.from('profiles').select('user_id, email, role'),
-            sb.from('factures').select('id, dossier_id, numero, montant, emise_le, snapshot')
+            sb.from('dossiers').select('id, famille_id, montant_total, statut'),
+            sb.from('paiements').select('dossier_id, montant, encaisse'),
+            sb.from('profiles').select('user_id, email, role')
         ]);
 
         if (aRes.error) {
@@ -155,11 +157,10 @@ document.addEventListener('DOMContentLoaded', () => {
         dossiers = dRes.data || [];
         paiements = pRes.data || [];
         profiles = prRes.data || [];
-        factures = facRes.data || [];
+        buildFamilleIndex();
         renderStats();
         renderRows();
         renderAdmins();
-        renderDossiers();
     }
 
     // =========================================================
@@ -168,16 +169,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderStats() {
         const total = adherents.length;
         const byCours = (c) => adherents.filter(a => a.cours_type === c).length;
-        const byStatut = (s) => adherents.filter(a => a.statut_dossier === s).length;
         const nbBureau = adherents.filter(a => a.membre_bureau).length;
         const totalDu = dossiers.reduce((s, d) => s + (d.montant_total || 0), 0);
         const encaisse = paiements.filter(p => p.encaisse).reduce((s, p) => s + (p.montant || 0), 0);
+        // Statut par dossier (= par famille), pas par adhérent.
+        const statuses = Object.values(familleStatusMap);
+        const byDossier = (s) => statuses.filter(v => v === s).length;
 
         statsEl.innerHTML = [
             statCard('Adhérents', total,
                 `${byCours('Enfant')} enfants · ${byCours('Adulte')} adultes · ${byCours('Self-Defense')} self`, 'encre'),
-            statCard('Dossiers validés', byStatut('Validé'),
-                `${byStatut('Attente paiement')} en attente · ${byStatut('Incomplet')} incomplets`, 'green'),
+            statCard('Dossiers validés', byDossier('Validé'),
+                `${byDossier('En attente paiement')} att. paiement · ${byDossier('En attente justificatifs')} att. justif · ${byDossier('Incomplet')} incomplets`, 'green'),
             statCard('Bureau du club', nbBureau, 'pratiquants · tarif réduit (37 €)', 'corail'),
             statCard('Encaissé', fmt(encaisse), `sur ${fmt(totalDu)} attendus`, 'dojo')
         ].join('');
@@ -208,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const s = fStatut.value;
         return adherents.filter(a => {
             if (c && a.cours_type !== c) return false;
-            if (s && a.statut_dossier !== s) return false;
+            if (s && statutOf(a) !== s) return false;
             if (q) {
                 const hay = `${a.prenom} ${a.nom} ${a.familles?.nom_referent || ''}`.toLowerCase();
                 if (!hay.includes(q)) return false;
@@ -228,13 +231,69 @@ document.addEventListener('DOMContentLoaded', () => {
         return age;
     }
 
-    // Couleur du select statut selon sa valeur.
+    // =========================================================
+    // Statut de dossier — dérivation (pièces justificatives × règlement)
+    // =========================================================
+    // Pièces OK pour UN adhérent : toutes les pièces requises validées
+    // (les pièces `minorOnly` ne comptent que pour les mineurs).
+    function justifComplete(a) {
+        const age = ageOf(a.date_naissance);
+        const isMinor = age !== null && age < 18;
+        const docs = (a && a.documents && typeof a.documents === 'object') ? a.documents : {};
+        const applicable = DOCUMENTS.filter(d => !d.minorOnly || isMinor);
+        return applicable.length > 0 && applicable.every(d => !!docs[d.key]);
+    }
+
+    // Statut combiné à partir des deux axes (cf. migration 0010).
+    function computeDossierStatus(justifOk, paiementOk) {
+        if (justifOk && paiementOk) return 'Validé';
+        if (justifOk && !paiementOk) return 'En attente paiement';
+        if (!justifOk && paiementOk) return 'En attente justificatifs';
+        return 'Incomplet';
+    }
+
+    // Recalcule les agrégats par famille (montant dû / encaissé) + le statut
+    // combiné de chaque famille, depuis les données chargées.
+    function buildFamilleIndex() {
+        familleAgg = {};
+        familleStatusMap = {};
+        const dossierToFamille = {};
+        dossiers.forEach(d => {
+            dossierToFamille[d.id] = d.famille_id;
+            const agg = familleAgg[d.famille_id] || (familleAgg[d.famille_id] = { du: 0, encaisse: 0 });
+            agg.du += d.montant_total || 0;
+        });
+        paiements.forEach(p => {
+            if (!p.encaisse) return;
+            const fid = dossierToFamille[p.dossier_id];
+            if (fid == null) return;
+            const agg = familleAgg[fid] || (familleAgg[fid] = { du: 0, encaisse: 0 });
+            agg.encaisse += p.montant || 0;
+        });
+        const parFamille = {};
+        adherents.forEach(a => (parFamille[a.famille_id] = parFamille[a.famille_id] || []).push(a));
+        Object.keys(parFamille).forEach(fid => {
+            const liste = parFamille[fid];
+            const justifOk = liste.length > 0 && liste.every(justifComplete);
+            const agg = familleAgg[fid] || { du: 0, encaisse: 0 };
+            const paiementOk = agg.du > 0 && agg.encaisse >= agg.du;
+            familleStatusMap[fid] = computeDossierStatus(justifOk, paiementOk);
+        });
+    }
+
+    // Statut dossier d'un adhérent (calculé), avec repli sur la valeur stockée.
+    function statutOf(a) {
+        return familleStatusMap[a.famille_id] || a.statut_dossier || 'Incomplet';
+    }
+
+    // Couleur d'un badge de statut dossier.
     function statutClass(v) {
         if (v === 'Validé') return 'bg-green-50 text-green-700 border-green-300';
-        if (v === 'Attente paiement') return 'bg-amber-50 text-amber-700 border-amber-300';
+        if (v === 'En attente paiement') return 'bg-amber-50 text-amber-700 border-amber-300';
+        if (v === 'En attente justificatifs') return 'bg-blue-50 text-blue-700 border-blue-300';
+        if (v === 'Annulé') return 'bg-red-50 text-red-700 border-red-300';
         return 'bg-gray-50 text-gray-500 border-csb-tatami'; // Incomplet
     }
-    const STATUT_SELECT_BASE = 'text-sm rounded-lg border px-2 py-1.5 font-semibold cursor-pointer ';
 
     function renderRows() {
         const list = filtered();
@@ -255,7 +314,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const ville = a.familles?.ville || '';
 
         const gradeOpts = GRADES.map(g => `<option ${g === a.grade_actuel ? 'selected' : ''}>${esc(g)}</option>`).join('');
-        const statutOpts = STATUTS.map(s => `<option ${s === a.statut_dossier ? 'selected' : ''}>${esc(s)}</option>`).join('');
 
         return `
             <tr data-id="${a.id}" class="border-t border-csb-tatami/60 hover:bg-csb-washi/40 transition">
@@ -271,14 +329,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-4 py-3">
                     <select data-field="grade_actuel" class="text-sm rounded-lg border border-csb-tatami px-2 py-1.5 bg-white cursor-pointer">${gradeOpts}</select>
                 </td>
-                <td class="px-4 py-3">
-                    <select data-field="statut_dossier" class="${STATUT_SELECT_BASE}${statutClass(a.statut_dossier)}">${statutOpts}</select>
-                </td>
+                <td class="px-4 py-3">${badgeStatut(statutOf(a))}</td>
                 <td class="px-4 py-3 text-center">
                     <input type="checkbox" data-field="membre_bureau" class="chk mx-auto" ${a.membre_bureau ? 'checked' : ''}>
                 </td>
-                <td class="px-4 py-3 whitespace-nowrap">
-                    <span data-role="feedback" class="text-xs"></span>
+                <td class="px-4 py-3 whitespace-nowrap text-right">
+                    <span data-role="feedback" class="text-xs mr-2"></span>
+                    <button type="button" data-open-detail class="text-csb-corail text-sm font-bold hover:underline whitespace-nowrap">Dossier ›</button>
                 </td>
             </tr>`;
     }
@@ -293,11 +350,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const id = Number(tr.dataset.id);
         const field = ctrl.dataset.field;
         const value = ctrl.type === 'checkbox' ? ctrl.checked : ctrl.value;
-
-        const ok = await saveField(tr, id, field, value);
-        if (ok && field === 'statut_dossier') {
-            ctrl.className = STATUT_SELECT_BASE + statutClass(value);
-        }
+        // Champs encore éditables en ligne : membre_bureau, grade_actuel.
+        // (Le statut dossier n'est plus éditable : il est calculé, cf. modale.)
+        await saveField(tr, id, field, value);
     });
 
     async function saveField(tr, id, field, value) {
@@ -485,221 +540,547 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // =========================================================
-    // Dossiers & règlements (encaissements + facture)
+    // FICHE DOSSIER FAMILLE (modale) — Phase 2
     // =========================================================
-    // Source unique de l'état « soldé » : le dossier (panier famille). La
-    // facture (document fiscal numéroté) n'est éditable QUE dossier soldé, et
-    // l'émission est faite côté base (RPC bureau-only) — cf. migration 0009.
-    const dossiersRowsEl = $('#dossiers-rows');
+    // Vue détaillée par famille : pièces justificatives (checklist validée par
+    // le bureau) + règlement (paiements). Le statut de dossier est CALCULÉ à
+    // partir de ces deux axes (cf. computeDossierStatus / refreshStatuts), jamais
+    // saisi à la main. Modèle : un dossier par famille et par saison.
+    // =========================================================
+    const SAISON = '2026-2027'; // saison active (aligné sur inscription.js)
 
-    // Centimes encaissés (lignes `encaisse = true`) d'un dossier.
-    function encaisseDe(dossierId) {
-        return paiements
-            .filter(p => p.dossier_id === dossierId && p.encaisse)
-            .reduce((s, p) => s + (p.montant || 0), 0);
-    }
-    function estSolde(d) {
-        return d.statut === 'valide' || encaisseDe(d.id) >= (d.montant_total || 0);
-    }
-    // Statut dérivé des encaissements (on ne touche jamais un dossier 'annule').
-    function statutDerive(d) {
-        if (d.statut === 'annule') return 'annule';
-        const enc = encaisseDe(d.id);
-        if ((d.montant_total || 0) > 0 && enc >= d.montant_total) return 'valide';
-        return enc > 0 ? 'paye_partiel' : 'attente_paiement';
-    }
-    const DOSSIER_BADGE = {
-        valide: ['Soldé', 'bg-green-50 text-green-700 border-green-300'],
-        paye_partiel: ['Partiel', 'bg-amber-50 text-amber-700 border-amber-300'],
-        attente_paiement: ['En attente', 'bg-gray-50 text-gray-500 border-csb-tatami'],
-        annule: ['Annulé', 'bg-gray-100 text-gray-400 border-csb-tatami']
-    };
-    const PAY_MODE_LABEL = { cheque: 'Chèque', espece: 'Espèces', cb: 'Carte', ancv: 'ANCV', caf: 'CAF' };
+    // Modes de règlement (alignés sur le CHECK de la migration 0006).
+    const MODE_LABEL = { cheque: 'Chèque', espece: 'Espèces', cb: 'CB', ancv: 'Coupon ANCV', caf: 'Bon CAF' };
 
-    function renderDossiers() {
-        if (!dossiersRowsEl) return;
-        if (!dossiers.length) {
-            dossiersRowsEl.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">Aucun dossier d\'inscription.</td></tr>';
+    // Checklist des pièces (jsonb `adherents.documents`). Évolutif : ajouter ou
+    // retirer une ligne ici suffit, sans migration. `minorOnly` = mineurs seuls.
+    const DOCUMENTS = [
+        { key: 'photo',                  label: "Photo d'identité" },
+        { key: 'certificat_medical',     label: 'Certificat médical / questionnaire santé' },
+        { key: 'autorisation_parentale', label: 'Autorisation parentale', minorOnly: true },
+        { key: 'reglement_interieur',    label: 'Règlement intérieur signé' }
+    ];
+
+    const modal = $('#detail-modal');
+    const detailBody = $('#detail-body');
+    const detailTitle = $('#detail-title');
+    const detailSub = $('#detail-sub');
+    const lightbox = $('#lightbox');
+    const lightboxClose = $('#lightbox-close');
+
+    if (lightbox) {
+        const closeLb = () => {
+            lightbox.classList.add('opacity-0');
+            setTimeout(() => lightbox.classList.add('hidden'), 300);
+        };
+        if (lightboxClose) lightboxClose.addEventListener('click', closeLb);
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) closeLb();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !lightbox.classList.contains('hidden')) closeLb();
+        });
+    }
+
+    let detailFamille = null;
+    let detailAdherents = [];
+    let detailDossiers = [];
+    let detailPaiements = [];
+    let detailFactures = [];
+    let detailDirty = false; // une écriture impactant la liste a eu lieu → recharger à la fermeture
+    let tarifConfig = null;  // pour créer un dossier manquant (calcul auto)
+
+    // Saisie en euros (« 70 » / « 70,50 ») -> centimes. null si invalide.
+    function eurosToCents(str) {
+        const n = parseFloat(String(str).replace(',', '.').replace(/[^\d.]/g, ''));
+        if (!isFinite(n) || n < 0) return null;
+        return Math.round(n * 100);
+    }
+
+    async function loadTarifConfig() {
+        if (tarifConfig) return tarifConfig;
+        const { data } = await sb.from('tarifs').select('*').eq('saison', SAISON).maybeSingle();
+        tarifConfig = data || CSBTarifs.DEFAULT_CONFIG;
+        return tarifConfig;
+    }
+
+    // --- Ouverture / fermeture ---
+    rowsEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-open-detail]');
+        if (!btn) return;
+        const id = Number(btn.closest('tr').dataset.id);
+        const a = adherents.find(x => x.id === id);
+        if (a) openDetail(a.famille_id);
+    });
+
+    function closeDetail() {
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+        if (detailDirty) { detailDirty = false; loadAll(); } // répercute statuts/encaissements dans la liste + stats
+    }
+    modal.addEventListener('click', (e) => { if (e.target.closest('[data-detail-close]')) closeDetail(); });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeDetail();
+    });
+
+    async function openDetail(familleId) {
+        detailDirty = false;
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        detailTitle.textContent = 'Chargement…';
+        detailSub.textContent = '';
+        detailBody.innerHTML = '<p class="text-center text-gray-400 py-10">Chargement du dossier…</p>';
+
+        const [fRes, aRes, dRes] = await Promise.all([
+            sb.from('familles').select('*').eq('id', familleId).maybeSingle(),
+            sb.from('adherents').select('*').eq('famille_id', familleId).order('id', { ascending: true }),
+            sb.from('dossiers').select('*').eq('famille_id', familleId).order('id', { ascending: true })
+        ]);
+        const firstErr = fRes.error || aRes.error || dRes.error;
+        if (firstErr) {
+            detailBody.innerHTML = `<p class="text-center text-csb-corail py-10">Erreur de chargement : ${esc(firstErr.message)}</p>`;
             return;
         }
-        dossiersRowsEl.innerHTML = dossiers.map(dossierRowHtml).join('');
+        detailFamille = fRes.data || { id: familleId };
+        detailAdherents = aRes.data || [];
+        detailDossiers = dRes.data || [];
+
+        const dossierIds = detailDossiers.map(d => d.id);
+        if (dossierIds.length) {
+            const [pRes, facRes] = await Promise.all([
+                sb.from('paiements').select('*').in('dossier_id', dossierIds).order('id', { ascending: true }),
+                sb.from('factures').select('*').in('dossier_id', dossierIds)
+            ]);
+            detailPaiements = pRes.error ? [] : (pRes.data || []);
+            detailFactures = facRes.error ? [] : (facRes.data || []);
+        } else {
+            detailPaiements = [];
+            detailFactures = [];
+        }
+
+        // Pré-chargement des URLs signées pour les photos des adhérents de la famille
+        for (const a of detailAdherents) {
+            if (a.photo_path) {
+                const { data, error } = await sb.storage.from('dossiers').createSignedUrl(a.photo_path, 3600); // Valide 1h
+                if (!error && data) {
+                    a._photo_url = data.signedUrl;
+                }
+            }
+        }
+
+        renderDetail();
     }
 
-    function dossierRowHtml(d) {
-        const enc = encaisseDe(d.id);
-        const reste = Math.max(0, (d.montant_total || 0) - enc);
-        const [txt, cls] = DOSSIER_BADGE[statutDerive(d)] || DOSSIER_BADGE.attente_paiement;
-        const ref = d.familles?.nom_referent || '—';
-        const ville = d.familles?.ville || '';
-        const fac = factures.find(f => f.dossier_id === d.id);
-        const facTag = fac
-            ? `<span class="ml-2 text-[10px] font-bold uppercase tracking-wider text-csb-dojo bg-csb-washi border border-csb-tatami px-2 py-0.5 rounded">Facture ${esc(fac.numero)}</span>`
-            : '';
+    // =========================================================
+    // Rendu de la modale
+    // =========================================================
+    function renderDetail() {
+        const f = detailFamille;
+        detailTitle.textContent = `Famille ${f.nom_referent || '—'}`;
+        const adr = [f.adresse, [f.code_postal, f.ville].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+        detailSub.textContent = [adr, f.telephone_urgence].filter(Boolean).join(' · ');
+        detailBody.innerHTML = sectionSummary() + sectionAdherents() + sectionReglement();
+    }
+
+    function badgeStatut(v) {
+        return `<span class="inline-block text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${statutClass(v)}">${esc(v)}</span>`;
+    }
+
+    // Résumé : statut combiné + les deux axes (pièces justif. × règlement),
+    // pour bien distinguer les deux notions.
+    function sectionSummary() {
+        const nbJustifOk = detailAdherents.filter(justifComplete).length;
+        const justifOk = detailAdherents.length > 0 && nbJustifOk === detailAdherents.length;
+        const totalDu = detailDossiers.reduce((s, d) => s + (d.montant_total || 0), 0);
+        const totalEnc = detailPaiements.filter(p => p.encaisse).reduce((s, p) => s + (p.montant || 0), 0);
+        const paiementOk = totalDu > 0 && totalEnc >= totalDu;
+        const status = computeDossierStatus(justifOk, paiementOk);
+        const axis = (ok, txtOk, txtKo) => `<span class="font-semibold ${ok ? 'text-green-700' : 'text-amber-700'}">${ok ? '✔ ' + txtOk : '✘ ' + txtKo}</span>`;
         return `
-            <tr data-dossier="${d.id}" class="border-t border-csb-tatami/60 hover:bg-csb-washi/40 transition">
-                <td class="px-4 py-3">
-                    <div class="font-semibold text-csb-encre">${esc(ref)}</div>
-                    <div class="text-xs text-gray-400">${esc(ville)}</div>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap">${esc(d.saison || '')}</td>
-                <td class="px-4 py-3 text-right whitespace-nowrap">${fmt(d.montant_total)}</td>
-                <td class="px-4 py-3 text-right whitespace-nowrap text-green-700">${fmt(enc)}</td>
-                <td class="px-4 py-3 text-right whitespace-nowrap ${reste > 0 ? 'text-csb-corail font-semibold' : 'text-gray-400'}">${fmt(reste)}</td>
-                <td class="px-4 py-3"><span class="inline-block text-xs font-semibold rounded-full px-3 py-1 border ${cls}">${esc(txt)}</span>${facTag}</td>
-                <td class="px-4 py-3 text-right">
-                    <button type="button" data-pay="${d.id}"
-                            class="px-4 py-1.5 rounded-full font-condensed uppercase tracking-wider border border-csb-dojo text-csb-dojo hover:bg-csb-dojo hover:text-white transition text-xs">
-                        Gérer
+            <section class="bg-white rounded-xl border border-csb-tatami p-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="font-condensed uppercase tracking-wider text-xs text-gray-400">Statut du dossier</span>
+                    ${badgeStatut(status)}
+                </div>
+                <div class="grid sm:grid-cols-2 gap-2 mt-3 text-sm">
+                    <div>Pièces justificatives : ${axis(justifOk, `complètes (${nbJustifOk}/${detailAdherents.length})`, `${nbJustifOk}/${detailAdherents.length} adhérent(s)`)}</div>
+                    <div>Règlement : ${axis(paiementOk, `réglé (${fmt(totalEnc)})`, `${fmt(totalEnc)} / ${fmt(totalDu)}`)}</div>
+                </div>
+            </section>`;
+    }
+
+    function sectionAdherents() {
+        const cards = detailAdherents.map(adherentCard).join('') ||
+            '<p class="text-sm text-gray-400">Aucun adhérent rattaché à cette famille.</p>';
+        return `
+            <section>
+                <h3 class="font-condensed text-lg uppercase tracking-wider text-csb-encre mb-3">Adhérents &amp; pièces justificatives</h3>
+                <div class="space-y-4">${cards}</div>
+            </section>`;
+    }
+
+    function adherentCard(a) {
+        const age = ageOf(a.date_naissance);
+        const isMinor = age !== null && age < 18;
+        const docs = (a.documents && typeof a.documents === 'object') ? a.documents : {};
+        const applicable = DOCUMENTS.filter(d => !d.minorOnly || isMinor);
+        const nbOk = applicable.filter(d => docs[d.key]).length;
+        const pieceOk = applicable.length > 0 && nbOk === applicable.length;
+        const pieceBadge = `<span class="inline-block text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${pieceOk ? 'bg-green-50 text-green-700 border-green-300' : 'bg-gray-50 text-gray-500 border-csb-tatami'}">${pieceOk ? 'Pièces OK' : 'Pièces incomplètes'}</span>`;
+
+        const checks = applicable.map(d => `
+            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" class="chk" data-doc-key="${d.key}" data-adherent-id="${a.id}" ${docs[d.key] ? 'checked' : ''}>
+                <span>${esc(d.label)}</span>
+            </label>`).join('');
+
+        // Consentements / Pass'Sport saisis à l'inscription — lecture seule.
+        const infos = [
+            a.droit_image ? "Droit à l'image ✔" : "Droit à l'image ✘",
+            a.pass_sport ? `Pass'Sport${a.pass_sport_code ? ' (' + esc(a.pass_sport_code) + ')' : ''}` : null,
+            a.attestation_caf_ce ? 'Attestation CAF/CE demandée' : null,
+            a.numero_passeport ? 'Passeport ' + esc(a.numero_passeport) : null
+        ].filter(Boolean);
+
+        const photoContent = a._photo_url
+            ? `<div class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg overflow-hidden border border-csb-tatami cursor-pointer shadow-sm hover:ring-2 hover:ring-csb-corail transition" data-photo="${esc(a._photo_url)}" title="Agrandir la photo">
+                 <img src="${esc(a._photo_url)}" alt="Photo de ${esc(a.prenom)}" class="w-full h-full object-cover">
+               </div>`
+            : `<div class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg border-2 border-dashed border-csb-tatami bg-gray-50 flex flex-col items-center justify-center text-gray-400" title="Pas de photo">
+                 <span class="text-xl font-bold">✕</span>
+                 <span class="text-[9px] uppercase mt-1">Aucune</span>
+               </div>`;
+
+        return `
+            <div class="bg-white rounded-xl border border-csb-tatami p-4 flex flex-col sm:flex-row gap-4">
+                ${photoContent}
+                <div class="flex-grow">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <div>
+                            <span class="font-semibold text-csb-encre text-lg">${esc(a.prenom)} ${esc(a.nom)}</span>
+                            <span class="text-xs text-gray-400 ml-2">${esc(COURS_LABEL[a.cours_type] || '—')}${age !== null ? ' · ' + age + ' ans' : ''}</span>
+                        </div>
+                        ${pieceBadge}
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-x-6 gap-y-2 mb-3">${checks}</div>
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-csb-tatami/60">
+                        <span class="text-xs text-gray-500" data-docs-summary="${a.id}">${nbOk}/${applicable.length} pièce${applicable.length > 1 ? 's' : ''} validée${nbOk > 1 ? 's' : ''}</span>
+                    </div>
+                    ${infos.length ? `<p class="text-[11px] text-gray-400 mt-2">${infos.join(' · ')}</p>` : ''}
+                </div>
+            </div>`;
+    }
+
+    function sectionReglement() {
+        let inner;
+        if (!detailDossiers.length) {
+            inner = `
+                <div class="bg-white rounded-xl border border-csb-tatami p-4 text-sm text-gray-600">
+                    Aucun dossier d'inscription pour cette famille.
+                    <button type="button" data-create-dossier class="ml-2 text-csb-corail font-bold hover:underline">Créer le dossier (tarif auto)</button>
+                </div>`;
+        } else {
+            inner = detailDossiers.map(dossierBlock).join('');
+        }
+        return `
+            <section>
+                <h3 class="font-condensed text-lg uppercase tracking-wider text-csb-encre mb-3">Règlement</h3>
+                ${inner}
+            </section>`;
+    }
+
+    function dossierBlock(d) {
+        const pays = detailPaiements.filter(p => p.dossier_id === d.id);
+        const enc = pays.filter(p => p.encaisse).reduce((s, p) => s + (p.montant || 0), 0);
+        const du = d.montant_total || 0;
+        const reste = Math.max(0, du - enc);
+        const pct = du > 0 ? Math.min(100, Math.round(enc / du * 100)) : 0;
+        const fullyPaid = du > 0 && enc >= du;
+
+        const rows = pays.length ? pays.map(paymentRow).join('') :
+            '<tr><td colspan="5" class="px-3 py-4 text-center text-gray-400 text-sm">Aucun règlement enregistré.</td></tr>';
+        const modeOpts = Object.keys(MODE_LABEL).map(k => `<option value="${k}">${MODE_LABEL[k]}</option>`).join('');
+
+        // Facture : gate volontairement sur le règlement seul (fullyPaid), pas sur le
+        // statut combiné pièces×règlement — même logique que l'attestation adhérent.
+        const fac = detailFactures.find(f => f.dossier_id === d.id);
+        const banner = !fullyPaid
+            ? `<div class="rounded-lg bg-amber-50 border border-amber-300 text-amber-800 text-sm px-3 py-2 mt-3">⚠ Attestation CE/CAF et facture bloquées tant que le règlement n'est pas complet (reste ${fmt(reste)}).</div>`
+            : `<div class="rounded-lg bg-green-50 border border-green-300 text-green-800 text-sm px-3 py-2 mt-3 flex flex-wrap items-center justify-between gap-2">
+                   <span>✔ Dossier réglé${fac ? ` — facture n° ${esc(fac.numero)} émise le ${new Date(fac.emise_le).toLocaleDateString('fr-FR')}.` : ' — attestation CE/CAF déblocable.'}</span>
+                   <button type="button" data-facture-btn data-dossier-id="${d.id}"
+                           class="px-4 py-1.5 rounded-full font-condensed uppercase tracking-wider bg-csb-dojo text-white hover:bg-csb-encre transition text-xs whitespace-nowrap">
+                       ${fac ? '⬇ Télécharger la facture' : '⬇ Éditer la facture'}
+                   </button>
+               </div>`;
+
+        return `
+            <div class="bg-white rounded-xl border border-csb-tatami p-4">
+                <div class="flex flex-wrap items-end justify-between gap-2 mb-1">
+                    <div>
+                        <span class="font-condensed uppercase tracking-wider text-xs text-gray-400">Saison ${esc(d.saison || '—')}</span>
+                        <p class="text-csb-encre"><span class="font-bold text-lg">${fmt(enc)}</span> encaissé sur <span class="font-bold">${fmt(du)}</span></p>
+                    </div>
+                    <span class="text-sm font-semibold ${fullyPaid ? 'text-green-700' : 'text-amber-700'}">${fullyPaid ? 'Réglé' : 'Reste ' + fmt(reste)}</span>
+                </div>
+                <div class="h-2 rounded-full bg-csb-tatami overflow-hidden mb-4">
+                    <div class="h-full ${fullyPaid ? 'bg-green-500' : 'bg-csb-corail'}" style="width:${pct}%"></div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-[11px] uppercase tracking-wider text-gray-400 border-b border-csb-tatami">
+                                <th class="px-3 py-2 font-semibold">Montant</th>
+                                <th class="px-3 py-2 font-semibold">Mode</th>
+                                <th class="px-3 py-2 font-semibold text-center">Encaissé</th>
+                                <th class="px-3 py-2 font-semibold">Date</th>
+                                <th class="px-3 py-2"></th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+
+                <!-- Ajout d'un règlement -->
+                <div data-add-form class="flex flex-wrap items-end gap-2 mt-4 pt-4 border-t border-csb-tatami/60">
+                    <div>
+                        <label class="lbl">Montant (€)</label>
+                        <input type="text" inputmode="decimal" data-pay-montant placeholder="${esc((du / 100).toString().replace('.', ','))}" class="inp w-28">
+                    </div>
+                    <div>
+                        <label class="lbl">Mode</label>
+                        <select data-pay-mode class="inp">${modeOpts}</select>
+                    </div>
+                    <div>
+                        <label class="lbl">N° chèque</label>
+                        <input type="text" data-pay-cheque placeholder="(si chèque)" class="inp w-32">
+                    </div>
+                    <label class="flex items-center gap-2 text-sm pb-2 cursor-pointer">
+                        <input type="checkbox" data-pay-encaisse class="chk" checked>
+                        <span>Encaissé</span>
+                    </label>
+                    <button type="button" data-pay-add data-dossier-id="${d.id}"
+                            class="px-5 py-2.5 rounded-full font-condensed uppercase tracking-wider bg-csb-dojo text-white hover:bg-csb-corail transition text-sm">
+                        + Ajouter
                     </button>
-                </td>
+                </div>
+                <p class="text-[11px] text-gray-400 mt-2">Chèques à l'ordre de <strong>CSB Karaté</strong> · 3× max · encaissement mensuel.</p>
+                ${banner}
+            </div>`;
+    }
+
+    function paymentRow(p) {
+        const num = p.mode === 'cheque' && p.numero_cheque ? ` <span class="text-gray-400">n°${esc(p.numero_cheque)}</span>` : '';
+        const date = p.date_encaissement ? new Date(p.date_encaissement).toLocaleDateString('fr-FR') : '—';
+        return `
+            <tr data-pay-id="${p.id}" class="border-b border-csb-tatami/40">
+                <td class="px-3 py-2 font-semibold text-csb-encre whitespace-nowrap">${fmt(p.montant)}</td>
+                <td class="px-3 py-2 whitespace-nowrap">${esc(MODE_LABEL[p.mode] || p.mode)}${num}</td>
+                <td class="px-3 py-2 text-center"><input type="checkbox" data-pay-toggle class="chk mx-auto" ${p.encaisse ? 'checked' : ''}></td>
+                <td class="px-3 py-2 whitespace-nowrap text-gray-500">${esc(date)}</td>
+                <td class="px-3 py-2 text-right"><button type="button" data-pay-delete class="text-csb-corail font-bold hover:underline">Suppr.</button></td>
             </tr>`;
     }
 
-    // --- Modale d'encaissement ---
-    const payModal = $('#pay-modal');
-    const payTitle = $('#pay-title');
-    const paySummary = $('#pay-summary');
-    const payList = $('#pay-list');
-    const payMsg = $('#pay-msg');
-    const payFactureBtn = $('#pay-facture');
-    let modalDossierId = null;
-
-    function openPayModal(id) {
-        modalDossierId = id;
-        const d = dossiers.find(x => x.id === id);
-        if (!d) return;
-        payTitle.textContent = (d.familles?.nom_referent || 'Dossier') + ' · ' + (d.saison || '');
-        $('#pay-montant').value = '';
-        $('#pay-cheque').value = '';
-        $('#pay-date').value = new Date().toISOString().slice(0, 10);
-        $('#pay-encaisse').checked = true;
-        payMsg.classList.add('hidden');
-        renderPayBody(d);
-        payModal.classList.remove('hidden');
-        document.body.classList.add('overflow-hidden');
-    }
-    function closePayModal() {
-        modalDossierId = null;
-        payModal.classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-    }
-
-    function renderPayBody(d) {
-        const enc = encaisseDe(d.id);
-        const reste = Math.max(0, (d.montant_total || 0) - enc);
-        const cell = (label, val, color) => `
-            <div class="rounded-xl bg-csb-washi/60 border border-csb-tatami p-3">
-                <p class="text-[10px] uppercase tracking-wider text-gray-400">${label}</p>
-                <p class="text-lg font-bold ${color}">${val}</p>
-            </div>`;
-        paySummary.innerHTML =
-            cell('Total', fmt(d.montant_total), 'text-csb-encre') +
-            cell('Encaissé', fmt(enc), 'text-green-700') +
-            cell('Reste', fmt(reste), reste > 0 ? 'text-csb-corail' : 'text-gray-400');
-
-        // Pré-remplit le champ montant avec le reste (confort de saisie).
-        if (reste > 0) $('#pay-montant').value = (reste / 100).toFixed(2);
-
-        const lignes = paiements.filter(p => p.dossier_id === d.id);
-        payList.innerHTML = lignes.length ? lignes.map(p => `
-            <div class="flex items-center justify-between gap-3 text-sm border border-csb-tatami rounded-lg px-3 py-2">
-                <span>
-                    <strong class="text-csb-encre">${fmt(p.montant)}</strong>
-                    <span class="text-gray-400">· ${esc(PAY_MODE_LABEL[p.mode] || p.mode)}${p.numero_cheque ? ' n°' + esc(p.numero_cheque) : ''}</span>
-                </span>
-                <span class="text-xs font-semibold ${p.encaisse ? 'text-green-600' : 'text-amber-600'}">${p.encaisse ? '✓ encaissé' : 'à encaisser'}</span>
-            </div>`).join('')
-            : '<p class="text-sm text-gray-400">Aucun encaissement enregistré.</p>';
-
-        // Bouton facture : actif seulement si soldé.
-        const fac = factures.find(f => f.dossier_id === d.id);
-        const solde = estSolde(d);
-        payFactureBtn.disabled = !solde;
-        payFactureBtn.title = solde ? '' : 'Disponible une fois le dossier soldé.';
-        payFactureBtn.innerHTML = fac
-            ? `⬇ Télécharger la facture N° ${esc(fac.numero)}`
-            : '⬇ Éditer la facture';
-    }
-
-    dossiersRowsEl && dossiersRowsEl.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-pay]');
-        if (btn) openPayModal(Number(btn.dataset.pay));
-    });
-    $('#pay-close').addEventListener('click', closePayModal);
-    payModal.addEventListener('click', (e) => { if (e.target === payModal) closePayModal(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !payModal.classList.contains('hidden')) closePayModal(); });
-
-    // Enregistrer un encaissement (écriture `paiements` : RLS = bureau only).
-    $('#pay-add').addEventListener('click', async () => {
-        const d = dossiers.find(x => x.id === modalDossierId);
-        if (!d) return;
-        const euros = parseFloat($('#pay-montant').value);
-        if (!(euros > 0)) { showPayMsg('Montant invalide.', false); return; }
-        const row = {
-            dossier_id: d.id,
-            montant: Math.round(euros * 100),       // centimes
-            mode: $('#pay-mode').value,
-            numero_cheque: $('#pay-cheque').value.trim(),
-            encaisse: $('#pay-encaisse').checked,
-            date_encaissement: $('#pay-date').value || null
-        };
-        const addBtn = $('#pay-add');
-        addBtn.disabled = true;
-        try {
-            const { data, error } = await sb.from('paiements').insert(row).select().single();
-            if (error) throw error;
-            paiements.push(data);
-            await syncStatutDossier(d);       // bascule le statut si soldé/partiel
-            renderPayBody(d);
-            renderDossiers();
-            renderStats();
-            $('#pay-montant').value = '';
-            $('#pay-cheque').value = '';
-            showPayMsg('Encaissement enregistré.', true);
-        } catch (err) {
-            console.error(err);
-            showPayMsg('Échec : ' + (err.message || err), false);
-        } finally {
-            addBtn.disabled = false;
-        }
+    // =========================================================
+    // Interactions de la modale (délégation)
+    // =========================================================
+    detailBody.addEventListener('change', (e) => {
+        const docChk = e.target.closest('[data-doc-key]');
+        if (docChk) return toggleDocument(docChk);
+        const payToggle = e.target.closest('[data-pay-toggle]');
+        if (payToggle) return togglePaymentEncaisse(payToggle);
     });
 
-    // Aligne dossiers.statut sur les encaissements (idempotent).
-    async function syncStatutDossier(d) {
-        const cible = statutDerive(d);
-        if (cible === d.statut) return;
-        const { error } = await sb.from('dossiers').update({ statut: cible }).eq('id', d.id);
-        if (!error) d.statut = cible;
-        else console.error(error);
-    }
+    detailBody.addEventListener('click', (e) => {
+        const photoBtn = e.target.closest('[data-photo]');
+        if (photoBtn) return openPhoto(photoBtn.dataset.photo);
+        const addBtn = e.target.closest('[data-pay-add]');
+        if (addBtn) return addPayment(addBtn);
+        const delBtn = e.target.closest('[data-pay-delete]');
+        if (delBtn) return deletePayment(delBtn);
+        const createBtn = e.target.closest('[data-create-dossier]');
+        if (createBtn) return createDossier(createBtn);
+        const facBtn = e.target.closest('[data-facture-btn]');
+        if (facBtn) return factureAction(facBtn);
+    });
 
-    function showPayMsg(txt, ok) {
-        payMsg.textContent = txt;
-        payMsg.className = 'text-sm mt-3 ' + (ok ? 'text-green-600' : 'text-csb-corail');
-        payMsg.classList.remove('hidden');
-    }
+    // --- Facture (document fiscal numéroté) : émission OU téléchargement si déjà émise ---
+    // L'émission passe par la RPC `emettre_facture` (SECURITY DEFINER, bureau-only,
+    // migration 0013) : numérotation atomique côté base, jamais côté client.
+    async function factureAction(btn) {
+        const dossierId = Number(btn.dataset.dossierId);
+        const existing = detailFactures.find(f => f.dossier_id === dossierId);
+        if (existing) return CSBPdf.facture(existing);
 
-    // Émission / téléchargement de la facture (RPC atomique, bureau-only).
-    payFactureBtn.addEventListener('click', async () => {
-        const d = dossiers.find(x => x.id === modalDossierId);
-        if (!d) return;
-        payFactureBtn.disabled = true;
+        btn.disabled = true;
+        const original = btn.textContent;
+        btn.textContent = 'Émission…';
         try {
-            const { data, error } = await sb.rpc('emettre_facture', { p_dossier_id: d.id });
+            const { data, error } = await sb.rpc('emettre_facture', { p_dossier_id: dossierId });
             if (error) throw error;
-            // La RPC renvoie la ligne `factures` (créée ou existante).
             const fac = Array.isArray(data) ? data[0] : data;
-            if (!factures.some(f => f.id === fac.id)) factures.push(fac);
+            detailFactures.push(fac);
+            detailDirty = true;
             await CSBPdf.facture(fac);
-            renderPayBody(d);
-            renderDossiers();
+            renderDetail();
         } catch (err) {
             console.error(err);
-            showPayMsg('Facture impossible : ' + (err.message || err), false);
-        } finally {
-            payFactureBtn.disabled = false;
+            alert('Facture impossible : ' + (err.message || err));
+            btn.disabled = false;
+            btn.textContent = original;
         }
-    });
+    }
+
+    // --- Validation manuelle d'une pièce (jsonb, sans re-render : garde le scroll) ---
+    async function toggleDocument(chk) {
+        const id = Number(chk.dataset.adherentId);
+        const key = chk.dataset.docKey;
+        const a = detailAdherents.find(x => x.id === id);
+        if (!a) return;
+        const documents = Object.assign({}, a.documents || {}, { [key]: chk.checked });
+        chk.disabled = true;
+        const { error } = await sb.from('adherents').update({ documents }).eq('id', id);
+        chk.disabled = false;
+        if (error) {
+            console.error(error);
+            chk.checked = !chk.checked;
+            alert("Échec de l'enregistrement : " + error.message);
+            return;
+        }
+        a.documents = documents;
+        // Les pièces influent sur le statut combiné → on recalcule et on re-rend.
+        await refreshStatuts();
+        renderDetail();
+    }
+
+    // --- Photo : Ouverture de la version grand format dans la lightbox ---
+    function openPhoto(url) {
+        const lb = document.getElementById('lightbox');
+        const lbImg = document.getElementById('lightbox-img');
+        if (!lb || !lbImg) return;
+        lbImg.src = url;
+        lb.classList.remove('hidden');
+        setTimeout(() => lb.classList.remove('opacity-0'), 10);
+    }
+
+    // --- Paiements : ajout / encaissement / suppression (bureau uniquement, RLS) ---
+    async function addPayment(btn) {
+        const dossierId = Number(btn.dataset.dossierId);
+        const form = btn.closest('[data-add-form]');
+        const montant = eurosToCents(form.querySelector('[data-pay-montant]').value);
+        const mode = form.querySelector('[data-pay-mode]').value;
+        const numero = form.querySelector('[data-pay-cheque]').value.trim();
+        const encaisse = form.querySelector('[data-pay-encaisse]').checked;
+        if (montant === null || montant === 0) { alert('Saisissez un montant valide (en euros).'); return; }
+
+        btn.disabled = true;
+        const { data, error } = await sb.from('paiements').insert({
+            dossier_id: dossierId,
+            montant,
+            mode,
+            numero_cheque: mode === 'cheque' ? numero : '',
+            encaisse,
+            date_encaissement: encaisse ? todayISO() : null
+        }).select().single();
+        btn.disabled = false;
+        if (error) { console.error(error); alert('Échec : ' + error.message); return; }
+        detailPaiements.push(data);
+        detailDirty = true;
+        await refreshStatuts();
+        renderDetail();
+    }
+
+    async function togglePaymentEncaisse(chk) {
+        const id = Number(chk.closest('[data-pay-id]').dataset.payId);
+        const p = detailPaiements.find(x => x.id === id);
+        if (!p) return;
+        const encaisse = chk.checked;
+        const date_encaissement = encaisse ? (p.date_encaissement || todayISO()) : null;
+        chk.disabled = true;
+        const { error } = await sb.from('paiements').update({ encaisse, date_encaissement }).eq('id', id);
+        chk.disabled = false;
+        if (error) { console.error(error); chk.checked = !encaisse; alert('Échec : ' + error.message); return; }
+        p.encaisse = encaisse;
+        p.date_encaissement = date_encaissement;
+        detailDirty = true;
+        await refreshStatuts();
+        renderDetail();
+    }
+
+    async function deletePayment(btn) {
+        const id = Number(btn.closest('[data-pay-id]').dataset.payId);
+        const p = detailPaiements.find(x => x.id === id);
+        if (!p) return;
+        if (!confirm(`Supprimer ce règlement de ${fmt(p.montant)} ?`)) return;
+        const { error } = await sb.from('paiements').delete().eq('id', id);
+        if (error) { alert('Échec : ' + error.message); return; }
+        detailPaiements = detailPaiements.filter(x => x.id !== id);
+        detailDirty = true;
+        await refreshStatuts();
+        renderDetail();
+    }
+
+    function todayISO() { return new Date().toISOString().slice(0, 10); }
+
+    // --- Statut combiné dérivé (pièces justificatives × règlement) ---
+    // Recalcule le statut de la famille puis le PERSISTE sur ses dossiers et,
+    // en miroir, sur chaque adhérent (même statut pour tous les membres — c'est
+    // le statut DU DOSSIER). Appelé après tout changement de pièces ou de paiement.
+    async function refreshStatuts() {
+        const justifOk = detailAdherents.length > 0 && detailAdherents.every(justifComplete);
+        const totalDu = detailDossiers.reduce((s, d) => s + (d.montant_total || 0), 0);
+        const totalEnc = detailPaiements.filter(p => p.encaisse).reduce((s, p) => s + (p.montant || 0), 0);
+        const paiementOk = totalDu > 0 && totalEnc >= totalDu;
+        const status = computeDossierStatus(justifOk, paiementOk);
+
+        for (const d of detailDossiers) {
+            if (d.statut !== status) {
+                const { error } = await sb.from('dossiers').update({ statut: status }).eq('id', d.id);
+                if (!error) d.statut = status;
+            }
+        }
+        for (const a of detailAdherents) {
+            if (a.statut_dossier === status) continue;
+            const { error } = await sb.from('adherents').update({ statut_dossier: status }).eq('id', a.id);
+            if (!error) {
+                a.statut_dossier = status;
+                const cached = adherents.find(x => x.id === a.id); // garde la liste principale cohérente
+                if (cached) cached.statut_dossier = status;
+            }
+        }
+        detailDirty = true;
+    }
+
+    // --- Création d'un dossier manquant (ex. adhérent ajouté à la main) ---
+    async function createDossier(btn) {
+        if (!detailAdherents.length) { alert('Aucun adhérent : impossible de créer un dossier.'); return; }
+        const cfg = await loadTarifConfig();
+        const liste = detailAdherents.map(a => ({
+            prenom: a.prenom,
+            coursType: a.cours_type,
+            membreBureau: a.membre_bureau,
+            passSport: a.pass_sport
+        }));
+        const detail = CSBTarifs.computeTarif(liste, cfg);
+        if (!confirm(`Créer le dossier ${SAISON} pour cette famille ?\nTotal calculé : ${fmt(detail.total)}`)) return;
+        btn.disabled = true;
+        const { data, error } = await sb.from('dossiers').insert({
+            famille_id: detailFamille.id,
+            saison: SAISON,
+            montant_total: detail.total,
+            detail_calcul: Object.assign({}, detail, { modePaiement: 'au_club', source: 'bureau' }),
+            mode_paiement: 'au_club',
+            statut: 'Incomplet'
+        }).select().single();
+        btn.disabled = false;
+        if (error) { console.error(error); alert('Échec : ' + error.message); return; }
+        detailDossiers.push(data);
+        detailDirty = true;
+        await refreshStatuts();
+        renderDetail();
+    }
 
     // --- Démarrage ---
     boot_init();
