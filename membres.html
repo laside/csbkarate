@@ -189,5 +189,25 @@
 
     <div id="footer-placeholder" class="min-h-[160px]"></div>
 
+    <!-- ===================== MODALE : FICHE DOSSIER FAMILLE ===================== -->
+    <!-- Vue détaillée par famille (Phase 2) : pièces justificatives + règlement.
+         Le corps (#detail-body) est entièrement rendu par membres.js. -->
+    <div id="detail-modal" class="hidden fixed inset-0 z-50 flex items-stretch sm:items-center justify-center">
+        <div data-detail-close class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div class="relative w-full sm:max-w-3xl sm:mx-4 bg-csb-washi sm:rounded-2xl shadow-2xl max-h-screen sm:max-h-[90vh] flex flex-col">
+            <!-- En-tête fixe -->
+            <div class="shrink-0 bg-csb-dojo text-white px-6 py-4 flex items-start justify-between sm:rounded-t-2xl">
+                <div>
+                    <span class="font-condensed text-csb-tatami uppercase tracking-widest text-xs block">Fiche dossier</span>
+                    <h2 id="detail-title" class="font-serif text-2xl leading-tight"></h2>
+                    <p id="detail-sub" class="text-sm text-csb-tatami/80"></p>
+                </div>
+                <button type="button" data-detail-close class="text-white/80 hover:text-white text-3xl leading-none -mt-1" aria-label="Fermer">&times;</button>
+            </div>
+            <!-- Corps défilant -->
+            <div id="detail-body" class="overflow-y-auto p-6 space-y-8"></div>
+        </div>
+    </div>
+
 </body>
 </html>
