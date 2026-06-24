@@ -1,0 +1,59 @@
+name: Build CSS & Deploy FTP
+
+on:
+  push:
+    branches:
+      - deploy-toile-libre # 🎯 Ne s'exécute QUE sur cette branche
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Télécharger le CLI Tailwind
+        run: |
+          curl -sL -o tailwindcss "https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.19/tailwindcss-linux-x64"
+          chmod +x tailwindcss
+
+      - name: Générer le CSS purgé et minifié
+        run: ./tailwindcss -i ./assets/css/tailwind-input.css -o ./assets/css/tailwind.min.css --config ./tailwind.config.js --minify
+
+      - name: Committer le CSS généré
+        run: |
+          rm -f tailwindcss
+          if ! git diff --quiet -- assets/css/tailwind.min.css; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add assets/css/tailwind.min.css
+            git commit -m "chore: régénère tailwind.min.css [skip ci]"
+            git push origin HEAD:${{ github.ref_name }}
+          else
+            echo "Aucun changement de style détecté."
+          fi
+
+      - name: 🚀 Déploiement FTP vers Toile-Libre
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: /
+          exclude: |
+            **/.git*
+            **/.git*/**
+            .github/**
+            .vscode/**
+            supabase/**
+            tailwind.config.js
+            CLAUDE.md
+            README.md
+            LICENSE
+            assets/css/tailwind-input.css
