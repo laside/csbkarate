@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace adhérent | CSB Karaté</title>
+
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <!-- Tailwind : CSS pré-généré (purgé/minifié en CI) pour preview/prod ; CDN (JIT) seulement en local pour le développement -->
+    <link rel="stylesheet" href="./assets/css/tailwind.min.css">
+    <script>
+        if (['localhost', '127.0.0.1'].includes(location.hostname)) {
+            document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
+        }
+    </script>
+    <script src="./assets/js/tailwind.js"></script>
+    <script src="./assets/js/main.js" defer></script>
+    <!-- Module gestion : parle directement à window.sb (CRUD relationnel + RLS) -->
+    <script type="module" src="./assets/js/supabase.js"></script>
+    <script src="./assets/js/tarifs.js" defer></script>
+    <script src="./assets/js/pdf.js" defer></script>
+    <script src="./assets/js/adherent.js" defer></script>
+
+    <!-- Vercel Web Analytics -->
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="bg-csb-washi text-csb-encre font-sans antialiased min-h-screen flex flex-col">
+
+    <div id="header-placeholder"></div>
+
+    <main class="flex-grow pt-28 pb-20 px-4 sm:px-6">
+        <div class="max-w-5xl mx-auto">
+
+            <!-- ===================== PORTAIL DE CONNEXION (adhérent) ===================== -->
+            <section id="gate" class="hidden max-w-sm mx-auto mt-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-csb-tatami p-8">
+                    <span class="font-condensed text-csb-corail uppercase tracking-widest text-xs block mb-2">Espace privé</span>
+                    <h1 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-1">Espace adhérent</h1>
+                    <p class="text-gray-500 text-sm mb-6">Connectez-vous avec le compte créé lors de votre inscription en ligne.</p>
+
+                    <label class="lbl" for="gate-email">Email</label>
+                    <input id="gate-email" type="email" autocomplete="email" class="inp mb-4">
+
+                    <label class="lbl" for="gate-pwd">Mot de passe</label>
+                    <input id="gate-pwd" type="password" autocomplete="current-password" class="inp mb-5">
+
+                    <button id="gate-btn" type="button"
+                            class="w-full bg-csb-dojo text-white font-condensed uppercase tracking-wider py-3 rounded-full hover:bg-csb-corail transition shadow-lg">
+                        Se connecter
+                    </button>
+                    <p id="gate-error" class="hidden text-csb-corail text-sm mt-3"></p>
+                    <p id="gate-info" class="hidden text-csb-dojo text-sm mt-3"></p>
+
+                    <div class="mt-5 pt-4 border-t border-csb-tatami text-center text-sm">
+                        <button id="gate-forgot" type="button" class="text-csb-dojo hover:text-csb-corail transition">Mot de passe oublié ?</button>
+                        <span class="text-gray-300 mx-2">·</span>
+                        <a href="./inscription.html" class="text-csb-corail hover:underline">Pas encore inscrit ?</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===================== TABLEAU DE BORD ADHÉRENT ===================== -->
+            <section id="dashboard" class="hidden">
+
+                <div class="flex flex-wrap justify-between items-end gap-4 mb-8">
+                    <div>
+                        <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm block">Espace adhérent</span>
+                        <h1 class="font-serif text-4xl text-csb-encre">Mon dossier</h1>
+                        <p id="welcome" class="text-gray-500 text-sm mt-1"></p>
+                    </div>
+                    <button id="btn-logout" type="button"
+                            class="px-5 py-2 rounded-full font-condensed uppercase tracking-wider bg-gray-200 text-csb-encre hover:bg-gray-300 transition text-sm">
+                        Se déconnecter
+                    </button>
+                </div>
+
+                <!-- Coordonnées de la famille -->
+                <div id="famille-card" class="bg-white rounded-2xl border border-csb-tatami p-6 mb-6"></div>
+
+                <!-- Adhérents (pratiquants) -->
+                <h2 class="font-condensed text-xl uppercase tracking-wider text-csb-encre mb-3">Mes adhérents</h2>
+                <div id="adherents-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10"></div>
+
+                <!-- Dossiers / règlement / documents -->
+                <h2 class="font-condensed text-xl uppercase tracking-wider text-csb-encre mb-3">Règlement & documents</h2>
+                <div id="dossiers-list" class="space-y-4"></div>
+
+            </section>
+
+            <!-- Chargement initial -->
+            <p id="boot" class="text-center text-gray-400 font-condensed uppercase tracking-wider py-20">Chargement…</p>
+
+        </div>
+    </main>
+
+    <div id="footer-placeholder" class="min-h-[160px]"></div>
+
+</body>
+</html>
