@@ -1,0 +1,44 @@
+name: Build CSS
+
+# Purge/minifie Tailwind en CI (CLI binaire autonome, pas de npm install).
+# Le dev local reste 100% inchangé : les pages chargent le CDN Tailwind tant
+# que location.hostname est localhost/127.0.0.1 (voir le <head> des pages),
+# ce fichier ne génère que assets/css/tailwind.min.css pour preview/prod.
+
+on:
+  push:
+    branches:
+      - '**'
+
+permissions:
+  contents: write
+
+jobs:
+  build-css:
+    runs-on: ubuntu-latest
+    # Ne se redéclenche pas sur son propre commit (en plus du marqueur [skip ci] ci-dessous).
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Télécharger le CLI Tailwind (binaire autonome, version figée)
+        run: |
+          curl -sL -o tailwindcss "https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.19/tailwindcss-linux-x64"
+          chmod +x tailwindcss
+
+      - name: Générer le CSS purgé et minifié
+        run: ./tailwindcss -i ./assets/css/tailwind-input.css -o ./assets/css/tailwind.min.css --config ./tailwind.config.js --minify
+
+      - name: Committer le CSS généré s'il a changé
+        run: |
+          rm -f tailwindcss
+          if ! git diff --quiet -- assets/css/tailwind.min.css; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add assets/css/tailwind.min.css
+            git commit -m "chore: régénère tailwind.min.css [skip ci]"
+            git push origin HEAD:${{ github.ref_name }}
+          else
+            echo "Aucun changement de style détecté."
+          fi

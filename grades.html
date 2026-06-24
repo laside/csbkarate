@@ -7,7 +7,13 @@
     <meta name="description" content="Programme technique officiel des grades Wadō-Ryū (FFK) : katas, kihon et kumite du 5ème Kyu au 5ème Dan, conditions de passage et critères de notation.">
 
     <link rel="stylesheet" href="./assets/css/style.css">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind : CSS pré-généré (purgé/minifié en CI) pour preview/prod ; CDN (JIT) seulement en local pour le développement -->
+    <link rel="stylesheet" href="./assets/css/tailwind.min.css">
+    <script>
+        if (['localhost', '127.0.0.1'].includes(location.hostname)) {
+            document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
+        }
+    </script>
     <script src="./assets/js/tailwind.js"></script>
     <script src="./assets/js/main.js" defer></script>
     <script type="module" src="./assets/js/supabase.js"></script>
@@ -312,6 +318,6 @@
         </div>
     </main>
 
-    <div id="footer-placeholder"></div>
+    <div id="footer-placeholder" class="min-h-[160px]"></div>
 </body>
 </html>

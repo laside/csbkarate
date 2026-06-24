@@ -6,7 +6,7 @@ Code propre, moderne, léger, maintenable. Pédagogique en français.
 **Pas de sur-ingénierie.** Pas de framework lourd. Vanilla JS uniquement.
 
 ## Stack (NE PAS modifier sans demander)
-- HTML5 sémantique + Tailwind CSS (CDN, config dans `assets/js/tailwind.js`)
+- HTML5 sémantique + Tailwind CSS. **Double chemin** (décidé le 24/06/2026, cf. section dédiée plus bas) : CDN (`cdn.tailwindcss.com`, config dans `assets/js/tailwind.js`) en local sur `localhost`/`127.0.0.1` ; CSS purgé/minifié généré par CI (`assets/css/tailwind.min.css`) partout ailleurs (preview Vercel + prod). Pas de build local, pas de npm — le build vit uniquement dans GitHub Actions.
 - Vanilla JS ES6+, API `fetch` pour charger JSON et composants
 - Chart.js (CDN) → graphiques de données (ex. radar comparatif sur `wadoryu.html`)
 - Données : **Supabase** (Postgres + Auth, SDK via CDN ESM) — cf. section BDD. Les 5 collections CMS (`news`, `competitions`, `galerie`, `grades`, `saison`) sont migrées. Le routage par collection est dans `store.js` (toutes pointent vers Supabase aujourd'hui ; les fichiers `.json` de `/data/` restent en lecture seule, comme trace historique).
@@ -138,6 +138,36 @@ Présent sur `news.html`, `competitions.html`, `galerie.html`, `grades.html` et 
 - Vérifier que header/footer s'injectent bien (pas de "flash" visible)
 - Vérifier la console JS : zéro erreur tolérée
 
+## Build CSS Tailwind (CI GitHub Actions) — décidé le 24/06/2026
+
+Le CDN Tailwind (`cdn.tailwindcss.com`) reste la dette technique connue la plus visible (warning console + poids en prod). Plutôt que d'introduire un build local (interdit, cf. Stack), la purge/minification est déportée dans **GitHub Actions**, déclenchée automatiquement, sans jamais toucher au poste du développeur ni à `npm`.
+
+**Mécanique :**
+- `tailwind.config.js` (racine) : config **CLI**, miroir de `assets/js/tailwind.js` (mêmes couleurs/polices). Les deux fichiers doivent rester synchronisés à la main si la charte change — pas de source unique, pour ne pas complexifier le chargement CDN côté navigateur.
+- `assets/css/tailwind-input.css` : entrée `@tailwind base/components/utilities`, donnée au CLI.
+- `assets/css/tailwind.min.css` : **généré**, committé dans le repo (comme un artefact, pas une source éditée à la main). Présent dès maintenant (généré une première fois en local via le binaire standalone, pour ne pas livrer un prod cassé avant le premier run CI).
+- `.github/workflows/build-css.yml` : à chaque push (toutes branches, pour que les previews Vercel aient aussi un CSS à jour), télécharge le **binaire CLI autonome** de Tailwind (`tailwindcss-linux-x64`, version figée — pas de `npm install`), régénère `tailwind.min.css`, et le recommit (`[skip ci]` + bot identity) **uniquement si le contenu a changé**. Vercel redéploie sur ce commit de bot comme sur n'importe quel push.
+- **Dans le `<head>` des pages** (les 10 pages publiques/gestion, pas `construction.html` ni `template.html`, cf. plus bas) :
+  ```html
+  <link rel="stylesheet" href="./assets/css/style.css">
+  <link rel="stylesheet" href="./assets/css/tailwind.min.css">
+  <script>
+      if (['localhost', '127.0.0.1'].includes(location.hostname)) {
+          document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
+      }
+  </script>
+  <script src="./assets/js/tailwind.js"></script>
+  ```
+  En local (Live Server = `localhost`/`127.0.0.1`) : le CDN se charge en plus, en JIT — *aucun changement* du confort de dev (nouvelle classe visible instantanément, pas besoin d'attendre un build). Ailleurs (preview `*.vercel.app`, prod) : uniquement le CSS généré, pas de CDN, pas de warning console.
+- **Exclus délibérément** : `construction.html` (utilise un bloc `<style type="text/tailwindcss">` avec `@layer`/`@apply`, une fonctionnalité **CDN runtime only** que le CLI ne traite pas — page de verrou temporaire, peu de trafic, pas une priorité de perf) et `template.html` (brand book non lié au site, convention de couleurs différente, pas une page live).
+
+**Pourquoi c'est sûr (vérifié le 24/06/2026) :** le contenu scanné par le CLI inclut `./*.html`, `./components/*.html` **et** `./assets/js/**/*.js` — nécessaire car plusieurs pages construisent des classes Tailwind dans des template strings JS (`membres.js`, `saison.js`, `inscription.js`, `competitions.html` inline) plutôt que dans du HTML statique. Toutes ces classes sont des **littéraux statiques** (jamais de concaténation type `'bg-' + couleur`), donc détectables par le scanner texte du CLI — vérifié par recherche de motifs de concaténation dynamique (aucun trouvé) et par échantillonnage des classes les plus à risque (couleurs `csb-*`, classes retournées conditionnellement par `statutClass()`, valeurs arbitraires `min-h-[...]`/`aspect-[...]`, modificateurs d'opacité `/30`) dans le CSS généré.
+
+**Limites connues, acceptées à ce stade :**
+- Pas de vérification visuelle automatisée (pas d'outil de navigateur disponible dans cet environnement) : à confirmer manuellement (Live Server pour le chemin CDN, une preview Vercel pour le chemin CSS généré) avant de considérer la bascule définitivement validée.
+- Si deux push arrivent en même temps, le second `git push` du bot peut échouer (non-fast-forward) ; pas de retry automatique — un push suivant régénère normalement. Acceptable à l'échelle d'un petit club.
+- Si la charte graphique change, penser à répercuter dans **les deux** fichiers de config (CDN et CLI).
+
 ## État du projet
 
 **Pages terminées :** `index.html`, `wadoryu.html`, `news.html`, `club.html`, `competitions.html`, `mentions-legales.html`, `galerie.html`, `grades.html`
@@ -215,7 +245,7 @@ Détail et priorisation dans l'historique de conversation ; points saillants à 
 - ~~**Navigation mobile absente**~~ ✅ **Corrigé** : `components/header.html` a désormais un bouton hamburger (`lg:hidden`) + un panneau `#mobile-menu` ; logique d'ouverture/fermeture (clic, lien, Échap) dans `initMobileMenu()` de `main.js`.
 - ~~**Pas d'échappement HTML** dans les rendus CMS~~ ✅ **Corrigé** : `news.js`, `galerie.js`, `competitions.html` et le carrousel de `index.html` ont chacun leur fonction `esc()` (même pattern que `grades.js`, dupliquée volontairement — utilitaire pur de 2 lignes, pas de quoi justifier un module partagé). Tout contenu issu des données (`.json`) est échappé avant injection via `innerHTML`.
 - ~~**`logo-wadoryu.png` ≈ 1 Mo**~~ ✅ **Corrigé** : redimensionné de 851×828 à 192×192 px (4× la taille d'affichage réelle de 48×48 dans `header.html`/`footer.html`, marge confortable pour le rétina), transparence conservée. ~987 Ko → ~70 Ko (−93 %).
-- **Tailwind via CDN** (`cdn.tailwindcss.com`) : avertissement console + perf en prod. Candidat à un build CSS *si* un jour on accepte une étape de build (sinon laisser tel quel, cf. contraintes).
+- ~~**Tailwind via CDN** (`cdn.tailwindcss.com`) : avertissement console + perf en prod.~~ ✅ **Corrigé le 24/06/2026** : purge/minification déportée vers GitHub Actions (CLI standalone, pas de npm) ; le CDN ne reste chargé qu'en local (`localhost`/`127.0.0.1`). Détail dans la section « Build CSS Tailwind (CI) ».
 - ~~**Logique CMS dupliquée** sur 4 pages~~ ✅ **Factorisée** : l'**accès aux données** (lecture JSON + export) est dans `assets/js/store.js`, et le **mode admin** (login + modales) dans `assets/js/admin.js` (`Admin.init({ onUnlock, onCloseAdmin })`). Chaque page ne garde que son rendu et son CRUD. Mot de passe `CSB` centralisé dans `admin.js`.
 - Typo corrigée : « Self-Défense Féminine Féminine » (index.html).
 - ~~**Refonte des icônes de disciplines sur index.html**~~ ✅ **Corrigé** : La section "Nos Disciplines" sur `index.html` a été mise à jour avec des icônes plus grandes, un design en tuiles "Bento" amélioré (padding, ombres, coins arrondis), des tailles de texte ajustées et des couleurs de fond/texte alignées avec la charte graphique. Les chemins des images (`kkt2.png`, `mm2.png`, `ff2.png`) ont été mis à jour pour pointer vers `assets/photos/`.
@@ -224,7 +254,7 @@ Détail et priorisation dans l'historique de conversation ; points saillants à 
 
 ## Ce qu'il ne faut PAS faire
 
-- ❌ Ajouter un build step (Vite, Webpack, Parcel, etc.)
+- ❌ Ajouter un build step **local** (Vite, Webpack, Parcel, etc.) — exception unique et déjà actée : la purge CSS Tailwind tourne en **CI** (GitHub Actions), jamais sur la machine du développeur. Ne pas généraliser ce précédent à autre chose sans demander.
 - ❌ Convertir en framework (React, Vue, Svelte, etc.)
 - ❌ Repasser en SPA (architecture multi-pages validée)
 - ❌ Modifier la config de déploiement Vercel (créer un `vercel.json`, changer les réglages projet) sans demander
