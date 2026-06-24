@@ -2,7 +2,6 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-20">
 
-            <!-- Logo avec intégration Wado-Ryu -->
             <a href="./index.html" class="flex items-center space-x-3 group">
                 <img src="./logo-wadoryu.png" alt="Logo Wado-Ryu" class="w-12 h-12 object-contain group-hover:scale-105 transition-transform" onerror="this.style.display='none'">
                 <span class="font-condensed text-2xl font-bold tracking-wider text-csb-encre uppercase">
@@ -14,7 +13,6 @@
                 <a href="./index.html#accueil" class="nav-link hover:text-csb-corail">Accueil</a>
                 <a href="./index.html#disciplines" class="nav-link hover:text-csb-corail">Disciplines</a>
 
-                <!-- Menu Déroulant -->
                 <div class="relative group">
                     <button class="flex items-center gap-1 nav-link hover:text-csb-corail pb-1">
                         Le club
@@ -30,9 +28,6 @@
                             <a href="./inscription.html" class="px-4 py-3 font-bold text-csb-corail hover:bg-red-50 transition flex items-center gap-2">
                                 Inscription en ligne
                             </a>
-                            <a href="./adherent.html" class="px-4 py-3 text-csb-encre hover:bg-csb-washi hover:text-csb-corail transition flex items-center gap-2">
-                                Espace adhérent
-                            </a>
                             <a href="./news.html" class="px-4 py-3 font-bold text-csb-dojo hover:bg-red-50 hover:text-csb-corail transition flex items-center gap-2">
                                 Actualités & News
                             </a>
@@ -43,23 +38,22 @@
                 <a href="./wadoryu.html" class="nav-link text-csb-dojo hover:text-csb-corail">Le Wado-Ryu</a>
             </nav>
 
-            <!-- Côté droit : CTA (tablette+) + bouton hamburger (mobile) -->
             <div class="flex items-center gap-3">
-                <div class="hidden md:flex items-center gap-3">
-                    <!-- Accès direct à l'espace bureau (page protégée par sa propre connexion) -->
-                    <a href="./membres.html" title="Espace réservé au bureau"
-                       class="inline-flex items-center gap-1.5 bg-csb-dojo text-white px-5 py-2 rounded-full font-condensed uppercase tracking-wider hover:bg-csb-encre transition text-sm">
+                <div class="hidden lg:flex items-center gap-2">
+                    <a href="./adherent.html" title="Espace Adhérent" class="inline-flex items-center gap-1.5 px-4 py-2 border border-csb-tatami text-csb-encre font-condensed uppercase tracking-wider text-sm hover:border-csb-corail hover:text-csb-corail transition rounded-full mr-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        Adhérent
+                    </a>
+                    <a href="./membres.html" title="Espace Bureau" class="inline-flex items-center gap-1.5 px-4 py-2 bg-csb-dojo text-white font-condensed uppercase tracking-wider text-sm hover:bg-csb-encre transition rounded-full mr-1">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                        Espace Bureau
+                        Bureau
                     </a>
                     <a href="./index.html#infos" class="bg-csb-corail text-white px-6 py-2 rounded-full font-condensed uppercase tracking-wider hover:bg-opacity-90 transition shadow-lg shadow-csb-corail/30">
                         Nous rejoindre
                     </a>
                 </div>
 
-                <button id="btn-burger" type="button"
-                        class="lg:hidden inline-flex items-center justify-center w-11 h-11 rounded-lg text-csb-encre hover:bg-csb-washi hover:text-csb-corail transition"
-                        aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="mobile-menu">
+                <button id="btn-burger" type="button" class="lg:hidden inline-flex items-center justify-center w-11 h-11 rounded-lg text-csb-encre hover:bg-csb-washi hover:text-csb-corail transition" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="mobile-menu">
                     <svg id="burger-open" class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     <svg id="burger-close" class="w-7 h-7 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -67,9 +61,7 @@
         </div>
     </div>
 
-    <!-- Menu mobile déroulant (injecté/affiché sous la barre, géré par main.js) -->
-    <div id="mobile-menu"
-         class="lg:hidden hidden opacity-0 -translate-y-3 transition-all duration-200 border-t border-csb-tatami bg-white/95 backdrop-blur-md max-h-[calc(100vh-5rem)] overflow-y-auto">
+    <div id="mobile-menu" class="lg:hidden hidden opacity-0 -translate-y-3 transition-all duration-200 border-t border-csb-tatami bg-white/95 backdrop-blur-md max-h-[calc(100vh-5rem)] overflow-y-auto">
         <nav class="max-w-7xl mx-auto px-6 py-4 flex flex-col font-condensed uppercase tracking-wider text-csb-encre">
             <a href="./index.html#accueil" class="py-3 border-b border-csb-tatami/60 hover:text-csb-corail transition">Accueil</a>
             <a href="./index.html#disciplines" class="py-3 border-b border-csb-tatami/60 hover:text-csb-corail transition">Disciplines</a>
@@ -81,14 +73,22 @@
             <a href="./grades.html" class="py-3 border-b border-csb-tatami/60 hover:text-csb-corail transition">Passage de grade</a>
             <a href="./galerie.html" class="py-3 border-b border-csb-tatami/60 hover:text-csb-corail transition">Galerie</a>
             <a href="./inscription.html" class="py-3 border-b border-csb-tatami/60 font-bold text-csb-corail hover:text-csb-encre transition">Inscription en ligne</a>
-            <a href="./adherent.html" class="py-3 border-b border-csb-tatami/60 hover:text-csb-corail transition">Espace adhérent</a>
             <a href="./news.html" class="py-3 hover:text-csb-corail transition">Actualités &amp; News</a>
 
-            <a href="./index.html#infos" class="mt-4 bg-csb-corail text-white text-center px-6 py-3 rounded-full hover:bg-opacity-90 transition shadow-lg shadow-csb-corail/30">Nous rejoindre</a>
-            <a href="./membres.html" class="mt-2 inline-flex items-center justify-center gap-1.5 bg-csb-dojo text-white text-center px-6 py-3 rounded-full hover:bg-csb-encre transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                Espace Bureau
-            </a>
+            <div class="mt-6 pt-4 border-t-2 border-csb-tatami flex flex-col gap-3">
+                <span class="text-xs text-gray-400 font-sans mb-1 normal-case">Espaces de connexion</span>
+                <a href="./adherent.html" class="inline-flex items-center justify-center gap-2 border border-csb-tatami text-csb-encre text-center px-6 py-3 rounded-full hover:border-csb-corail transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    Espace Adhérent
+                </a>
+                <a href="./membres.html" class="inline-flex items-center justify-center gap-2 bg-csb-dojo text-white text-center px-6 py-3 rounded-full hover:bg-csb-encre transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    Espace Bureau
+                </a>
+                <a href="./index.html#infos" class="mt-4 bg-csb-corail text-white text-center px-6 py-3 rounded-full hover:bg-opacity-90 transition shadow-lg shadow-csb-corail/30">
+                    Nous rejoindre
+                </a>
+            </div>
         </nav>
     </div>
 </header>
