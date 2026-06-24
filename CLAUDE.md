@@ -247,7 +247,7 @@ Détail et priorisation dans l'historique de conversation ; points saillants à 
 - ~~**`logo-wadoryu.png` ≈ 1 Mo**~~ ✅ **Corrigé** : redimensionné de 851×828 à 192×192 px (4× la taille d'affichage réelle de 48×48 dans `header.html`/`footer.html`, marge confortable pour le rétina), transparence conservée. ~987 Ko → ~70 Ko (−93 %).
 - ~~**Tailwind via CDN** (`cdn.tailwindcss.com`) : avertissement console + perf en prod.~~ ✅ **Corrigé le 24/06/2026** : purge/minification déportée vers GitHub Actions (CLI standalone, pas de npm) ; le CDN ne reste chargé qu'en local (`localhost`/`127.0.0.1`). Détail dans la section « Build CSS Tailwind (CI) ».
 - ~~**Logique CMS dupliquée** sur 4 pages~~ ✅ **Factorisée** : l'**accès aux données** (lecture JSON + export) est dans `assets/js/store.js`, et le **mode admin** (login + modales) dans `assets/js/admin.js` (`Admin.init({ onUnlock, onCloseAdmin })`). Chaque page ne garde que son rendu et son CRUD. Mot de passe `CSB` centralisé dans `admin.js`.
-- Typo corrigée : « Self-Défense Féminine Féminine » (index.html).
+- ~~**Le carrousel des news (index.html) manquait de visuels**~~ ✅ **Corrigé** : Les miniatures s'affichent désormais correctement. Le bug de défilement (flèches droite/gauche) a été corrigé avec un calcul de largeur dynamique, et on charge 6 articles au lieu de 3 pour rentabiliser le défilement.
 - ~~**Refonte des icônes de disciplines sur index.html**~~ ✅ **Corrigé** : La section "Nos Disciplines" sur `index.html` a été mise à jour avec des icônes plus grandes, un design en tuiles "Bento" amélioré (padding, ombres, coins arrondis), des tailles de texte ajustées et des couleurs de fond/texte alignées avec la charte graphique. Les chemins des images (`kkt2.png`, `mm2.png`, `ff2.png`) ont été mis à jour pour pointer vers `assets/photos/`.
 - ~~**Dates de saison obsolètes (2024-2025)**~~ ✅ **Corrigé** : Remplacées par la saison actuelle "2026-2027" sur la page d'accueil et le lien du document PDF d'inscription.
 - ~~**Lien Mot de passe oublié manquant**~~ ✅ **Corrigé** : Intégration de `resetPasswordForEmail` de Supabase avec `redirectTo: window.location.origin` dans `admin.js` et ajout du bouton sur toutes les modales de connexion.
@@ -267,9 +267,9 @@ Détail et priorisation dans l'historique de conversation ; points saillants à 
 Objectif : remplacer le CMS « Git-based » (export JSON manuel → commit) par une vraie persistance, pour que l'admin enregistre directement depuis le site. **Les 5 collections sont migrées.** Reste une étape distincte et non commencée : le Storage des photos (cf. « Points de vigilance »).
 
 ### État de la bascule
-- ✅ **`news`** — migré (table Postgres + RLS, Auth, lecture/écriture depuis le site). Pilote validé.
+- ✅ **`news`** — migré (table Postgres + RLS, Auth, lecture/écriture depuis le site, bucket public `news` pour le téléversement des images d'illustration). Pilote validé.
 - ✅ **`competitions`** — migré (même patron que `news`, tableau plat).
-- ✅ **`galerie`** — migré en **document JSONB** (table singleton 1 ligne, `id = 1`), car structure imbriquée (sections + stages). Seule la **structure** est en base, les **fichiers images** restent manuels (Storage pas encore fait).
+- ✅ **`galerie`** — migré en **document JSONB** (table singleton 1 ligne, `id = 1`), car structure imbriquée (sections + stages). Structure et images en base (upload vers le bucket public `galerie` via l'admin).
 - ✅ **`grades`** — migré (tableau plat + colonne `position` pour préserver l'ordre d'affichage d'origine, qui n'est pas un tri par id ; champ `hidden` filtré **au niveau RLS**, pas seulement côté client).
 - ✅ **`saison`** — migré en **document JSONB** (singleton `id=1`, patron `galerie`), `0005_saison.sql`. Pilote les horaires/tarifs/libellé/plage de l'accueil ; rendu via `saison.js` en *progressive enhancement* (le HTML statique d'`index.html` sert de fallback si Supabase échoue).
 
@@ -289,7 +289,7 @@ Objectif : remplacer le CMS « Git-based » (export JSON manuel → commit) par 
 - *`id`* : on conserve des `id` numériques fournis par le client (le `Date.now()` des pages) pour ne pas toucher au CRUD existant ; le `save` fait `upsert` + `delete` du complément (= « remplace la collection par ce tableau »).
 - *Ordre d'affichage (`grades`)* : `position` est recalculée à **chaque sauvegarde** depuis l'ordre du tableau en mémoire côté client (`data.grades`), pas stockée comme une identité permanente — reproduit fidèlement l'ancien comportement « l'ordre du fichier JSON est l'ordre d'affichage ».
 - *Fichiers `data/*.json`* : conservés dans le repo mais **plus lus par le site** (trace historique uniquement). Ne pas les considérer comme source de vérité pour un audit de contenu — toujours vérifier en base.
-- *Storage* : l'upload des photos reste manuel (`assets/photos/`) ; **Supabase Storage** est l'étape suivante envisagée (remplacera le dépôt manuel), notamment pour `galerie`. Non commencé.
+- *Storage* : Les images du CMS (`news`, `galerie`) sont désormais uploadées directement sur Supabase Storage. L'upload manuel sur Github (`assets/photos/`) n'est plus nécessaire. Les fichiers de module gestion (`dossiers`) utilisent un bucket privé.
 
 ---
 

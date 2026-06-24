@@ -565,6 +565,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const detailBody = $('#detail-body');
     const detailTitle = $('#detail-title');
     const detailSub = $('#detail-sub');
+    const lightbox = $('#lightbox');
+    const lightboxClose = $('#lightbox-close');
+
+    if (lightbox) {
+        const closeLb = () => {
+            lightbox.classList.add('opacity-0');
+            setTimeout(() => lightbox.classList.add('hidden'), 300);
+        };
+        if (lightboxClose) lightboxClose.addEventListener('click', closeLb);
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) closeLb();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !lightbox.classList.contains('hidden')) closeLb();
+        });
+    }
 
     let detailFamille = null;
     let detailAdherents = [];
@@ -635,6 +651,17 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             detailPaiements = [];
         }
+
+        // Pré-chargement des URLs signées pour les photos des adhérents de la famille
+        for (const a of detailAdherents) {
+            if (a.photo_path) {
+                const { data, error } = await sb.storage.from('dossiers').createSignedUrl(a.photo_path, 3600); // Valide 1h
+                if (!error && data) {
+                    a._photo_url = data.signedUrl;
+                }
+            }
+        }
+
         renderDetail();
     }
 
@@ -709,25 +736,32 @@ document.addEventListener('DOMContentLoaded', () => {
             a.numero_passeport ? 'Passeport ' + esc(a.numero_passeport) : null
         ].filter(Boolean);
 
-        const photoBtn = a.photo_path
-            ? `<button type="button" data-photo="${esc(a.photo_path)}" class="text-csb-corail text-xs font-bold hover:underline">Voir la photo</button>`
-            : '<span class="text-xs text-gray-400">Pas de photo</span>';
+        const photoContent = a._photo_url
+            ? `<div class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg overflow-hidden border border-csb-tatami cursor-pointer shadow-sm hover:ring-2 hover:ring-csb-corail transition" data-photo="${esc(a._photo_url)}" title="Agrandir la photo">
+                 <img src="${esc(a._photo_url)}" alt="Photo de ${esc(a.prenom)}" class="w-full h-full object-cover">
+               </div>`
+            : `<div class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg border-2 border-dashed border-csb-tatami bg-gray-50 flex flex-col items-center justify-center text-gray-400" title="Pas de photo">
+                 <span class="text-xl font-bold">✕</span>
+                 <span class="text-[9px] uppercase mt-1">Aucune</span>
+               </div>`;
 
         return `
-            <div class="bg-white rounded-xl border border-csb-tatami p-4">
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                    <div>
-                        <span class="font-semibold text-csb-encre">${esc(a.prenom)} ${esc(a.nom)}</span>
-                        <span class="text-xs text-gray-400 ml-2">${esc(COURS_LABEL[a.cours_type] || '—')}${age !== null ? ' · ' + age + ' ans' : ''}</span>
+            <div class="bg-white rounded-xl border border-csb-tatami p-4 flex flex-col sm:flex-row gap-4">
+                ${photoContent}
+                <div class="flex-grow">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <div>
+                            <span class="font-semibold text-csb-encre text-lg">${esc(a.prenom)} ${esc(a.nom)}</span>
+                            <span class="text-xs text-gray-400 ml-2">${esc(COURS_LABEL[a.cours_type] || '—')}${age !== null ? ' · ' + age + ' ans' : ''}</span>
+                        </div>
+                        ${pieceBadge}
                     </div>
-                    ${pieceBadge}
+                    <div class="grid sm:grid-cols-2 gap-x-6 gap-y-2 mb-3">${checks}</div>
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-csb-tatami/60">
+                        <span class="text-xs text-gray-500" data-docs-summary="${a.id}">${nbOk}/${applicable.length} pièce${applicable.length > 1 ? 's' : ''} validée${nbOk > 1 ? 's' : ''}</span>
+                    </div>
+                    ${infos.length ? `<p class="text-[11px] text-gray-400 mt-2">${infos.join(' · ')}</p>` : ''}
                 </div>
-                <div class="grid sm:grid-cols-2 gap-x-6 gap-y-2 mb-2">${checks}</div>
-                <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-csb-tatami/60">
-                    <span class="text-xs text-gray-500" data-docs-summary="${a.id}">${nbOk}/${applicable.length} pièce${applicable.length > 1 ? 's' : ''} validée${nbOk > 1 ? 's' : ''}</span>
-                    ${photoBtn}
-                </div>
-                ${infos.length ? `<p class="text-[11px] text-gray-400 mt-2">${infos.join(' · ')}</p>` : ''}
             </div>`;
     }
 
@@ -877,11 +911,14 @@ document.addEventListener('DOMContentLoaded', () => {
         renderDetail();
     }
 
-    // --- Photo (bucket privé) : URL signée à la demande ---
-    async function openPhoto(path) {
-        const { data, error } = await sb.storage.from('dossiers').createSignedUrl(path, 120);
-        if (error || !data) { alert('Photo introuvable : ' + (error ? error.message : 'lien indisponible')); return; }
-        window.open(data.signedUrl, '_blank', 'noopener');
+    // --- Photo : Ouverture de la version grand format dans la lightbox ---
+    function openPhoto(url) {
+        const lb = document.getElementById('lightbox');
+        const lbImg = document.getElementById('lightbox-img');
+        if (!lb || !lbImg) return;
+        lbImg.src = url;
+        lb.classList.remove('hidden');
+        setTimeout(() => lb.classList.remove('opacity-0'), 10);
     }
 
     // --- Paiements : ajout / encaissement / suppression (bureau uniquement, RLS) ---
