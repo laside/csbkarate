@@ -79,6 +79,11 @@
                         <button id="btn-close-admin" class="bg-gray-200 text-csb-encre px-6 py-2 rounded font-bold hover:bg-gray-300 transition">Fermer</button>
                     </div>
                 </div>
+                
+                <p class="text-sm text-gray-500 mb-8 max-w-3xl">
+                    Ajoutez, modifiez ou supprimez des actualités, puis cliquez sur
+                    <strong>Enregistrer en ligne</strong>. Les images seront envoyées vers le stockage sécurisé.
+                </p>
 
                 <div class="grid md:grid-cols-3 gap-8">
                     <!-- Formulaire Ajout/Edition -->
@@ -100,9 +105,13 @@
                             </div>
                         </div>
 
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Nom de l'image (optionnel)</label>
-                        <input type="text" id="news-image" placeholder="ex: photo.jpg" class="w-full border border-csb-tatami rounded p-2 mb-3 text-sm">
-                        <p class="text-[10px] text-gray-400 mb-4 mt-1">L'image devra être glissée dans le dossier <code class="bg-gray-100 px-1">assets/photos/</code> sur Github.</p>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Image d'illustration (optionnelle)</label>
+                        <div class="flex flex-col gap-2 mb-3">
+                            <div id="current-image-preview" class="text-sm text-gray-600 hidden"></div>
+                            <input type="hidden" id="news-image">
+                            <input type="file" id="news-photo-file" accept="image/*" class="w-full border border-csb-tatami rounded p-2 text-sm bg-white">
+                            <p class="text-[10px] text-gray-400 mt-1">L'image sera hébergée directement sur Supabase. Les anciennes images GitHub sont conservées.</p>
+                        </div>
 
                         <label class="block text-xs font-bold text-gray-500 mb-1">Contenu</label>
                         <textarea id="news-excerpt" rows="4" class="w-full border border-csb-tatami rounded p-2 mb-4 text-sm" required></textarea>

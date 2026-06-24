@@ -93,12 +93,13 @@
                         </select>
                     </div>
                     <div>
-                        <label class="lbl" for="f-statut">Statut / Paiement</label>
+                        <label class="lbl" for="f-statut">Statut dossier</label>
                         <select id="f-statut" class="inp">
                             <option value="">Tous</option>
-                            <option value="Incomplet">Incomplet</option>
-                            <option value="Attente paiement">Attente paiement</option>
                             <option value="Validé">Validé</option>
+                            <option value="En attente paiement">En attente paiement</option>
+                            <option value="En attente justificatifs">En attente justificatifs</option>
+                            <option value="Incomplet">Incomplet</option>
                         </select>
                     </div>
                     <span id="count" class="text-sm text-gray-500 font-condensed uppercase tracking-wider ml-auto pb-2"></span>
@@ -114,7 +115,7 @@
                                     <th class="px-4 py-3 font-semibold">Famille</th>
                                     <th class="px-4 py-3 font-semibold">Cours</th>
                                     <th class="px-4 py-3 font-semibold">Grade</th>
-                                    <th class="px-4 py-3 font-semibold">Statut / Paiement</th>
+                                    <th class="px-4 py-3 font-semibold">Statut dossier</th>
                                     <th class="px-4 py-3 font-semibold text-center" title="Membre du bureau du club (tarif réduit). N'a rien à voir avec l'accès admin au site.">Bureau<br><span class="font-normal normal-case text-[9px]">du club</span></th>
                                     <th class="px-4 py-3 font-semibold"></th>
                                 </tr>
@@ -125,8 +126,9 @@
                 </div>
 
                 <p class="text-xs text-gray-400 mt-4">
-                    Les modifications (statut, bureau, grade) sont enregistrées automatiquement à chaque changement.
-                    L'enregistrement des règlements (chèques, encaissements) sera ajouté dans une prochaine étape.
+                    « Bureau du club » et « Grade » sont enregistrés automatiquement à chaque changement.
+                    Le <strong>statut du dossier</strong> n'est pas modifiable : il se calcule (pièces justificatives × règlement).
+                    Ouvrez « Dossier › » pour valider les pièces et saisir les règlements.
                 </p>
 
                 <!-- ===================== ADMINISTRATEURS DU SITE ===================== -->
@@ -188,6 +190,32 @@
     </main>
 
     <div id="footer-placeholder" class="min-h-[160px]"></div>
+
+    <!-- ===================== MODALE : FICHE DOSSIER FAMILLE ===================== -->
+    <!-- Vue détaillée par famille (Phase 2) : pièces justificatives + règlement.
+         Le corps (#detail-body) est entièrement rendu par membres.js. -->
+    <div id="detail-modal" class="hidden fixed inset-0 z-50 flex items-stretch sm:items-center justify-center">
+        <div data-detail-close class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div class="relative w-full sm:max-w-3xl sm:mx-4 bg-csb-washi sm:rounded-2xl shadow-2xl max-h-screen sm:max-h-[90vh] flex flex-col">
+            <!-- En-tête fixe -->
+            <div class="shrink-0 bg-csb-dojo text-white px-6 py-4 flex items-start justify-between sm:rounded-t-2xl">
+                <div>
+                    <span class="font-condensed text-csb-tatami uppercase tracking-widest text-xs block">Fiche dossier</span>
+                    <h2 id="detail-title" class="font-serif text-2xl leading-tight"></h2>
+                    <p id="detail-sub" class="text-sm text-csb-tatami/80"></p>
+                </div>
+                <button type="button" data-detail-close class="text-white/80 hover:text-white text-3xl leading-none -mt-1" aria-label="Fermer">&times;</button>
+            </div>
+            <!-- Corps défilant -->
+            <div id="detail-body" class="overflow-y-auto p-6 space-y-8"></div>
+        </div>
+    </div>
+
+    <!-- ===================== LIGHTBOX PHOTO ===================== -->
+    <div id="lightbox" class="hidden fixed inset-0 z-[60] bg-csb-encre/95 flex items-center justify-center p-4 opacity-0 transition-opacity">
+        <button type="button" id="lightbox-close" class="absolute top-5 right-6 text-white/70 hover:text-csb-corail text-4xl font-bold transition" aria-label="Fermer">&times;</button>
+        <img id="lightbox-img" src="" alt="Photo en grand format" class="max-h-[80vh] w-auto object-contain rounded-lg shadow-2xl">
+    </div>
 
 </body>
 </html>

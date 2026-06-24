@@ -400,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     droit_image: a.droitImage,
                     photo_path: photoPath,
                     grade_actuel: a.grade,
-                    statut_dossier: 'Attente paiement'
+                    statut_dossier: 'Incomplet' // statut combiné dérivé ensuite par le bureau (pièces × règlement)
                 });
             }
             const { error: adhErr } = await sb.from('adherents').insert(rows);
@@ -414,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 montant_total: detail.total,
                 detail_calcul: { ...detail, souhaitReglement: splitWish, modePaiement: 'au_club' },
                 mode_paiement: 'au_club',
-                statut: 'attente_paiement'
+                statut: 'Incomplet'
             });
             if (dosErr) throw dosErr;
 
