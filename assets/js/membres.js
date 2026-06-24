@@ -46,7 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const rolesRowsEl = $('#roles-rows');
 
     // --- Rôles (alignés sur le CHECK de la migration 0006) ---
-    const ROLES = ['bureau', 'enseignant', 'adherent'];
     const ROLE_RANK = { bureau: 0, enseignant: 1, adherent: 2 };
 
     // --- État ---
@@ -105,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (error) throw error;
             if (!await isBureau()) {
                 await sb.auth.signOut();
-                throw new Error("Ce compte n'a pas les droits « bureau ».");
+                throw new Error("Ce compte n'a pas les droits « administrateur ».");
             }
             gatePwd.value = '';
             await showDashboard();
@@ -154,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
         profiles = prRes.data || [];
         renderStats();
         renderRows();
-        renderProfiles();
+        renderAdmins();
     }
 
     // =========================================================
@@ -173,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `${byCours('Enfant')} enfants · ${byCours('Adulte')} adultes · ${byCours('Self-Defense')} self`, 'encre'),
             statCard('Dossiers validés', byStatut('Validé'),
                 `${byStatut('Attente paiement')} en attente · ${byStatut('Incomplet')} incomplets`, 'green'),
-            statCard('Membres du bureau', nbBureau, 'tarif réduit (37 €)', 'corail'),
+            statCard('Bureau du club', nbBureau, 'pratiquants · tarif réduit (37 €)', 'corail'),
             statCard('Encaissé', fmt(encaisse), `sur ${fmt(totalDu)} attendus`, 'dojo')
         ].join('');
     }
@@ -320,39 +319,65 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // Comptes & rôles
+    // Administrateurs du site (accès gestion) — distinct de membre_bureau
     // =========================================================
-    function renderProfiles() {
+    // « Admin du site » = compte de rôle bureau (accès complet) ou enseignant
+    // (grades). Les comptes 'adherent' ne sont PAS des admins : on ne les
+    // affiche pas ici. Promouvoir/rétrograder = changer profiles.role.
+    const ADMIN_ROLES = ['bureau', 'enseignant'];
+
+    function roleLabel(r) {
+        return { bureau: 'Administrateur', enseignant: 'Enseignant', adherent: 'Adhérent' }[r] || r;
+    }
+
+    function renderAdmins() {
         if (!rolesRowsEl) return;
-        const list = profiles.slice().sort((a, b) => {
+        const list = profiles.filter(p => ADMIN_ROLES.includes(p.role)).sort((a, b) => {
             const r = (ROLE_RANK[a.role] ?? 9) - (ROLE_RANK[b.role] ?? 9);
             return r !== 0 ? r : (a.email || '').localeCompare(b.email || '');
         });
         if (!list.length) {
-            rolesRowsEl.innerHTML = '<tr><td colspan="3" class="px-4 py-8 text-center text-gray-400">Aucun compte.</td></tr>';
+            rolesRowsEl.innerHTML = '<tr><td colspan="3" class="px-4 py-8 text-center text-gray-400">Aucun administrateur. Ajoutez-en un ci-dessus.</td></tr>';
             return;
         }
         rolesRowsEl.innerHTML = list.map(p => {
             const isMe = p.user_id === currentUserId;
-            const opts = ROLES.map(r => `<option value="${r}" ${r === p.role ? 'selected' : ''}>${roleLabel(r)}</option>`).join('');
+            const opts = ADMIN_ROLES.map(r => `<option value="${r}" ${r === p.role ? 'selected' : ''}>${roleLabel(r)}</option>`).join('');
             return `
                 <tr data-uid="${esc(p.user_id)}" class="border-t border-csb-tatami/60 hover:bg-csb-washi/40 transition">
                     <td class="px-4 py-3">
                         <span class="text-csb-encre">${esc(p.email || '(email inconnu)')}</span>
                         ${isMe ? '<span class="ml-2 text-[10px] font-bold uppercase tracking-wider text-csb-corail bg-red-50 px-2 py-0.5 rounded">vous</span>' : ''}
                     </td>
-                    <td class="px-4 py-3">
+                    <td class="px-4 py-3 flex items-center gap-3">
                         <select data-role-select class="text-sm rounded-lg border border-csb-tatami px-2 py-1.5 bg-white cursor-pointer">${opts}</select>
+                        <span data-role="feedback" class="text-xs"></span>
                     </td>
-                    <td class="px-4 py-3 whitespace-nowrap"><span data-role="feedback" class="text-xs"></span></td>
+                    <td class="px-4 py-3 text-right">
+                        <button type="button" data-remove-access class="text-csb-corail text-sm font-bold hover:underline">Retirer l'accès</button>
+                    </td>
                 </tr>`;
         }).join('');
     }
 
-    function roleLabel(r) {
-        return { bureau: 'Bureau', enseignant: 'Enseignant', adherent: 'Adhérent' }[r] || r;
+    // Compte combien de comptes ont l'accès complet (bureau) — pour les gardes.
+    function nbAdminsComplets() {
+        return profiles.filter(p => p.role === 'bureau').length;
     }
 
+    // Vérifie qu'on ne retire pas le dernier accès « bureau » ni le sien.
+    // Retourne un message d'erreur (string) si interdit, sinon null.
+    function blocageRetraitBureau(uid) {
+        if (uid === currentUserId) {
+            return 'Vous ne pouvez pas retirer votre propre accès administrateur (risque de blocage). Demandez à un autre administrateur.';
+        }
+        if (nbAdminsComplets() <= 1) {
+            return 'Impossible : il doit rester au moins un administrateur (accès complet).';
+        }
+        return null;
+    }
+
+    // Changement de niveau (Administrateur <-> Enseignant).
     rolesRowsEl && rolesRowsEl.addEventListener('change', async (e) => {
         const sel = e.target.closest('[data-role-select]');
         if (!sel) return;
@@ -363,20 +388,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const oldRole = prof ? prof.role : 'adherent';
         if (newRole === oldRole) return;
 
-        // Garde anti-blocage : ne pas retirer le DERNIER accès bureau,
-        // ni son PROPRE accès bureau (lockout de la session en cours).
+        // Rétrograder un « bureau » (vers enseignant) réduit les accès complets.
         if (oldRole === 'bureau' && newRole !== 'bureau') {
-            if (uid === currentUserId) {
-                alert('Vous ne pouvez pas retirer votre propre accès bureau (risque de blocage). Demandez à un autre membre du bureau de le faire.');
-                sel.value = oldRole;
-                return;
-            }
-            const nbBureau = profiles.filter(p => p.role === 'bureau').length;
-            if (nbBureau <= 1) {
-                alert('Impossible : il doit rester au moins un compte « bureau ».');
-                sel.value = oldRole;
-                return;
-            }
+            const err = blocageRetraitBureau(uid);
+            if (err) { alert(err); sel.value = oldRole; return; }
         }
 
         const fb = tr.querySelector('[data-role="feedback"]');
@@ -395,6 +410,72 @@ document.addEventListener('DOMContentLoaded', () => {
         fb.textContent = '✓ enregistré';
         fb.className = 'text-xs text-green-600 font-bold';
         setTimeout(() => { if (fb.textContent === '✓ enregistré') fb.textContent = ''; }, 2000);
+    });
+
+    // Retirer l'accès : le compte redevient un simple adhérent.
+    rolesRowsEl && rolesRowsEl.addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-remove-access]');
+        if (!btn) return;
+        const tr = btn.closest('tr');
+        const uid = tr.dataset.uid;
+        const prof = profiles.find(p => p.user_id === uid);
+        if (!prof) return;
+
+        if (prof.role === 'bureau') {
+            const err = blocageRetraitBureau(uid);
+            if (err) { alert(err); return; }
+        }
+        if (!confirm(`Retirer l'accès de ${prof.email || 'ce compte'} ?\nLe compte redeviendra un simple adhérent (il n'est pas supprimé).`)) return;
+
+        const { error } = await sb.from('profiles').update({ role: 'adherent' }).eq('user_id', uid);
+        if (error) { alert('Échec : ' + error.message); return; }
+        prof.role = 'adherent';
+        renderAdmins();
+    });
+
+    // Ajouter un administrateur = promouvoir un compte EXISTANT (par email).
+    const adminAddBtn = $('#admin-add-btn');
+    adminAddBtn && adminAddBtn.addEventListener('click', async () => {
+        const emailEl = $('#admin-email');
+        const msg = $('#admin-add-msg');
+        const email = emailEl.value.trim();
+        const role = $('#admin-role').value;
+        const showMsg = (txt, ok) => {
+            msg.textContent = txt;
+            msg.className = 'text-sm mb-4 ' + (ok ? 'text-green-600' : 'text-csb-corail');
+            msg.classList.remove('hidden');
+        };
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showMsg('Email invalide.', false); return; }
+
+        adminAddBtn.disabled = true;
+        try {
+            // Recherche du compte (email recopié dans profiles par la migration 0008).
+            const { data, error } = await sb.from('profiles')
+                .select('user_id, email, role').ilike('email', email).maybeSingle();
+            if (error) throw error;
+            if (!data) {
+                showMsg("Aucun compte avec cet email. La personne doit d'abord créer un compte via l'inscription en ligne.", false);
+                return;
+            }
+            if (ADMIN_ROLES.includes(data.role)) {
+                showMsg(`Ce compte est déjà ${roleLabel(data.role)}.`, false);
+                return;
+            }
+            const { error: upErr } = await sb.from('profiles').update({ role }).eq('user_id', data.user_id);
+            if (upErr) throw upErr;
+
+            // Cache local + rendu.
+            const prof = profiles.find(p => p.user_id === data.user_id);
+            if (prof) prof.role = role; else profiles.push({ user_id: data.user_id, email: data.email, role });
+            emailEl.value = '';
+            renderAdmins();
+            showMsg(`${data.email} est maintenant ${roleLabel(role)}.`, true);
+        } catch (err) {
+            console.error(err);
+            showMsg('Erreur : ' + (err.message || err), false);
+        } finally {
+            adminAddBtn.disabled = false;
+        }
     });
 
     // --- Démarrage ---

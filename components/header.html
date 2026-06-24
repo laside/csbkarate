@@ -42,7 +42,13 @@
 
             <!-- Côté droit : CTA (tablette+) + bouton hamburger (mobile) -->
             <div class="flex items-center gap-3">
-                <div class="hidden md:flex">
+                <div class="hidden md:flex items-center gap-3">
+                    <!-- Accès direct à l'espace bureau (page protégée par sa propre connexion) -->
+                    <a href="./membres.html" title="Espace réservé au bureau"
+                       class="inline-flex items-center gap-1.5 bg-csb-dojo text-white px-5 py-2 rounded-full font-condensed uppercase tracking-wider hover:bg-csb-encre transition text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        Espace Bureau
+                    </a>
                     <a href="./index.html#infos" class="bg-csb-corail text-white px-6 py-2 rounded-full font-condensed uppercase tracking-wider hover:bg-opacity-90 transition shadow-lg shadow-csb-corail/30">
                         Nous rejoindre
                     </a>
@@ -75,6 +81,10 @@
             <a href="./news.html" class="py-3 hover:text-csb-corail transition">Actualités &amp; News</a>
 
             <a href="./index.html#infos" class="mt-4 bg-csb-corail text-white text-center px-6 py-3 rounded-full hover:bg-opacity-90 transition shadow-lg shadow-csb-corail/30">Nous rejoindre</a>
+            <a href="./membres.html" class="mt-2 inline-flex items-center justify-center gap-1.5 bg-csb-dojo text-white text-center px-6 py-3 rounded-full hover:bg-csb-encre transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                Espace Bureau
+            </a>
         </nav>
     </div>
 </header>

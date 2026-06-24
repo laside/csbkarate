@@ -109,7 +109,7 @@
                                     <th class="px-4 py-3 font-semibold">Cours</th>
                                     <th class="px-4 py-3 font-semibold">Grade</th>
                                     <th class="px-4 py-3 font-semibold">Statut / Paiement</th>
-                                    <th class="px-4 py-3 font-semibold text-center">Bureau</th>
+                                    <th class="px-4 py-3 font-semibold text-center" title="Membre du bureau du club (tarif réduit). N'a rien à voir avec l'accès admin au site.">Bureau<br><span class="font-normal normal-case text-[9px]">du club</span></th>
                                     <th class="px-4 py-3 font-semibold"></th>
                                 </tr>
                             </thead>
@@ -123,27 +123,55 @@
                     L'enregistrement des règlements (chèques, encaissements) sera ajouté dans une prochaine étape.
                 </p>
 
-                <!-- ===================== COMPTES & RÔLES ===================== -->
+                <!-- ===================== ADMINISTRATEURS DU SITE ===================== -->
                 <div class="mt-14">
-                    <h2 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-1">Comptes & rôles</h2>
+                    <h2 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-1">Administrateurs du site</h2>
                     <p class="text-gray-500 text-sm mb-4 max-w-3xl">
-                        Tous les comptes ayant accès au site. Le rôle <strong>bureau</strong> donne accès à cette page de gestion ;
-                        <strong>enseignant</strong> pourra valider les grades ; <strong>adhérent</strong> ne voit que son propre dossier.
+                        Comptes ayant accès à la <strong>gestion du site</strong> — à ne pas confondre avec le
+                        « membre du bureau » du club (info de l'adhérent, liée au tarif).
+                        <strong>Administrateur</strong> : accès complet (cette page). <strong>Enseignant</strong> :
+                        validation des grades (à venir). Un adhérent peut être membre du bureau du club sans être admin du site.
                     </p>
+
+                    <!-- Ajouter un administrateur (promotion d'un compte existant) -->
+                    <div class="bg-white rounded-2xl border border-csb-tatami p-4 mb-4 flex flex-wrap gap-3 items-end">
+                        <div class="flex-grow min-w-[220px]">
+                            <label class="lbl" for="admin-email">Ajouter — email d'un compte existant</label>
+                            <input id="admin-email" type="email" placeholder="prenom.nom@email.fr" class="inp">
+                        </div>
+                        <div>
+                            <label class="lbl" for="admin-role">Niveau</label>
+                            <select id="admin-role" class="inp">
+                                <option value="bureau">Administrateur</option>
+                                <option value="enseignant">Enseignant</option>
+                            </select>
+                        </div>
+                        <button id="admin-add-btn" type="button"
+                                class="px-6 py-3 rounded-full font-condensed uppercase tracking-wider bg-csb-dojo text-white hover:bg-csb-corail transition text-sm">
+                            + Ajouter
+                        </button>
+                    </div>
+                    <p id="admin-add-msg" class="hidden text-sm mb-4"></p>
+
                     <div class="bg-white rounded-2xl border border-csb-tatami overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead>
                                     <tr class="text-left font-condensed uppercase tracking-wider text-[11px] text-gray-400 border-b border-csb-tatami bg-csb-washi/60">
                                         <th class="px-4 py-3 font-semibold">Compte (email)</th>
-                                        <th class="px-4 py-3 font-semibold">Rôle</th>
-                                        <th class="px-4 py-3 font-semibold"></th>
+                                        <th class="px-4 py-3 font-semibold">Niveau d'accès</th>
+                                        <th class="px-4 py-3 font-semibold text-right">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="roles-rows"></tbody>
                             </table>
                         </div>
                     </div>
+                    <p class="text-xs text-gray-400 mt-3 max-w-3xl">
+                        « Ajouter » promeut un compte <strong>déjà existant</strong> (créé via l'inscription en ligne).
+                        « Retirer l'accès » repasse le compte en simple adhérent (le compte n'est pas supprimé).
+                        La création et la suppression <em>définitives</em> de comptes nécessiteront une fonction serveur sécurisée (étape ultérieure).
+                    </p>
                 </div>
             </section>
 
