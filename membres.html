@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des membres | CSB Karaté</title>
+
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./assets/js/tailwind.js"></script>
+    <script src="./assets/js/main.js" defer></script>
+    <!-- Module gestion : parle directement à window.sb (CRUD relationnel + RLS) -->
+    <script type="module" src="./assets/js/supabase.js"></script>
+    <script src="./assets/js/tarifs.js" defer></script>
+    <script src="./assets/js/membres.js" defer></script>
+
+    <!-- Vercel Web Analytics -->
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="bg-csb-washi text-csb-encre font-sans antialiased min-h-screen flex flex-col">
+
+    <div id="header-placeholder"></div>
+
+    <main class="flex-grow pt-28 pb-20 px-4 sm:px-6">
+        <div class="max-w-7xl mx-auto">
+
+            <!-- ===================== PORTAIL DE CONNEXION (bureau) ===================== -->
+            <section id="gate" class="hidden max-w-sm mx-auto mt-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-csb-tatami p-8">
+                    <span class="font-condensed text-csb-corail uppercase tracking-widest text-xs block mb-2">Accès réservé</span>
+                    <h1 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-1">Espace Bureau</h1>
+                    <p class="text-gray-500 text-sm mb-6">Connectez-vous avec votre compte bureau pour gérer les adhésions.</p>
+
+                    <label class="lbl" for="gate-email">Email</label>
+                    <input id="gate-email" type="email" autocomplete="email" class="inp mb-4">
+
+                    <label class="lbl" for="gate-pwd">Mot de passe</label>
+                    <input id="gate-pwd" type="password" autocomplete="current-password" class="inp mb-5">
+
+                    <button id="gate-btn" type="button"
+                            class="w-full bg-csb-dojo text-white font-condensed uppercase tracking-wider py-3 rounded-full hover:bg-csb-corail transition shadow-lg">
+                        Se connecter
+                    </button>
+                    <p id="gate-error" class="hidden text-csb-corail text-sm mt-3"></p>
+                </div>
+            </section>
+
+            <!-- ===================== TABLEAU DE BORD ===================== -->
+            <section id="dashboard" class="hidden">
+
+                <div class="flex flex-wrap justify-between items-end gap-4 mb-8">
+                    <div>
+                        <span class="font-condensed text-csb-corail uppercase tracking-widest text-sm block">Espace Bureau</span>
+                        <h1 class="font-serif text-4xl text-csb-encre">Gestion des membres</h1>
+                    </div>
+                    <div class="flex gap-3">
+                        <button id="btn-refresh" type="button"
+                                class="px-5 py-2 rounded-full font-condensed uppercase tracking-wider border border-csb-tatami text-csb-encre hover:bg-white transition text-sm">
+                            ↻ Actualiser
+                        </button>
+                        <button id="btn-logout" type="button"
+                                class="px-5 py-2 rounded-full font-condensed uppercase tracking-wider bg-gray-200 text-csb-encre hover:bg-gray-300 transition text-sm">
+                            Se déconnecter
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Cartes statistiques (injectées par membres.js) -->
+                <div id="stats" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10"></div>
+
+                <!-- Filtres -->
+                <div class="bg-white rounded-2xl border border-csb-tatami p-4 mb-6 flex flex-wrap gap-4 items-end">
+                    <div class="flex-grow min-w-[200px]">
+                        <label class="lbl" for="f-search">Rechercher</label>
+                        <input id="f-search" type="search" placeholder="Nom, prénom ou référent…" class="inp">
+                    </div>
+                    <div>
+                        <label class="lbl" for="f-cours">Cours</label>
+                        <select id="f-cours" class="inp">
+                            <option value="">Tous</option>
+                            <option value="Enfant">Enfant</option>
+                            <option value="Adulte">Adulte</option>
+                            <option value="Self-Defense">Self-défense</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="lbl" for="f-statut">Statut / Paiement</label>
+                        <select id="f-statut" class="inp">
+                            <option value="">Tous</option>
+                            <option value="Incomplet">Incomplet</option>
+                            <option value="Attente paiement">Attente paiement</option>
+                            <option value="Validé">Validé</option>
+                        </select>
+                    </div>
+                    <span id="count" class="text-sm text-gray-500 font-condensed uppercase tracking-wider ml-auto pb-2"></span>
+                </div>
+
+                <!-- Liste -->
+                <div class="bg-white rounded-2xl border border-csb-tatami overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left font-condensed uppercase tracking-wider text-[11px] text-gray-400 border-b border-csb-tatami bg-csb-washi/60">
+                                    <th class="px-4 py-3 font-semibold">Adhérent</th>
+                                    <th class="px-4 py-3 font-semibold">Famille</th>
+                                    <th class="px-4 py-3 font-semibold">Cours</th>
+                                    <th class="px-4 py-3 font-semibold">Grade</th>
+                                    <th class="px-4 py-3 font-semibold">Statut / Paiement</th>
+                                    <th class="px-4 py-3 font-semibold text-center">Bureau</th>
+                                    <th class="px-4 py-3 font-semibold"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="rows"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <p class="text-xs text-gray-400 mt-4">
+                    Les modifications (statut, bureau, grade) sont enregistrées automatiquement à chaque changement.
+                    L'enregistrement des règlements (chèques, encaissements) sera ajouté dans une prochaine étape.
+                </p>
+
+                <!-- ===================== COMPTES & RÔLES ===================== -->
+                <div class="mt-14">
+                    <h2 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-1">Comptes & rôles</h2>
+                    <p class="text-gray-500 text-sm mb-4 max-w-3xl">
+                        Tous les comptes ayant accès au site. Le rôle <strong>bureau</strong> donne accès à cette page de gestion ;
+                        <strong>enseignant</strong> pourra valider les grades ; <strong>adhérent</strong> ne voit que son propre dossier.
+                    </p>
+                    <div class="bg-white rounded-2xl border border-csb-tatami overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left font-condensed uppercase tracking-wider text-[11px] text-gray-400 border-b border-csb-tatami bg-csb-washi/60">
+                                        <th class="px-4 py-3 font-semibold">Compte (email)</th>
+                                        <th class="px-4 py-3 font-semibold">Rôle</th>
+                                        <th class="px-4 py-3 font-semibold"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="roles-rows"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chargement initial -->
+            <p id="boot" class="text-center text-gray-400 font-condensed uppercase tracking-wider py-20">Chargement…</p>
+
+        </div>
+    </main>
+
+    <div id="footer-placeholder"></div>
+
+</body>
+</html>
