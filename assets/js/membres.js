@@ -21,8 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
     ));
     const fmt = (c) => CSBTarifs.formatEuros(c);
 
-    // --- Listes de référence (alignées sur les CHECK de la migration 0006) ---
-    const STATUTS = ['Incomplet', 'Attente paiement', 'Validé'];
+    // --- Listes de référence ---
+    // Le statut de dossier (Incomplet / En attente paiement / En attente
+    // justificatifs / Validé — migration 0010) n'est PAS une liste éditable :
+    // il est CALCULÉ (cf. computeDossierStatus), à partir des pièces (par
+    // adhérent) et du règlement (par dossier).
     const GRADES = [
         'Ceinture Blanche', 'Ceinture Jaune', 'Ceinture Orange', 'Ceinture Verte',
         'Ceinture Bleue', 'Ceinture Marron', '1er Dan', '2e Dan', '3e Dan', '4e Dan', '5e Dan'
@@ -54,6 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let paiements = [];
     let profiles = [];
     let currentUserId = null;
+    // Agrégats par famille, recalculés à chaque chargement (cf. buildFamilleIndex) :
+    let familleAgg = {};        // famille_id -> { du, encaisse } (centimes)
+    let familleStatusMap = {};  // famille_id -> statut dossier combiné (dérivé)
 
     // =========================================================
     // Authentification (gate bureau)
@@ -135,10 +141,10 @@ document.addEventListener('DOMContentLoaded', () => {
         rowsEl.innerHTML = '<tr><td colspan="7" class="px-4 py-10 text-center text-gray-400">Chargement…</td></tr>';
         const [aRes, dRes, pRes, prRes] = await Promise.all([
             sb.from('adherents')
-                .select('id, prenom, nom, date_naissance, genre, cours_type, grade_actuel, statut_dossier, membre_bureau, famille_id, familles(nom_referent, ville)')
+                .select('id, prenom, nom, date_naissance, genre, cours_type, grade_actuel, statut_dossier, membre_bureau, documents, famille_id, familles(nom_referent, ville)')
                 .order('nom', { ascending: true }),
-            sb.from('dossiers').select('montant_total, statut'),
-            sb.from('paiements').select('montant, encaisse'),
+            sb.from('dossiers').select('id, famille_id, montant_total, statut'),
+            sb.from('paiements').select('dossier_id, montant, encaisse'),
             sb.from('profiles').select('user_id, email, role')
         ]);
 
@@ -151,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dossiers = dRes.data || [];
         paiements = pRes.data || [];
         profiles = prRes.data || [];
+        buildFamilleIndex();
         renderStats();
         renderRows();
         renderAdmins();
@@ -162,16 +169,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderStats() {
         const total = adherents.length;
         const byCours = (c) => adherents.filter(a => a.cours_type === c).length;
-        const byStatut = (s) => adherents.filter(a => a.statut_dossier === s).length;
         const nbBureau = adherents.filter(a => a.membre_bureau).length;
         const totalDu = dossiers.reduce((s, d) => s + (d.montant_total || 0), 0);
         const encaisse = paiements.filter(p => p.encaisse).reduce((s, p) => s + (p.montant || 0), 0);
+        // Statut par dossier (= par famille), pas par adhérent.
+        const statuses = Object.values(familleStatusMap);
+        const byDossier = (s) => statuses.filter(v => v === s).length;
 
         statsEl.innerHTML = [
             statCard('Adhérents', total,
                 `${byCours('Enfant')} enfants · ${byCours('Adulte')} adultes · ${byCours('Self-Defense')} self`, 'encre'),
-            statCard('Dossiers validés', byStatut('Validé'),
-                `${byStatut('Attente paiement')} en attente · ${byStatut('Incomplet')} incomplets`, 'green'),
+            statCard('Dossiers validés', byDossier('Validé'),
+                `${byDossier('En attente paiement')} att. paiement · ${byDossier('En attente justificatifs')} att. justif · ${byDossier('Incomplet')} incomplets`, 'green'),
             statCard('Bureau du club', nbBureau, 'pratiquants · tarif réduit (37 €)', 'corail'),
             statCard('Encaissé', fmt(encaisse), `sur ${fmt(totalDu)} attendus`, 'dojo')
         ].join('');
@@ -202,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const s = fStatut.value;
         return adherents.filter(a => {
             if (c && a.cours_type !== c) return false;
-            if (s && a.statut_dossier !== s) return false;
+            if (s && statutOf(a) !== s) return false;
             if (q) {
                 const hay = `${a.prenom} ${a.nom} ${a.familles?.nom_referent || ''}`.toLowerCase();
                 if (!hay.includes(q)) return false;
@@ -222,13 +231,69 @@ document.addEventListener('DOMContentLoaded', () => {
         return age;
     }
 
-    // Couleur du select statut selon sa valeur.
+    // =========================================================
+    // Statut de dossier — dérivation (pièces justificatives × règlement)
+    // =========================================================
+    // Pièces OK pour UN adhérent : toutes les pièces requises validées
+    // (les pièces `minorOnly` ne comptent que pour les mineurs).
+    function justifComplete(a) {
+        const age = ageOf(a.date_naissance);
+        const isMinor = age !== null && age < 18;
+        const docs = (a && a.documents && typeof a.documents === 'object') ? a.documents : {};
+        const applicable = DOCUMENTS.filter(d => !d.minorOnly || isMinor);
+        return applicable.length > 0 && applicable.every(d => !!docs[d.key]);
+    }
+
+    // Statut combiné à partir des deux axes (cf. migration 0010).
+    function computeDossierStatus(justifOk, paiementOk) {
+        if (justifOk && paiementOk) return 'Validé';
+        if (justifOk && !paiementOk) return 'En attente paiement';
+        if (!justifOk && paiementOk) return 'En attente justificatifs';
+        return 'Incomplet';
+    }
+
+    // Recalcule les agrégats par famille (montant dû / encaissé) + le statut
+    // combiné de chaque famille, depuis les données chargées.
+    function buildFamilleIndex() {
+        familleAgg = {};
+        familleStatusMap = {};
+        const dossierToFamille = {};
+        dossiers.forEach(d => {
+            dossierToFamille[d.id] = d.famille_id;
+            const agg = familleAgg[d.famille_id] || (familleAgg[d.famille_id] = { du: 0, encaisse: 0 });
+            agg.du += d.montant_total || 0;
+        });
+        paiements.forEach(p => {
+            if (!p.encaisse) return;
+            const fid = dossierToFamille[p.dossier_id];
+            if (fid == null) return;
+            const agg = familleAgg[fid] || (familleAgg[fid] = { du: 0, encaisse: 0 });
+            agg.encaisse += p.montant || 0;
+        });
+        const parFamille = {};
+        adherents.forEach(a => (parFamille[a.famille_id] = parFamille[a.famille_id] || []).push(a));
+        Object.keys(parFamille).forEach(fid => {
+            const liste = parFamille[fid];
+            const justifOk = liste.length > 0 && liste.every(justifComplete);
+            const agg = familleAgg[fid] || { du: 0, encaisse: 0 };
+            const paiementOk = agg.du > 0 && agg.encaisse >= agg.du;
+            familleStatusMap[fid] = computeDossierStatus(justifOk, paiementOk);
+        });
+    }
+
+    // Statut dossier d'un adhérent (calculé), avec repli sur la valeur stockée.
+    function statutOf(a) {
+        return familleStatusMap[a.famille_id] || a.statut_dossier || 'Incomplet';
+    }
+
+    // Couleur d'un badge de statut dossier.
     function statutClass(v) {
         if (v === 'Validé') return 'bg-green-50 text-green-700 border-green-300';
-        if (v === 'Attente paiement') return 'bg-amber-50 text-amber-700 border-amber-300';
+        if (v === 'En attente paiement') return 'bg-amber-50 text-amber-700 border-amber-300';
+        if (v === 'En attente justificatifs') return 'bg-blue-50 text-blue-700 border-blue-300';
+        if (v === 'Annulé') return 'bg-red-50 text-red-700 border-red-300';
         return 'bg-gray-50 text-gray-500 border-csb-tatami'; // Incomplet
     }
-    const STATUT_SELECT_BASE = 'text-sm rounded-lg border px-2 py-1.5 font-semibold cursor-pointer ';
 
     function renderRows() {
         const list = filtered();
@@ -249,7 +314,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const ville = a.familles?.ville || '';
 
         const gradeOpts = GRADES.map(g => `<option ${g === a.grade_actuel ? 'selected' : ''}>${esc(g)}</option>`).join('');
-        const statutOpts = STATUTS.map(s => `<option ${s === a.statut_dossier ? 'selected' : ''}>${esc(s)}</option>`).join('');
 
         return `
             <tr data-id="${a.id}" class="border-t border-csb-tatami/60 hover:bg-csb-washi/40 transition">
@@ -265,9 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-4 py-3">
                     <select data-field="grade_actuel" class="text-sm rounded-lg border border-csb-tatami px-2 py-1.5 bg-white cursor-pointer">${gradeOpts}</select>
                 </td>
-                <td class="px-4 py-3">
-                    <select data-field="statut_dossier" class="${STATUT_SELECT_BASE}${statutClass(a.statut_dossier)}">${statutOpts}</select>
-                </td>
+                <td class="px-4 py-3">${badgeStatut(statutOf(a))}</td>
                 <td class="px-4 py-3 text-center">
                     <input type="checkbox" data-field="membre_bureau" class="chk mx-auto" ${a.membre_bureau ? 'checked' : ''}>
                 </td>
@@ -288,11 +350,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const id = Number(tr.dataset.id);
         const field = ctrl.dataset.field;
         const value = ctrl.type === 'checkbox' ? ctrl.checked : ctrl.value;
-
-        const ok = await saveField(tr, id, field, value);
-        if (ok && field === 'statut_dossier') {
-            ctrl.className = STATUT_SELECT_BASE + statutClass(value);
-        }
+        // Champs encore éditables en ligne : membre_bureau, grade_actuel.
+        // (Le statut dossier n'est plus éditable : il est calculé, cf. modale.)
+        await saveField(tr, id, field, value);
     });
 
     async function saveField(tr, id, field, value) {
@@ -483,10 +543,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // FICHE DOSSIER FAMILLE (modale) — Phase 2
     // =========================================================
     // Vue détaillée par famille : pièces justificatives (checklist validée par
-    // le bureau) + règlement (paiements). La bascule de statut est DÉRIVÉE du
-    // règlement : dès que l'encaissé couvre le total dû, les adhérents de la
-    // famille passent « Validé » (et reviennent « Attente paiement » si on
-    // retire un encaissement). Modèle : un dossier par famille et par saison.
+    // le bureau) + règlement (paiements). Le statut de dossier est CALCULÉ à
+    // partir de ces deux axes (cf. computeDossierStatus / refreshStatuts), jamais
+    // saisi à la main. Modèle : un dossier par famille et par saison.
     // =========================================================
     const SAISON = '2026-2027'; // saison active (aligné sur inscription.js)
 
@@ -587,11 +646,34 @@ document.addEventListener('DOMContentLoaded', () => {
         detailTitle.textContent = `Famille ${f.nom_referent || '—'}`;
         const adr = [f.adresse, [f.code_postal, f.ville].filter(Boolean).join(' ')].filter(Boolean).join(', ');
         detailSub.textContent = [adr, f.telephone_urgence].filter(Boolean).join(' · ');
-        detailBody.innerHTML = sectionAdherents() + sectionReglement();
+        detailBody.innerHTML = sectionSummary() + sectionAdherents() + sectionReglement();
     }
 
     function badgeStatut(v) {
         return `<span class="inline-block text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${statutClass(v)}">${esc(v)}</span>`;
+    }
+
+    // Résumé : statut combiné + les deux axes (pièces justif. × règlement),
+    // pour bien distinguer les deux notions.
+    function sectionSummary() {
+        const nbJustifOk = detailAdherents.filter(justifComplete).length;
+        const justifOk = detailAdherents.length > 0 && nbJustifOk === detailAdherents.length;
+        const totalDu = detailDossiers.reduce((s, d) => s + (d.montant_total || 0), 0);
+        const totalEnc = detailPaiements.filter(p => p.encaisse).reduce((s, p) => s + (p.montant || 0), 0);
+        const paiementOk = totalDu > 0 && totalEnc >= totalDu;
+        const status = computeDossierStatus(justifOk, paiementOk);
+        const axis = (ok, txtOk, txtKo) => `<span class="font-semibold ${ok ? 'text-green-700' : 'text-amber-700'}">${ok ? '✔ ' + txtOk : '✘ ' + txtKo}</span>`;
+        return `
+            <section class="bg-white rounded-xl border border-csb-tatami p-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="font-condensed uppercase tracking-wider text-xs text-gray-400">Statut du dossier</span>
+                    ${badgeStatut(status)}
+                </div>
+                <div class="grid sm:grid-cols-2 gap-2 mt-3 text-sm">
+                    <div>Pièces justificatives : ${axis(justifOk, `complètes (${nbJustifOk}/${detailAdherents.length})`, `${nbJustifOk}/${detailAdherents.length} adhérent(s)`)}</div>
+                    <div>Règlement : ${axis(paiementOk, `réglé (${fmt(totalEnc)})`, `${fmt(totalEnc)} / ${fmt(totalDu)}`)}</div>
+                </div>
+            </section>`;
     }
 
     function sectionAdherents() {
@@ -610,6 +692,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const docs = (a.documents && typeof a.documents === 'object') ? a.documents : {};
         const applicable = DOCUMENTS.filter(d => !d.minorOnly || isMinor);
         const nbOk = applicable.filter(d => docs[d.key]).length;
+        const pieceOk = applicable.length > 0 && nbOk === applicable.length;
+        const pieceBadge = `<span class="inline-block text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${pieceOk ? 'bg-green-50 text-green-700 border-green-300' : 'bg-gray-50 text-gray-500 border-csb-tatami'}">${pieceOk ? 'Pièces OK' : 'Pièces incomplètes'}</span>`;
 
         const checks = applicable.map(d => `
             <label class="flex items-center gap-2 text-sm cursor-pointer">
@@ -636,7 +720,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="font-semibold text-csb-encre">${esc(a.prenom)} ${esc(a.nom)}</span>
                         <span class="text-xs text-gray-400 ml-2">${esc(COURS_LABEL[a.cours_type] || '—')}${age !== null ? ' · ' + age + ' ans' : ''}</span>
                     </div>
-                    ${badgeStatut(a.statut_dossier)}
+                    ${pieceBadge}
                 </div>
                 <div class="grid sm:grid-cols-2 gap-x-6 gap-y-2 mb-2">${checks}</div>
                 <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-csb-tatami/60">
@@ -788,11 +872,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         a.documents = documents;
-        const age = ageOf(a.date_naissance);
-        const applicable = DOCUMENTS.filter(d => !d.minorOnly || (age !== null && age < 18));
-        const nbOk = applicable.filter(d => documents[d.key]).length;
-        const sum = detailBody.querySelector(`[data-docs-summary="${id}"]`);
-        if (sum) sum.textContent = `${nbOk}/${applicable.length} pièce${applicable.length > 1 ? 's' : ''} validée${nbOk > 1 ? 's' : ''}`;
+        // Les pièces influent sur le statut combiné → on recalcule et on re-rend.
+        await refreshStatuts();
+        renderDetail();
     }
 
     // --- Photo (bucket privé) : URL signée à la demande ---
@@ -861,35 +943,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function todayISO() { return new Date().toISOString().slice(0, 10); }
 
-    // --- Bascule de statut dérivée du règlement ---
-    // Dossier : attente_paiement / paye_partiel / valide (selon l'encaissé).
-    // Adhérents : « Validé » dès que la famille a tout réglé ; sinon retour à
-    // « Attente paiement » s'ils étaient validés (les « Incomplet » ne sont pas
-    // touchés, sauf passage à « Validé » quand tout est réglé).
+    // --- Statut combiné dérivé (pièces justificatives × règlement) ---
+    // Recalcule le statut de la famille puis le PERSISTE sur ses dossiers et,
+    // en miroir, sur chaque adhérent (même statut pour tous les membres — c'est
+    // le statut DU DOSSIER). Appelé après tout changement de pièces ou de paiement.
     async function refreshStatuts() {
-        for (const d of detailDossiers) {
-            const enc = detailPaiements.filter(p => p.dossier_id === d.id && p.encaisse).reduce((s, p) => s + (p.montant || 0), 0);
-            const st = enc <= 0 ? 'attente_paiement' : (d.montant_total > 0 && enc >= d.montant_total ? 'valide' : 'paye_partiel');
-            if (st !== d.statut) {
-                const { error } = await sb.from('dossiers').update({ statut: st }).eq('id', d.id);
-                if (!error) d.statut = st;
-            }
-        }
+        const justifOk = detailAdherents.length > 0 && detailAdherents.every(justifComplete);
         const totalDu = detailDossiers.reduce((s, d) => s + (d.montant_total || 0), 0);
         const totalEnc = detailPaiements.filter(p => p.encaisse).reduce((s, p) => s + (p.montant || 0), 0);
-        const paid = totalDu > 0 && totalEnc >= totalDu;
-        for (const a of detailAdherents) {
-            let next = null;
-            if (paid && a.statut_dossier !== 'Validé') next = 'Validé';
-            else if (!paid && a.statut_dossier === 'Validé') next = 'Attente paiement';
-            if (!next) continue;
-            const { error } = await sb.from('adherents').update({ statut_dossier: next }).eq('id', a.id);
-            if (!error) {
-                a.statut_dossier = next;
-                const cached = adherents.find(x => x.id === a.id); // garde la liste principale cohérente
-                if (cached) cached.statut_dossier = next;
+        const paiementOk = totalDu > 0 && totalEnc >= totalDu;
+        const status = computeDossierStatus(justifOk, paiementOk);
+
+        for (const d of detailDossiers) {
+            if (d.statut !== status) {
+                const { error } = await sb.from('dossiers').update({ statut: status }).eq('id', d.id);
+                if (!error) d.statut = status;
             }
         }
+        for (const a of detailAdherents) {
+            if (a.statut_dossier === status) continue;
+            const { error } = await sb.from('adherents').update({ statut_dossier: status }).eq('id', a.id);
+            if (!error) {
+                a.statut_dossier = status;
+                const cached = adherents.find(x => x.id === a.id); // garde la liste principale cohérente
+                if (cached) cached.statut_dossier = status;
+            }
+        }
+        detailDirty = true;
     }
 
     // --- Création d'un dossier manquant (ex. adhérent ajouté à la main) ---
@@ -911,12 +991,13 @@ document.addEventListener('DOMContentLoaded', () => {
             montant_total: detail.total,
             detail_calcul: Object.assign({}, detail, { modePaiement: 'au_club', source: 'bureau' }),
             mode_paiement: 'au_club',
-            statut: 'attente_paiement'
+            statut: 'Incomplet'
         }).select().single();
         btn.disabled = false;
         if (error) { console.error(error); alert('Échec : ' + error.message); return; }
         detailDossiers.push(data);
         detailDirty = true;
+        await refreshStatuts();
         renderDetail();
     }
 

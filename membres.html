@@ -93,12 +93,13 @@
                         </select>
                     </div>
                     <div>
-                        <label class="lbl" for="f-statut">Statut / Paiement</label>
+                        <label class="lbl" for="f-statut">Statut dossier</label>
                         <select id="f-statut" class="inp">
                             <option value="">Tous</option>
-                            <option value="Incomplet">Incomplet</option>
-                            <option value="Attente paiement">Attente paiement</option>
                             <option value="Validé">Validé</option>
+                            <option value="En attente paiement">En attente paiement</option>
+                            <option value="En attente justificatifs">En attente justificatifs</option>
+                            <option value="Incomplet">Incomplet</option>
                         </select>
                     </div>
                     <span id="count" class="text-sm text-gray-500 font-condensed uppercase tracking-wider ml-auto pb-2"></span>
@@ -114,7 +115,7 @@
                                     <th class="px-4 py-3 font-semibold">Famille</th>
                                     <th class="px-4 py-3 font-semibold">Cours</th>
                                     <th class="px-4 py-3 font-semibold">Grade</th>
-                                    <th class="px-4 py-3 font-semibold">Statut / Paiement</th>
+                                    <th class="px-4 py-3 font-semibold">Statut dossier</th>
                                     <th class="px-4 py-3 font-semibold text-center" title="Membre du bureau du club (tarif réduit). N'a rien à voir avec l'accès admin au site.">Bureau<br><span class="font-normal normal-case text-[9px]">du club</span></th>
                                     <th class="px-4 py-3 font-semibold"></th>
                                 </tr>
@@ -125,8 +126,9 @@
                 </div>
 
                 <p class="text-xs text-gray-400 mt-4">
-                    Les modifications (statut, bureau, grade) sont enregistrées automatiquement à chaque changement.
-                    L'enregistrement des règlements (chèques, encaissements) sera ajouté dans une prochaine étape.
+                    « Bureau du club » et « Grade » sont enregistrés automatiquement à chaque changement.
+                    Le <strong>statut du dossier</strong> n'est pas modifiable : il se calcule (pièces justificatives × règlement).
+                    Ouvrez « Dossier › » pour valider les pièces et saisir les règlements.
                 </p>
 
                 <!-- ===================== ADMINISTRATEURS DU SITE ===================== -->
