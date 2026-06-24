@@ -9,13 +9,19 @@ Code propre, moderne, léger, maintenable. Pédagogique en français.
 - HTML5 sémantique + Tailwind CSS (CDN, config dans `assets/js/tailwind.js`)
 - Vanilla JS ES6+, API `fetch` pour charger JSON et composants
 - Chart.js (CDN) → graphiques de données (ex. radar comparatif sur `wadoryu.html`)
-- Données : **Supabase** (Postgres + Auth, SDK via CDN ESM) — cf. section BDD. Les 4 collections (`news`, `competitions`, `galerie`, `grades`) sont migrées. Le routage par collection est dans `store.js` (toutes pointent vers Supabase aujourd'hui ; les fichiers `.json` de `/data/` restent en lecture seule, comme trace historique).
+- Données : **Supabase** (Postgres + Auth, SDK via CDN ESM) — cf. section BDD. Les 5 collections CMS (`news`, `competitions`, `galerie`, `grades`, `saison`) sont migrées. Le routage par collection est dans `store.js` (toutes pointent vers Supabase aujourd'hui ; les fichiers `.json` de `/data/` restent en lecture seule, comme trace historique).
 - Hébergement : **Vercel** (déploiement auto sur push `main` = prod, preview sur les autres branches). Pas de `vercel.json` : config zéro. Vercel Web Analytics actif sur chaque page.
 
 ## Structure du projet
 /
 
-├── index.html, news.html, wadoryu.html, club.html, competitions.html, ...
+├── index.html, news.html, wadoryu.html, club.html, competitions.html, galerie.html, grades.html, ...
+
+├── inscription.html      ← module gestion : inscription en ligne (public)
+
+├── membres.html          ← module gestion : espace bureau / CRM (accès protégé)
+
+├── construction.html     ← page-verrou « En construction » (cf. section dédiée)
 
 ├── components/
 
@@ -47,7 +53,15 @@ Code propre, moderne, léger, maintenable. Pédagogique en français.
 
 │   ├── store.js      ← couche d'accès aux données + routage Supabase/JSON, cf. section BDD
 
-│   └── admin.js      ← mode admin factorisé (login Supabase Auth + modales), cf. section BDD
+│   ├── admin.js      ← mode admin factorisé (login Supabase Auth + modales), cf. section BDD
+
+│   ├── saison.js     ← horaires/tarifs éditables de l'accueil (collection `saison`)
+
+│   ├── tarifs.js     ← moteur de calcul de tarif pur (window.CSBTarifs, centimes)
+
+│   ├── inscription.js ← parcours d'inscription en ligne (module gestion)
+
+│   └── membres.js    ← espace bureau / CRM (module gestion)
 
 ├── photos/           ← images des actualités et compétitions
 
@@ -55,7 +69,9 @@ Code propre, moderne, léger, maintenable. Pédagogique en français.
 
 ├── supabase/
 
-│   └── migrations/   ← scripts SQL versionnés (tables + RLS), 1 par collection migrée
+│   ├── migrations/   ← scripts SQL versionnés (tables + RLS) : 0001-0004 collections CMS, 0005 saison, 0006-0008 module gestion
+
+│   └── seed_test_adherents.sql ← jeu de test (20 adhérents) — DEV uniquement, hors migrations
 
 ## Structure galerie.json
 - sections : club / competitions / entrainement / stages
@@ -105,9 +121,10 @@ Cartes avec coins arrondis, effet glassmorphism subtil, ombres légères.
 
 ## Mode Administrateur (CMS sans serveur)
 
-Présent sur `news.html`, `competitions.html`, `galerie.html` et `grades.html`.
+Présent sur `news.html`, `competitions.html`, `galerie.html`, `grades.html` et `index.html` (édition des horaires/tarifs de la saison, cf. collection `saison`).
+> ⚠️ Ce « Mode Administrateur CMS » (mot de passe admin unique, `admin.js`) est **distinct** du **module Gestion de club** (`membres.html`/`inscription.html`, auth multi-rôles `bureau`/`enseignant`/`adherent`) décrit plus bas. Deux systèmes d'auth Supabase coexistants pour deux usages.
 - Déverrouillage : bouton discret + **connexion Supabase Auth** (`signInWithPassword`, géré dans `admin.js`). L'email admin est constant (`window.CSB_ADMIN_EMAIL` dans `supabase.js`) ; l'admin ne saisit que son mot de passe. La session Auth autorise ensuite les écritures en base (RLS). Fonction de **réinitialisation de mot de passe** intégrée avec redirection dynamique (`window.location.origin`) pour supporter localhost/preview/prod.
-- Permet ajout/modif/suppression d'entrées, enregistrement direct en base (bouton « Enregistrer en ligne ») pour les 4 collections.
+- Permet ajout/modif/suppression d'entrées, enregistrement direct en base (bouton « Enregistrer en ligne ») pour les 5 collections (`news`, `competitions`, `galerie`, `grades`, `saison`).
 - Exception : sur `galerie.html`, seule la **structure** (quelle photo dans quelle section/stage) est enregistrée en ligne — les **fichiers images** doivent toujours être déposés manuellement dans `assets/photos/galerie/` sur GitHub (Storage pas encore migré).
 
 **Ne JAMAIS** :
@@ -126,6 +143,9 @@ Présent sur `news.html`, `competitions.html`, `galerie.html` et `grades.html`.
 **Pages terminées :** `index.html`, `wadoryu.html`, `news.html`, `club.html`, `competitions.html`, `mentions-legales.html`, `galerie.html`, `grades.html`
 - galerie.html ✅ — données (structure) sur Supabase, admin via Supabase Auth, photos toujours manuelles
 - grades.html ✅ — données sur Supabase (Kyu + Dan), admin via Supabase Auth
+- index.html ✅ — section « Informations Pratiques » (horaires/tarifs) éditable, collection `saison` ; cartes disciplines à retournement (flip) ; carrousel d'actus
+
+**Module Gestion de club (branche `feature-gestion`) — EN COURS :** `inscription.html` (Phase 1 livrée) et `membres.html` (Phase 2 en cours). Détail complet dans la section dédiée plus bas.
 
 ## Fonctionnalité temporaire : Mode "En Construction" (Restriction d'accès)
 Le site n'étant pas encore prêt pour le grand public, un système de restriction d'accès "léger" (front-end) a été mis en place pour bloquer les visiteurs tout en permettant aux membres du bureau de tester le site.
@@ -180,7 +200,8 @@ Données de **mineurs** (photos, contact d'urgence, santé) → Storage en **buc
   - **Verrou sécurité clé** : écriture `paiements` réservée au `bureau` (un membre ne peut pas s'auto-encaisser → règle d'or des attestations inviolable).
   - **1er compte bureau** = l'email admin historique (`marsella.lorenzo@gmail.com`, promu par le 5c du SQL) — adapter si différent.
 - **Phase 1 — Inscription en ligne** ✅ LIVRÉ (à tester en local) : `inscription.html` (wizard 4 étapes : famille → adhérents 1→5 → autorisations → récap), logique dans `assets/js/inscription.js`, **moteur de tarif** pur et testable dans `assets/js/tarifs.js` (`window.CSBTarifs`, tout en **centimes**). Règles d'âge au 1er sept. (Self ≥13 ans bloquant ; <18 → autorisation parentale dynamique à l'étape 3). Photos uploadées dans le bucket privé `dossiers` (chemin `<uid>/...`). **Flux de soumission** : `auth.signUp` (référent) → `upsert familles` → `insert adherents` (+ photos) → `insert dossiers` (statut `attente_paiement`). **Aucun `paiements` créé ici** (réservé au bureau). Migration complémentaire **`0007_adherents_passsport.sql`** (colonnes `pass_sport` / `pass_sport_code` sur `adherents`) — **à exécuter**. Le moteur de tarif réutilise la ligne `tarifs` Supabase (fallback `DEFAULT_CONFIG`). Pré-requis Auth : **« Confirm email » désactivé** (sinon pas de session post-signUp → l'insert RLS échoue). Limite connue Phase 1 : pas de rollback transactionnel si une étape échoue après le `signUp` (message invitant à contacter le club plutôt que resoumettre) ; **liée au site** depuis le bouton « Démarrer l'inscription » de l'accueil + l'entrée « Inscription en ligne » du menu « Le club » (desktop + mobile, `components/header.html`).
-- **Phase 2 — Espace Bureau (CRM)** ⏳ EN COURS : `membres.html` + `assets/js/membres.js` (page **bureau-only**, non liée au menu public → accès direct `/membres.html`). Portail de connexion (`signInWithPassword` + vérif rôle `bureau` via `profiles`, déconnexion si non-bureau), **tableau de bord** (adhérents par cours, dossiers par statut, membres bureau, encaissé/attendu depuis `dossiers`+`paiements`) et **liste filtrable** (recherche nom/référent, cours, statut) des `adherents` avec **édition inline auto-enregistrée** : `statut_dossier` (Incomplet/Attente paiement/Validé — la « case paiement »), `membre_bureau`, `grade_actuel`. **Section « Administrateurs du site »** : ne liste QUE les comptes de rôle `bureau`/`enseignant` (les `adherent` sont masqués). Ajouter (= promouvoir un compte **existant** par email, via `profiles.email`), changer le niveau (Administrateur=`bureau` / Enseignant=`enseignant`), retirer l'accès (→ `adherent`). Gardes anti-blocage : ni son propre accès bureau, ni le dernier bureau. La création/suppression *définitive* de comptes Auth nécessitera une fonction serveur (service_role, hors navigateur) — non faite. ⚠️ **TROIS notions distinctes à ne pas confondre** : (1) `adherents` = pratiquants (la liste principale) ; (2) `adherents.membre_bureau` = pratiquant **membre du bureau du club** (gouvernance asso, tarif 37 € — libellé UI « Bureau du club ») ; (3) `profiles.role` = **admin du site** (accès gestion, libellé UI « Administrateur »). Un adhérent peut être (2) sans être (3). `marsella.lorenzo` est (3) et n'apparaît PAS dans la liste des adhérents s'il n'a pas été inscrit comme pratiquant. Migration **`0008_profiles_email.sql`** (colonne `profiles.email` + trigger `handle_new_user` qui la remplit + backfill) — **à exécuter** : nécessaire car `auth.users` n'est pas lisible depuis le navigateur. **Reste à faire pour clore la phase** : enregistrement des **règlements** (table `paiements` : chèques, encaissements, `Incomplet → Validé` dérivé), validation des documents, vue par dossier/famille.
+- **Phase 2 — Espace Bureau (CRM)** ⏳ EN COURS : `membres.html` + `assets/js/membres.js` (page **bureau-only**, accès `/membres.html` via le bouton **« Espace Bureau »** du header — desktop à côté de « Nous rejoindre » + menu mobile, `components/header.html` ; visible publiquement mais protégée par son propre portail de connexion). Portail de connexion (`signInWithPassword` + vérif rôle `bureau` via `profiles`, déconnexion si non-bureau), **tableau de bord** (adhérents par cours, dossiers par statut, membres bureau, encaissé/attendu depuis `dossiers`+`paiements`) et **liste filtrable** (recherche nom/référent, cours, statut) des `adherents` avec **édition inline auto-enregistrée** : `statut_dossier` (Incomplet/Attente paiement/Validé — la « case paiement »), `membre_bureau`, `grade_actuel`. **Section « Administrateurs du site »** : ne liste QUE les comptes de rôle `bureau`/`enseignant` (les `adherent` sont masqués). Ajouter (= promouvoir un compte **existant** par email, via `profiles.email`), changer le niveau (Administrateur=`bureau` / Enseignant=`enseignant`), retirer l'accès (→ `adherent`). Gardes anti-blocage : ni son propre accès bureau, ni le dernier bureau. La création/suppression *définitive* de comptes Auth nécessitera une fonction serveur (service_role, hors navigateur) — non faite. ⚠️ **TROIS notions distinctes à ne pas confondre** : (1) `adherents` = pratiquants (la liste principale) ; (2) `adherents.membre_bureau` = pratiquant **membre du bureau du club** (gouvernance asso, tarif 37 € — libellé UI « Bureau du club ») ; (3) `profiles.role` = **admin du site** (accès gestion, libellé UI « Administrateur »). Un adhérent peut être (2) sans être (3). `marsella.lorenzo` est (3) et n'apparaît PAS dans la liste des adhérents s'il n'a pas été inscrit comme pratiquant. Migration **`0008_profiles_email.sql`** (colonne `profiles.email` + trigger `handle_new_user` qui la remplit + backfill) — **à exécuter** : nécessaire car `auth.users` n'est pas lisible depuis le navigateur. **Reste à faire pour clore la phase** : enregistrement des **règlements** (table `paiements` : chèques, encaissements, `Incomplet → Validé` dérivé), validation des documents, vue par dossier/famille.
+  - **Jeu de test** : `supabase/seed_test_adherents.sql` (hors `migrations/`) peuple 20 adhérents crédibles (7 bureau + 3 enseignants + 10 adhérents) avec dossiers/paiements. Emails en `@seed.test`, ré-exécutable (purge d'abord), nettoyage par `delete from auth.users where email like '%@seed.test'`. ⚠️ DEV/preview uniquement, insère dans `auth.users` (comptes d'affichage, non connectables).
 - **Phase 3 — Paiement HelloAsso** : fonction `/api/checkout` (1×/3×) + retour de paiement.
 - **Phase 4 — Espace Adhérent** : dossier/statut/ceinture + **attestation PDF** (jsPDF CDN, gated règlement complet).
 - **Phase 5 — Grades par l'enseignant** : validation d'un grade en 1 clic (réutilise les données de référence de `grades`).
@@ -213,17 +234,18 @@ Détail et priorisation dans l'historique de conversation ; points saillants à 
 
 ## Base de données : Supabase (bascule TERMINÉE pour les données)
 
-Objectif : remplacer le CMS « Git-based » (export JSON manuel → commit) par une vraie persistance, pour que l'admin enregistre directement depuis le site. **Les 4 collections sont migrées.** Reste une étape distincte et non commencée : le Storage des photos (cf. « Points de vigilance »).
+Objectif : remplacer le CMS « Git-based » (export JSON manuel → commit) par une vraie persistance, pour que l'admin enregistre directement depuis le site. **Les 5 collections sont migrées.** Reste une étape distincte et non commencée : le Storage des photos (cf. « Points de vigilance »).
 
 ### État de la bascule
 - ✅ **`news`** — migré (table Postgres + RLS, Auth, lecture/écriture depuis le site). Pilote validé.
 - ✅ **`competitions`** — migré (même patron que `news`, tableau plat).
 - ✅ **`galerie`** — migré en **document JSONB** (table singleton 1 ligne, `id = 1`), car structure imbriquée (sections + stages). Seule la **structure** est en base, les **fichiers images** restent manuels (Storage pas encore fait).
 - ✅ **`grades`** — migré (tableau plat + colonne `position` pour préserver l'ordre d'affichage d'origine, qui n'est pas un tri par id ; champ `hidden` filtré **au niveau RLS**, pas seulement côté client).
+- ✅ **`saison`** — migré en **document JSONB** (singleton `id=1`, patron `galerie`), `0005_saison.sql`. Pilote les horaires/tarifs/libellé/plage de l'accueil ; rendu via `saison.js` en *progressive enhancement* (le HTML statique d'`index.html` sert de fallback si Supabase échoue).
 
 ### Comment c'est branché
 - **`assets/js/supabase.js`** (module ESM, `window.sb`) : crée le client. URL + clé `anon`/`publishable` **publiques** (sûres : sécurité par la RLS). ⚠️ Jamais la clé `service_role` ici. Chargé via `<script type="module">` sur les pages utilisant Store/Admin.
-- **`store.js`** : route **toutes** les collections vers Supabase (`SUPABASE_COLLECTIONS`, les 4 désormais). La source JSON (`loadFromJson`/`saveToJson`) reste dans le fichier pour le filet de sécurité / référence, mais n'est plus appelée par aucune collection active. Pour les tableaux plats (news, competitions, grades), `saveToSupabase` délègue à `replaceSupabaseTable(table, rows)` (upsert + suppression du complément) — helper partagé. Les collections à structure imbriquée ou avec champ filtré par RLS (`galerie`, `grades`) ont leur propre logique.
+- **`store.js`** : route **toutes** les collections vers Supabase (`SUPABASE_COLLECTIONS`, les 5 désormais). La source JSON (`loadFromJson`/`saveToJson`) reste dans le fichier pour le filet de sécurité / référence, mais n'est plus appelée par aucune collection active. Pour les tableaux plats (news, competitions, grades), `saveToSupabase` délègue à `replaceSupabaseTable(table, rows)` (upsert + suppression du complément) — helper partagé. Les collections à structure imbriquée ou avec champ filtré par RLS (`galerie`, `grades`) ont leur propre logique.
 - **`admin.js`** : login = `signInWithPassword` (Supabase Auth) ; la session autorise les écritures (RLS « écriture = authenticated »).
 - **SQL versionné** : `supabase/migrations/00xx_<collection>.sql` (table + RLS + reprise des données). Exécuté à la main dans le SQL Editor Supabase. `0001_news.sql` sert de modèle pour un tableau plat simple ; `0003_galerie.sql` pour un document JSONB ; `0004_grades.sql` pour une RLS différenciée anon/authenticated + colonne d'ordre.
 
