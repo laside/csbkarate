@@ -586,6 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let detailAdherents = [];
     let detailDossiers = [];
     let detailPaiements = [];
+    let detailFactures = [];
     let detailDirty = false; // une écriture impactant la liste a eu lieu → recharger à la fermeture
     let tarifConfig = null;  // pour créer un dossier manquant (calcul auto)
 
@@ -646,10 +647,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const dossierIds = detailDossiers.map(d => d.id);
         if (dossierIds.length) {
-            const pRes = await sb.from('paiements').select('*').in('dossier_id', dossierIds).order('id', { ascending: true });
+            const [pRes, facRes] = await Promise.all([
+                sb.from('paiements').select('*').in('dossier_id', dossierIds).order('id', { ascending: true }),
+                sb.from('factures').select('*').in('dossier_id', dossierIds)
+            ]);
             detailPaiements = pRes.error ? [] : (pRes.data || []);
+            detailFactures = facRes.error ? [] : (facRes.data || []);
         } else {
             detailPaiements = [];
+            detailFactures = [];
         }
 
         // Pré-chargement des URLs signées pour les photos des adhérents de la famille
@@ -795,9 +801,18 @@ document.addEventListener('DOMContentLoaded', () => {
             '<tr><td colspan="5" class="px-3 py-4 text-center text-gray-400 text-sm">Aucun règlement enregistré.</td></tr>';
         const modeOpts = Object.keys(MODE_LABEL).map(k => `<option value="${k}">${MODE_LABEL[k]}</option>`).join('');
 
-        const banner = fullyPaid
-            ? `<div class="rounded-lg bg-green-50 border border-green-300 text-green-800 text-sm px-3 py-2 mt-3">✔ Dossier réglé — attestation CE/CAF déblocable (génération PDF en Phase 4).</div>`
-            : `<div class="rounded-lg bg-amber-50 border border-amber-300 text-amber-800 text-sm px-3 py-2 mt-3">⚠ Attestation CE/CAF bloquée tant que le règlement n'est pas complet (reste ${fmt(reste)}).</div>`;
+        // Facture : gate volontairement sur le règlement seul (fullyPaid), pas sur le
+        // statut combiné pièces×règlement — même logique que l'attestation adhérent.
+        const fac = detailFactures.find(f => f.dossier_id === d.id);
+        const banner = !fullyPaid
+            ? `<div class="rounded-lg bg-amber-50 border border-amber-300 text-amber-800 text-sm px-3 py-2 mt-3">⚠ Attestation CE/CAF et facture bloquées tant que le règlement n'est pas complet (reste ${fmt(reste)}).</div>`
+            : `<div class="rounded-lg bg-green-50 border border-green-300 text-green-800 text-sm px-3 py-2 mt-3 flex flex-wrap items-center justify-between gap-2">
+                   <span>✔ Dossier réglé${fac ? ` — facture n° ${esc(fac.numero)} émise le ${new Date(fac.emise_le).toLocaleDateString('fr-FR')}.` : ' — attestation CE/CAF déblocable.'}</span>
+                   <button type="button" data-facture-btn data-dossier-id="${d.id}"
+                           class="px-4 py-1.5 rounded-full font-condensed uppercase tracking-wider bg-csb-dojo text-white hover:bg-csb-encre transition text-xs whitespace-nowrap">
+                       ${fac ? '⬇ Télécharger la facture' : '⬇ Éditer la facture'}
+                   </button>
+               </div>`;
 
         return `
             <div class="bg-white rounded-xl border border-csb-tatami p-4">
@@ -887,7 +902,36 @@ document.addEventListener('DOMContentLoaded', () => {
         if (delBtn) return deletePayment(delBtn);
         const createBtn = e.target.closest('[data-create-dossier]');
         if (createBtn) return createDossier(createBtn);
+        const facBtn = e.target.closest('[data-facture-btn]');
+        if (facBtn) return factureAction(facBtn);
     });
+
+    // --- Facture (document fiscal numéroté) : émission OU téléchargement si déjà émise ---
+    // L'émission passe par la RPC `emettre_facture` (SECURITY DEFINER, bureau-only,
+    // migration 0013) : numérotation atomique côté base, jamais côté client.
+    async function factureAction(btn) {
+        const dossierId = Number(btn.dataset.dossierId);
+        const existing = detailFactures.find(f => f.dossier_id === dossierId);
+        if (existing) return CSBPdf.facture(existing);
+
+        btn.disabled = true;
+        const original = btn.textContent;
+        btn.textContent = 'Émission…';
+        try {
+            const { data, error } = await sb.rpc('emettre_facture', { p_dossier_id: dossierId });
+            if (error) throw error;
+            const fac = Array.isArray(data) ? data[0] : data;
+            detailFactures.push(fac);
+            detailDirty = true;
+            await CSBPdf.facture(fac);
+            renderDetail();
+        } catch (err) {
+            console.error(err);
+            alert('Facture impossible : ' + (err.message || err));
+            btn.disabled = false;
+            btn.textContent = original;
+        }
+    }
 
     // --- Validation manuelle d'une pièce (jsonb, sans re-render : garde le scroll) ---
     async function toggleDocument(chk) {
