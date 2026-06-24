@@ -9,6 +9,8 @@ on:
   push:
     branches:
       - '**'
+    branches-ignore:
+      - 'deploy-toile-libre' # Le workflow classique ignorera cette branche
 
 permissions:
   contents: write
