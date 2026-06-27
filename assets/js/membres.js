@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fSearch = $('#f-search');
     const fCours = $('#f-cours');
     const fStatut = $('#f-statut');
+    const btnExport = $('#btn-export');
     const rolesRowsEl = $('#roles-rows');
 
     // --- Rôles (alignés sur le CHECK de la migration 0006) ---
@@ -230,6 +231,44 @@ document.addEventListener('DOMContentLoaded', () => {
         if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
         return age;
     }
+
+    btnExport.addEventListener('click', () => {
+        const rows = filtered();
+        if (!rows.length) { alert('Aucun adhérent à exporter.'); return; }
+
+        const head = ['Nom', 'Prénom', 'Date Naissance', 'Âge', 'Genre', 'Cours', 'Grade', 'Bureau', 'Email Famille', 'Téléphone Urgence', 'Référent', 'Statut Dossier'];
+        const csvRows = [head.join(';')];
+
+        for (const a of rows) {
+            const row = [
+                a.nom,
+                a.prenom,
+                a.date_naissance ? new Date(a.date_naissance).toLocaleDateString('fr-FR') : '',
+                ageOf(a.date_naissance) ?? '',
+                a.genre || '',
+                a.cours_type || '',
+                a.grade_actuel || '',
+                a.membre_bureau ? 'Oui' : 'Non',
+                a.familles?.email || '',
+                a.familles?.telephone_urgence || '',
+                a.familles?.nom_referent || '',
+                statutOf(a) || ''
+            ].map(v => {
+                const s = String(v).replace(/"/g, '""');
+                return /[;\n"]/.test(s) ? `"${s}"` : s;
+            });
+            csvRows.push(row.join(';'));
+        }
+
+        const bom = new Uint8Array([0xEF, 0xBB, 0xBF]); // UTF-8 BOM for Excel
+        const blob = new Blob([bom, csvRows.join('\n')], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `csb-adherents-${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+    });
 
     // =========================================================
     // Statut de dossier — dérivation (pièces justificatives × règlement)
