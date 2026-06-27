@@ -81,11 +81,15 @@
         // 1) Cotisations de base, ligne par ligne.
         const lignes = liste.map((a, i) => {
             const base = cotisationBase(a, c);
+            const partLicence = c.tarif_bureau;
+            const partClub = Math.max(0, base.montant - partLicence);
             return {
                 index: i,
                 nom: a.prenom || `Adhérent ${i + 1}`,
                 label: base.label,
-                montant: base.montant
+                montant: base.montant,
+                partLicence,
+                partClub
             };
         });
         const sousTotal = lignes.reduce((s, l) => s + l.montant, 0);

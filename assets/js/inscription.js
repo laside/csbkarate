@@ -183,10 +183,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         let html = '<ul class="space-y-2">';
         detail.lignes.forEach((l) => {
-            html += `<li class="flex justify-between gap-3">
-                        <span>${esc(l.nom)} <span class="${p.muted}">· ${esc(l.label)}</span></span>
-                        <span class="whitespace-nowrap">${f(l.montant)}</span>
-                     </li>`;
+            html += `<li class="flex flex-col mb-2">
+                        <div class="flex justify-between gap-3">
+                            <span>${esc(l.nom)} <span class="${p.muted}">· ${esc(l.label)}</span></span>
+                            <span class="whitespace-nowrap">${f(l.montant)}</span>
+                        </div>`;
+            if (l.partClub > 0) {
+                html += `<div class="flex justify-between pl-4 mt-0.5 text-xs ${p.muted}">
+                            <span>↳ Licence & assurance</span>
+                            <span>${f(l.partLicence)}</span>
+                         </div>
+                         <div class="flex justify-between pl-4 text-xs ${p.muted}">
+                            <span>↳ Forfait club</span>
+                            <span>${f(l.partClub)}</span>
+                         </div>`;
+            } else {
+                html += `<div class="flex justify-between pl-4 mt-0.5 text-xs ${p.muted}">
+                            <span>↳ Licence & assurance uniquement</span>
+                            <span>${f(l.partLicence)}</span>
+                         </div>`;
+            }
+            html += `</li>`;
         });
         html += '</ul>';
         html += `<div class="flex justify-between mt-3 pt-3 border-t ${p.divider}">
