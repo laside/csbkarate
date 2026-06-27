@@ -16,7 +16,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // Modèle vide (sécurité).
-    let data = { label: '', debut: '', fin: '', horaires: [], tarifs: [], tarifsNote: '', licenceNote: '' };
+    let data = { label: '', debut: '', fin: '', horaires: [], tarifs: [], tarifsNote: '', licenceNote: '', tarifLicence: 3700 };
 
     // Échappe le HTML pour injecter du contenu admin en toute sécurité.
     const esc = (str) => String(str ?? '').replace(/[&<>"']/g, c =>
@@ -120,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const inFin = document.getElementById('saison-input-fin');
     const inTarifsNote = document.getElementById('saison-input-tarifs-note');
     const inLicenceNote = document.getElementById('saison-input-licence-note');
+    const inLicenceTarif = document.getElementById('saison-input-licence-tarif');
     const horairesList = document.getElementById('admin-horaires-list');
     const tarifsList = document.getElementById('admin-tarifs-list');
     const btnAddHoraire = document.getElementById('btn-add-horaire');
@@ -144,9 +145,22 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>`;
     }
 
+    // Types de cours correspondant au formulaire d'inscription.
+    const COURS_TYPES = [
+        { value: '',              label: '— (affichage seul)' },
+        { value: 'Baby',          label: 'Baby Karaté' },
+        { value: 'Enfant',        label: 'Enfants' },
+        { value: 'Adulte',        label: 'Ado / Adulte' },
+        { value: 'Self-Defense',  label: 'Self-Défense Fém.' }
+    ];
+
     function tarifRow(t = {}) {
+        const opts = COURS_TYPES.map(ct =>
+            `<option value="${esc(ct.value)}" ${t.coursType === ct.value ? 'selected' : ''}>${esc(ct.label)}</option>`
+        ).join('');
         return `
-            <div data-row class="flex gap-3 items-center">
+            <div data-row class="flex flex-wrap gap-3 items-center">
+                <select data-k="coursType" class="${FIELD} w-44" title="Type de cours (pour le calcul d'inscription)">${opts}</select>
                 <input data-k="label" value="${esc(t.label)}" placeholder="Catégorie (ex : Enfants)" class="${FIELD} flex-grow">
                 <input data-k="prix" value="${esc(t.prix)}" placeholder="183 €" class="${FIELD} w-28">
                 <button type="button" data-del class="text-csb-corail font-bold px-2 hover:scale-110 transition" title="Supprimer">✕</button>
@@ -162,6 +176,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (inFin) data.fin = inFin.value;
         if (inTarifsNote) data.tarifsNote = inTarifsNote.value.trim();
         if (inLicenceNote) data.licenceNote = inLicenceNote.value.trim();
+        // Tarif licence : stocké en centimes (l'admin saisit en euros).
+        if (inLicenceTarif) {
+            const v = parseFloat(inLicenceTarif.value);
+            data.tarifLicence = isFinite(v) ? Math.round(v * 100) : 3700;
+        }
 
         if (horairesList) {
             data.horaires = [...horairesList.querySelectorAll('[data-row]')].map(row => ({
@@ -174,6 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (tarifsList) {
             data.tarifs = [...tarifsList.querySelectorAll('[data-row]')].map(row => ({
+                coursType: row.querySelector('[data-k="coursType"]').value,
                 label: row.querySelector('[data-k="label"]').value.trim(),
                 prix: row.querySelector('[data-k="prix"]').value.trim()
             }));
@@ -189,6 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (inFin) inFin.value = data.fin || '';
         if (inTarifsNote) inTarifsNote.value = data.tarifsNote || '';
         if (inLicenceNote) inLicenceNote.value = data.licenceNote || '';
+        // Centimes -> euros pour l'affichage admin.
+        if (inLicenceTarif) inLicenceTarif.value = ((data.tarifLicence || 3700) / 100);
         renderAdminLists();
     }
 

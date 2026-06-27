@@ -42,14 +42,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- État ---
     let currentStep = 1;
-    let config = CSBTarifs.DEFAULT_CONFIG; // remplacé par la ligne `tarifs` si dispo
+    let config = CSBTarifs.DEFAULT_CONFIG; // remplacé par les données saison si dispo
 
     // =========================================================
-    // Chargement de la config tarifaire (lecture publique via RLS)
+    // Chargement de la config tarifaire depuis la collection `saison`
+    // (JSONB singleton id=1). Les tarifs saisis par l'admin dans la
+    // section « Informations Pratiques » de l'accueil pilotent le calcul.
     // =========================================================
-    sb.from('tarifs').select('*').eq('saison', SAISON).maybeSingle()
-        .then(({ data, error }) => {
-            if (!error && data) config = data;
+    sb.from('saison').select('data').eq('id', 1).maybeSingle()
+        .then(({ data: row, error }) => {
+            if (!error && row && row.data) {
+                const saison = row.data;
+                // Construire la map cotisations depuis les lignes tarifs de la saison.
+                const cotisations = {};
+                (saison.tarifs || []).forEach(t => {
+                    if (t.coursType && t.prix) {
+                        cotisations[t.coursType] = CSBTarifs.parsePrixText(t.prix);
+                    }
+                });
+                if (Object.keys(cotisations).length) {
+                    config = Object.assign({}, config, {
+                        cotisations,
+                        tarif_licence: saison.tarifLicence || config.tarif_licence || 3700
+                    });
+                }
+            }
             recompute();
         })
         .catch(() => recompute()); // en cas d'échec : on garde DEFAULT_CONFIG
@@ -187,23 +204,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="flex justify-between gap-3">
                             <span>${esc(l.nom)} <span class="${p.muted}">· ${esc(l.label)}</span></span>
                             <span class="whitespace-nowrap">${f(l.montant)}</span>
-                        </div>`;
-            if (l.partClub > 0) {
-                html += `<div class="flex justify-between pl-4 mt-0.5 text-xs ${p.muted}">
-                            <span>↳ Licence & assurance</span>
+                        </div>
+                        <div class="flex justify-between pl-4 mt-0.5 text-xs ${p.muted}">
+                            <span>↳ Cours</span>
+                            <span>${f(l.partCours)}</span>
+                        </div>
+                        <div class="flex justify-between pl-4 text-xs ${p.muted}">
+                            <span>↳ Licence & assurance FFK</span>
                             <span>${f(l.partLicence)}</span>
-                         </div>
-                         <div class="flex justify-between pl-4 text-xs ${p.muted}">
-                            <span>↳ Forfait club</span>
-                            <span>${f(l.partClub)}</span>
-                         </div>`;
-            } else {
-                html += `<div class="flex justify-between pl-4 mt-0.5 text-xs ${p.muted}">
-                            <span>↳ Licence & assurance uniquement</span>
-                            <span>${f(l.partLicence)}</span>
-                         </div>`;
-            }
-            html += `</li>`;
+                        </div>
+                     </li>`;
         });
         html += '</ul>';
         html += `<div class="flex justify-between mt-3 pt-3 border-t ${p.divider}">

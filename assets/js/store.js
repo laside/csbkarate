@@ -36,7 +36,7 @@
     const EMPTY_GALERIE = { sections: { club: [], competitions: [], entrainement: [], stages: [] } };
 
     // Structure vide de la saison (sécurité si la ligne est absente).
-    const EMPTY_SAISON = { label: '', debut: '', fin: '', horaires: [], tarifs: [], tarifsNote: '', licenceNote: '' };
+    const EMPTY_SAISON = { label: '', debut: '', fin: '', horaires: [], tarifs: [], tarifsNote: '', licenceNote: '', tarifLicence: 3700 };
 
     // Récupère le client Supabase ou échoue clairement s'il manque.
     function sb() {
