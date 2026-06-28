@@ -9,46 +9,86 @@
 // ⚠️ TOUT EN CENTIMES (integer). 210 € => 21000. Jamais de flottant en euros
 // (erreurs d'arrondi). On ne convertit en « 210,00 € » qu'à l'affichage.
 //
-// SOURCE DES MONTANTS : dossier d'inscription papier (PAS les chiffres Gemini).
-//   Adulte 210 € · Enfant 180 € · Self-défense 130 € · Membre du bureau 37 €.
-//   Remise famille (sur N inscrits) : 2→10 € · 3→30 € · 4→50 € · 5+→70 €.
-//   Remise Pass'Sport : 50 € par adhérent éligible (valeur configurable).
+// DEUX FORMATS DE CONFIG ACCEPTÉS :
+//   • « dynamique » (depuis saison admin) : { cotisations: { Baby:18300, ... }, tarif_licence:3700, ... }
+//   • « legacy » (table `tarifs` Supabase) : { cotisation_adulte:21000, ..., tarif_bureau:3700, ... }
+// Le format dynamique est prioritaire quand `config.cotisations` existe.
 // =============================================================
 
 (function (global) {
     'use strict';
 
-    // Config de secours si la base n'a pas (encore) répondu. Mêmes valeurs que
-    // le seed de la table `tarifs` (migration 0005). Clés en snake_case pour
-    // pouvoir passer la ligne Supabase telle quelle, sans remapper.
+    // Config de secours (valeurs du tableau tarifaire saison 2026-2027).
+    // Format « dynamique » par défaut — backward compat legacy préservée
+    // dans normalizeConfig().
     const DEFAULT_CONFIG = {
+        // Tarifs cours HORS licence (centimes), indexés par coursType du formulaire.
+        cotisations: {
+            'Baby':          18300,
+            'Enfant':        20300,
+            'Adulte':        23300,
+            'Self-Defense':  13300
+        },
+        // Licence FFK : montant ajouté à chaque adhérent.
+        tarif_licence:     3700,
+        // Remise Pass'Sport par adhérent éligible.
+        remise_passsport:  5000,
+        // Remise famille (clé = nb d'inscrits, « 5 » = 5 et +).
+        remises_famille:   { '2': 1000, '3': 3000, '4': 5000, '5': 7000 },
+        // Legacy (backward compat membres.js / table tarifs).
         cotisation_adulte: 21000,
         cotisation_enfant: 18000,
         cotisation_self:   13000,
-        tarif_bureau:      3700,
-        remise_passsport:  5000,
-        remises_famille:   { '2': 1000, '3': 3000, '4': 5000, '5': 7000 }
+        tarif_bureau:      3700
     };
 
-    // Libellés lisibles par type de cours (pour le détail du calcul).
+    // Libellés lisibles par coursType.
     const LABELS = {
-        'Adulte':       'Cotisation adulte',
-        'Enfant':       'Cotisation enfant',
-        'Self-Defense': 'Cotisation self-défense'
+        'Baby':          'Baby Karaté',
+        'Enfant':        'Enfants',
+        'Adulte':        'Ado / Adulte',
+        'Self-Defense':  'Self-Défense Fém.'
     };
 
-    // Cotisation de base d'un adhérent. Le « membre du bureau » est un tarif
-    // fixe qui REMPLACE le tarif de cours (37 €), quel que soit le cours suivi.
+    // Cotisation d'un adhérent. Le « membre du bureau » est un tarif fixe
+    // (37 €, licence seule) qui REMPLACE le tarif de cours, quel que soit le
+    // format de config — d'où sa PRIORITÉ ABSOLUE, avant les deux chemins de
+    // calcul. (Sinon la map `cotisations` du format dynamique masquerait cette
+    // règle et facturerait le plein tarif à un membre du bureau.)
     function cotisationBase(adherent, config) {
+        const coursType = adherent.coursType;
+
+        // --- Priorité : membre du bureau (tarif fixe) ---
         if (adherent.membreBureau) {
-            return { montant: config.tarif_bureau, label: 'Membre du bureau' };
+            const m = config.tarif_bureau || 0;
+            return { montant: m, partCours: 0, partLicence: m, label: 'Membre du bureau' };
         }
+
+        // --- Format dynamique (saison admin) : cotisations map + licence en sus ---
+        if (config.cotisations && config.cotisations[coursType] !== undefined) {
+            const partCours  = config.cotisations[coursType];
+            const partLicence = config.tarif_licence || 0;
+            return {
+                montant: partCours + partLicence,
+                partCours,
+                partLicence,
+                label: LABELS[coursType] || coursType || 'Cotisation'
+            };
+        }
+
+        // --- Format legacy (table `tarifs`) ---
         const montant = {
             'Adulte':       config.cotisation_adulte,
             'Enfant':       config.cotisation_enfant,
             'Self-Defense': config.cotisation_self
-        }[adherent.coursType] || 0;
-        return { montant, label: LABELS[adherent.coursType] || 'Cotisation' };
+        }[coursType] || 0;
+        const partLicence = config.tarif_licence || config.tarif_bureau || 0;
+        return {
+            montant,
+            partCours: Math.max(0, montant - partLicence),
+            partLicence,
+            label: LABELS[coursType] || 'Cotisation'
+        };
     }
 
     // Remise famille selon le NOMBRE d'inscrits dans le panier (paliers).
@@ -60,13 +100,15 @@
         return Number(table[palier] || 0);
     }
 
-    // Fusionne la config reçue (ligne Supabase, possiblement partielle) avec
-    // les valeurs par défaut. Ne touche jamais la config d'origine.
+    // Fusionne la config reçue avec les valeurs par défaut.
     function normalizeConfig(config) {
         const c = Object.assign({}, DEFAULT_CONFIG, config || {});
-        // remises_famille peut arriver en jsonb (clés string) : on garde l'objet.
         if (!c.remises_famille || typeof c.remises_famille !== 'object') {
             c.remises_famille = DEFAULT_CONFIG.remises_famille;
+        }
+        // Garantir la map cotisations si elle a été fournie.
+        if (config && config.cotisations && typeof config.cotisations === 'object') {
+            c.cotisations = config.cotisations;
         }
         return c;
     }
@@ -78,14 +120,16 @@
         const c = normalizeConfig(config);
         const liste = Array.isArray(adherents) ? adherents : [];
 
-        // 1) Cotisations de base, ligne par ligne.
+        // 1) Cotisations, ligne par ligne — cours + licence.
         const lignes = liste.map((a, i) => {
             const base = cotisationBase(a, c);
             return {
                 index: i,
                 nom: a.prenom || `Adhérent ${i + 1}`,
                 label: base.label,
-                montant: base.montant
+                montant: base.montant,
+                partCours: base.partCours,
+                partLicence: base.partLicence
             };
         });
         const sousTotal = lignes.reduce((s, l) => s + l.montant, 0);
@@ -121,10 +165,40 @@
         }).format((centimes || 0) / 100);
     }
 
+    // ---- Utilitaire : parse « 183 € » -> 18300 (centimes) ---------------
+    // Utilisé par inscription.js pour convertir les prix textuels de la saison.
+    function parsePrixText(str) {
+        const n = parseFloat(String(str || '').replace(/[^\d.,]/g, '').replace(',', '.'));
+        return isFinite(n) ? Math.round(n * 100) : 0;
+    }
+
+    // ---- Config dynamique depuis un document `saison` (JSONB) ------------
+    // Construit { cotisations, tarif_licence } à partir des lignes tarifs de
+    // la saison qui portent un `coursType`. Renvoie null si aucune ligne n'est
+    // mappée (le caller garde alors sa config DEFAULT/legacy). Factorise la
+    // logique partagée entre inscription.js (public) et membres.js (bureau)
+    // pour que les deux parcours produisent le MÊME total.
+    function configFromSaison(saison) {
+        if (!saison || typeof saison !== 'object') return null;
+        const cotisations = {};
+        (saison.tarifs || []).forEach(t => {
+            if (t && t.coursType && t.prix) {
+                cotisations[t.coursType] = parsePrixText(t.prix);
+            }
+        });
+        if (!Object.keys(cotisations).length) return null;
+        return {
+            cotisations,
+            tarif_licence: saison.tarifLicence || DEFAULT_CONFIG.tarif_licence
+        };
+    }
+
     global.CSBTarifs = {
         DEFAULT_CONFIG,
         computeTarif,
         formatEuros,
+        parsePrixText,
+        configFromSaison,
         // exposés pour tests unitaires éventuels
         cotisationBase,
         remiseFamille

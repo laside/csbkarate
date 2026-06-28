@@ -42,14 +42,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- État ---
     let currentStep = 1;
-    let config = CSBTarifs.DEFAULT_CONFIG; // remplacé par la ligne `tarifs` si dispo
+    let config = CSBTarifs.DEFAULT_CONFIG; // remplacé par les données saison si dispo
 
     // =========================================================
-    // Chargement de la config tarifaire (lecture publique via RLS)
+    // Chargement de la config tarifaire depuis la collection `saison`
+    // (JSONB singleton id=1). Les tarifs saisis par l'admin dans la
+    // section « Informations Pratiques » de l'accueil pilotent le calcul.
     // =========================================================
-    sb.from('tarifs').select('*').eq('saison', SAISON).maybeSingle()
-        .then(({ data, error }) => {
-            if (!error && data) config = data;
+    sb.from('saison').select('data').eq('id', 1).maybeSingle()
+        .then(({ data: row, error }) => {
+            if (!error && row && row.data) {
+                // Helper partagé avec membres.js : même prix des deux côtés.
+                const dyn = CSBTarifs.configFromSaison(row.data);
+                if (dyn) config = Object.assign({}, config, dyn);
+            }
             recompute();
         })
         .catch(() => recompute()); // en cas d'échec : on garde DEFAULT_CONFIG
@@ -150,7 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
             coursType: v('coursType'),
             grade: v('grade') || 'Ceinture Blanche',
             numeroPasseport: v('numeroPasseport'),
-            membreBureau: checked('membreBureau'),
+            // Case retirée du formulaire : la réduction « membre du bureau »
+            // est gérée au back-office (membres.html), jamais à l'inscription.
+            membreBureau: false,
             droitImage: checked('droitImage'),
             passSport: checked('passSport'),
             passSportCode: v('passSportCode'),
@@ -183,9 +191,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         let html = '<ul class="space-y-2">';
         detail.lignes.forEach((l) => {
-            html += `<li class="flex justify-between gap-3">
-                        <span>${esc(l.nom)} <span class="${p.muted}">· ${esc(l.label)}</span></span>
-                        <span class="whitespace-nowrap">${f(l.montant)}</span>
+            html += `<li class="flex flex-col mb-2">
+                        <div class="flex justify-between gap-3">
+                            <span>${esc(l.nom)} <span class="${p.muted}">· ${esc(l.label)}</span></span>
+                            <span class="whitespace-nowrap">${f(l.montant)}</span>
+                        </div>
+                        <div class="flex justify-between pl-4 mt-0.5 text-xs ${p.muted}">
+                            <span>↳ Cours</span>
+                            <span>${f(l.partCours)}</span>
+                        </div>
+                        <div class="flex justify-between pl-4 text-xs ${p.muted}">
+                            <span>↳ Licence & assurance FFK</span>
+                            <span>${f(l.partLicence)}</span>
+                        </div>
                      </li>`;
         });
         html += '</ul>';

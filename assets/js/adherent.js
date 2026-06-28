@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
     ));
     const fmt = (c) => CSBTarifs.formatEuros(c);
-    const COURS_LABEL = { 'Enfant': 'Enfant', 'Adulte': 'Adulte', 'Self-Defense': 'Self-défense' };
+    const COURS_LABEL = { 'Baby': 'Baby Karaté', 'Enfant': 'Enfant', 'Adulte': 'Adulte', 'Self-Defense': 'Self-défense' };
 
     // --- Éléments ---
     const boot = $('#boot');

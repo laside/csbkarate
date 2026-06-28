@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'Ceinture Blanche', 'Ceinture Jaune', 'Ceinture Orange', 'Ceinture Verte',
         'Ceinture Bleue', 'Ceinture Marron', '1er Dan', '2e Dan', '3e Dan', '4e Dan', '5e Dan'
     ];
-    const COURS_LABEL = { 'Enfant': 'Enfant', 'Adulte': 'Adulte', 'Self-Defense': 'Self-défense' };
+    const COURS_LABEL = { 'Baby': 'Baby Karaté', 'Enfant': 'Enfant', 'Adulte': 'Adulte', 'Self-Defense': 'Self-défense' };
 
     // --- Éléments ---
     const boot = $('#boot');
@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fSearch = $('#f-search');
     const fCours = $('#f-cours');
     const fStatut = $('#f-statut');
+    const btnExport = $('#btn-export');
     const rolesRowsEl = $('#roles-rows');
 
     // --- Rôles (alignés sur le CHECK de la migration 0006) ---
@@ -178,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         statsEl.innerHTML = [
             statCard('Adhérents', total,
-                `${byCours('Enfant')} enfants · ${byCours('Adulte')} adultes · ${byCours('Self-Defense')} self`, 'encre'),
+                `${byCours('Baby')} baby · ${byCours('Enfant')} enfants · ${byCours('Adulte')} adultes · ${byCours('Self-Defense')} self`, 'encre'),
             statCard('Dossiers validés', byDossier('Validé'),
                 `${byDossier('En attente paiement')} att. paiement · ${byDossier('En attente justificatifs')} att. justif · ${byDossier('Incomplet')} incomplets`, 'green'),
             statCard('Bureau du club', nbBureau, 'pratiquants · tarif réduit (37 €)', 'corail'),
@@ -230,6 +231,44 @@ document.addEventListener('DOMContentLoaded', () => {
         if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
         return age;
     }
+
+    btnExport.addEventListener('click', () => {
+        const rows = filtered();
+        if (!rows.length) { alert('Aucun adhérent à exporter.'); return; }
+
+        const head = ['Nom', 'Prénom', 'Date Naissance', 'Âge', 'Genre', 'Cours', 'Grade', 'Bureau', 'Email Famille', 'Téléphone Urgence', 'Référent', 'Statut Dossier'];
+        const csvRows = [head.join(';')];
+
+        for (const a of rows) {
+            const row = [
+                a.nom,
+                a.prenom,
+                a.date_naissance ? new Date(a.date_naissance).toLocaleDateString('fr-FR') : '',
+                ageOf(a.date_naissance) ?? '',
+                a.genre || '',
+                a.cours_type || '',
+                a.grade_actuel || '',
+                a.membre_bureau ? 'Oui' : 'Non',
+                a.familles?.email || '',
+                a.familles?.telephone_urgence || '',
+                a.familles?.nom_referent || '',
+                statutOf(a) || ''
+            ].map(v => {
+                const s = String(v).replace(/"/g, '""');
+                return /[;\n"]/.test(s) ? `"${s}"` : s;
+            });
+            csvRows.push(row.join(';'));
+        }
+
+        const bom = new Uint8Array([0xEF, 0xBB, 0xBF]); // UTF-8 BOM for Excel
+        const blob = new Blob([bom, csvRows.join('\n')], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `csb-adherents-${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+    });
 
     // =========================================================
     // Statut de dossier — dérivation (pièces justificatives × règlement)
@@ -599,8 +638,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadTarifConfig() {
         if (tarifConfig) return tarifConfig;
-        const { data } = await sb.from('tarifs').select('*').eq('saison', SAISON).maybeSingle();
-        tarifConfig = data || CSBTarifs.DEFAULT_CONFIG;
+        // Source de vérité : collection `saison` (mêmes prix que l'inscription
+        // en ligne, via le helper partagé). Fallback : table `tarifs` legacy,
+        // puis DEFAULT_CONFIG. Évite que le bureau et le public calculent des
+        // totaux différents pour la même adhésion.
+        const { data: srow } = await sb.from('saison').select('data').eq('id', 1).maybeSingle();
+        const dyn = srow && srow.data ? CSBTarifs.configFromSaison(srow.data) : null;
+        if (dyn) {
+            tarifConfig = Object.assign({}, CSBTarifs.DEFAULT_CONFIG, dyn);
+        } else {
+            const { data } = await sb.from('tarifs').select('*').eq('saison', SAISON).maybeSingle();
+            tarifConfig = data || CSBTarifs.DEFAULT_CONFIG;
+        }
         return tarifConfig;
     }
 
