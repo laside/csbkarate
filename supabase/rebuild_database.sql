@@ -49,9 +49,13 @@ drop policy if exists "dossiers_obj_insert_own"             on storage.objects;
 drop policy if exists "dossiers_obj_select_own_or_bureau"   on storage.objects;
 drop policy if exists "dossiers_obj_delete_own_or_bureau"   on storage.objects;
 
--- 0.2) Contenu + buckets Storage (objets d'abord, sinon le bucket refuse de partir).
-delete from storage.objects where bucket_id in ('dossiers', 'galerie', 'news');
-delete from storage.buckets where id        in ('dossiers', 'galerie', 'news');
+-- 0.2) Buckets Storage : CONSERVÉS tels quels.
+--      Supabase interdit la suppression directe des objets en SQL
+--      (trigger storage.protect_delete → erreur 42501). Inutile d'y toucher :
+--      les migrations 0006/0011/0012 recréent les buckets en « on conflict do
+--      nothing », donc aucun drop n'est nécessaire pour reconstruire le schéma.
+--      ▶ Pour repartir d'images VIERGES, vider les buckets dossiers/galerie/news
+--        à la main via Dashboard > Storage (ou l'API Storage), avant ce script.
 
 -- 0.3) Trigger Auth (recréé par 0006/0008).
 drop trigger if exists on_auth_user_created on auth.users;
