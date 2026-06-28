@@ -638,8 +638,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadTarifConfig() {
         if (tarifConfig) return tarifConfig;
-        const { data } = await sb.from('tarifs').select('*').eq('saison', SAISON).maybeSingle();
-        tarifConfig = data || CSBTarifs.DEFAULT_CONFIG;
+        // Source de vérité : collection `saison` (mêmes prix que l'inscription
+        // en ligne, via le helper partagé). Fallback : table `tarifs` legacy,
+        // puis DEFAULT_CONFIG. Évite que le bureau et le public calculent des
+        // totaux différents pour la même adhésion.
+        const { data: srow } = await sb.from('saison').select('data').eq('id', 1).maybeSingle();
+        const dyn = srow && srow.data ? CSBTarifs.configFromSaison(srow.data) : null;
+        if (dyn) {
+            tarifConfig = Object.assign({}, CSBTarifs.DEFAULT_CONFIG, dyn);
+        } else {
+            const { data } = await sb.from('tarifs').select('*').eq('saison', SAISON).maybeSingle();
+            tarifConfig = data || CSBTarifs.DEFAULT_CONFIG;
+        }
         return tarifConfig;
     }
 

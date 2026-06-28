@@ -50,9 +50,19 @@
         'Self-Defense':  'Self-Défense Fém.'
     };
 
-    // Cotisation d'un adhérent. Deux chemins selon le format de config.
+    // Cotisation d'un adhérent. Le « membre du bureau » est un tarif fixe
+    // (37 €, licence seule) qui REMPLACE le tarif de cours, quel que soit le
+    // format de config — d'où sa PRIORITÉ ABSOLUE, avant les deux chemins de
+    // calcul. (Sinon la map `cotisations` du format dynamique masquerait cette
+    // règle et facturerait le plein tarif à un membre du bureau.)
     function cotisationBase(adherent, config) {
         const coursType = adherent.coursType;
+
+        // --- Priorité : membre du bureau (tarif fixe) ---
+        if (adherent.membreBureau) {
+            const m = config.tarif_bureau || 0;
+            return { montant: m, partCours: 0, partLicence: m, label: 'Membre du bureau' };
+        }
 
         // --- Format dynamique (saison admin) : cotisations map + licence en sus ---
         if (config.cotisations && config.cotisations[coursType] !== undefined) {
@@ -66,11 +76,7 @@
             };
         }
 
-        // --- Format legacy (table `tarifs`, membres.js) ---
-        if (adherent.membreBureau) {
-            const m = config.tarif_bureau || 0;
-            return { montant: m, partCours: 0, partLicence: m, label: 'Membre du bureau' };
-        }
+        // --- Format legacy (table `tarifs`) ---
         const montant = {
             'Adulte':       config.cotisation_adulte,
             'Enfant':       config.cotisation_enfant,
@@ -166,11 +172,33 @@
         return isFinite(n) ? Math.round(n * 100) : 0;
     }
 
+    // ---- Config dynamique depuis un document `saison` (JSONB) ------------
+    // Construit { cotisations, tarif_licence } à partir des lignes tarifs de
+    // la saison qui portent un `coursType`. Renvoie null si aucune ligne n'est
+    // mappée (le caller garde alors sa config DEFAULT/legacy). Factorise la
+    // logique partagée entre inscription.js (public) et membres.js (bureau)
+    // pour que les deux parcours produisent le MÊME total.
+    function configFromSaison(saison) {
+        if (!saison || typeof saison !== 'object') return null;
+        const cotisations = {};
+        (saison.tarifs || []).forEach(t => {
+            if (t && t.coursType && t.prix) {
+                cotisations[t.coursType] = parsePrixText(t.prix);
+            }
+        });
+        if (!Object.keys(cotisations).length) return null;
+        return {
+            cotisations,
+            tarif_licence: saison.tarifLicence || DEFAULT_CONFIG.tarif_licence
+        };
+    }
+
     global.CSBTarifs = {
         DEFAULT_CONFIG,
         computeTarif,
         formatEuros,
         parsePrixText,
+        configFromSaison,
         // exposés pour tests unitaires éventuels
         cotisationBase,
         remiseFamille

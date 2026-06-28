@@ -52,20 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
     sb.from('saison').select('data').eq('id', 1).maybeSingle()
         .then(({ data: row, error }) => {
             if (!error && row && row.data) {
-                const saison = row.data;
-                // Construire la map cotisations depuis les lignes tarifs de la saison.
-                const cotisations = {};
-                (saison.tarifs || []).forEach(t => {
-                    if (t.coursType && t.prix) {
-                        cotisations[t.coursType] = CSBTarifs.parsePrixText(t.prix);
-                    }
-                });
-                if (Object.keys(cotisations).length) {
-                    config = Object.assign({}, config, {
-                        cotisations,
-                        tarif_licence: saison.tarifLicence || config.tarif_licence || 3700
-                    });
-                }
+                // Helper partagé avec membres.js : même prix des deux côtés.
+                const dyn = CSBTarifs.configFromSaison(row.data);
+                if (dyn) config = Object.assign({}, config, dyn);
             }
             recompute();
         })
@@ -167,7 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
             coursType: v('coursType'),
             grade: v('grade') || 'Ceinture Blanche',
             numeroPasseport: v('numeroPasseport'),
-            membreBureau: checked('membreBureau'),
+            // Case retirée du formulaire : la réduction « membre du bureau »
+            // est gérée au back-office (membres.html), jamais à l'inscription.
+            membreBureau: false,
             droitImage: checked('droitImage'),
             passSport: checked('passSport'),
             passSportCode: v('passSportCode'),
