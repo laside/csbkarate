@@ -75,7 +75,11 @@ Code propre, moderne, léger, maintenable. Pédagogique en français.
 
 ├── supabase/
 
-│   ├── migrations/   ← scripts SQL versionnés (tables + RLS) : 0001-0004 collections CMS, 0005 saison, 0006-0010 module gestion, 0011 storage galerie, 0012 storage news, 0013 facturation, 0014 durcissement RLS dossiers
+│   ├── migrations/   ← scripts SQL versionnés (tables + RLS) : 0001-0004 collections CMS, 0005 saison, 0006-0010 module gestion, 0011 storage galerie, 0012 storage news, 0013 facturation, 0014 durcissement RLS dossiers, 0015 licence FFK + cours Baby
+
+│   ├── rebuild_database.sql ← reconstruction complète (teardown + migrations 0001→0015 + seed saison V2.0 + comptes de test), un seul Run — DEV uniquement
+
+│   ├── setup_test_admin_account.sql ← (ré)init du compte de test admin@csbk.com — DEV uniquement
 
 │   └── seed_test_adherents.sql ← jeu de test (20 adhérents) — DEV uniquement, hors migrations
 
@@ -224,10 +228,11 @@ Système d'information du club inspiré de **MonClub**, intégré au site. Spéc
 `bureau` (secrétariat/admin, accès total) · `enseignant` (valide les grades) · `adhérent` (voit son dossier). Géré par une table `profiles` (user_id → role, famille_id) + RLS par utilisateur.
 
 ### Tarifs (Moteur dynamique unifié)
-- La **source de vérité** des tarifs est désormais la configuration de la **saison en cours** (collection `saison` JSONB, éditable par l'admin sur l'accueil). La table Postgres `tarifs` n'est qu'un fallback.
-- Les prix sont scindés et affichés en deux parties lors de l'inscription : **Cours** + **Licence/Assurance FFK** (paramétrable dans l'admin, ex: 37 €).
-- Types de cours (liés au formulaire) : **Baby Karaté**, **Adulte**, **Enfant**, **Self-Defense**.
-- **Membre du bureau : 37 € fixe** (cette réduction sera gérée automatiquement côté back-office ultérieurement, la case n'est plus exposée à l'inscription).
+- La **source de vérité** des tarifs est désormais la configuration de la **saison en cours** (collection `saison` JSONB, éditable par l'admin sur l'accueil). La table Postgres `tarifs` n'est qu'un fallback (legacy).
+- **Mécanique (V2.0)** : chaque ligne tarif de la saison porte un `coursType` (Baby/Enfant/Adulte/Self-Defense) + un `prix` (**cours seul**) ; le champ `tarifLicence` (centimes) s'ajoute par adhérent. Le helper **`CSBTarifs.configFromSaison(saison)`** (`tarifs.js`) construit la config dynamique ; il est **partagé** par `inscription.js` (public) ET `membres.js` (création de dossier bureau) → mêmes prix des deux côtés. Si aucun `coursType` n'est mappé, fallback silencieux sur `DEFAULT_CONFIG` (valeurs codées en dur).
+- Les prix sont scindés et affichés en deux parties lors de l'inscription : **Cours** + **Licence/Assurance FFK** (`tarifLicence`, ex. 37 €).
+- Types de cours (liés au formulaire) : **Baby Karaté**, **Adulte**, **Enfant**, **Self-Defense** (le `CHECK cours_type` Postgres inclut `'Baby'` depuis la migration `0015`). Libellé d'affichage mappé dans `COURS_LABEL` (`membres.js`/`adherent.js`) et `LABELS` (`tarifs.js`) — **penser à y ajouter tout nouveau type de cours**.
+- **Membre du bureau : 37 € fixe** — géré dans `cotisationBase` (`tarifs.js`) en **priorité absolue** (avant le chemin dynamique, sinon la map `cotisations` masquerait la règle). La case n'est plus exposée à l'inscription ; la réduction se gère au back-office (`membres.html`).
 - **Remise famille** (sur N inscrits dans le panier) : **2→10 € · 3→30 € · 4→50 € · 5+→70 €**.
 - **Remise Pass'Sport : 50 €** (⚠️ change chaque année → **valeur configurable** par le bureau).
 - Acompte 30 € = vestige de la pré-inscription papier en 2 temps → **supprimé du flux en ligne** (on paie le total d'un coup).
