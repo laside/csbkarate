@@ -178,8 +178,10 @@ Le CDN Tailwind (`cdn.tailwindcss.com`) reste la dette technique connue la plus 
 
 **Pages terminées :** `index.html`, `wadoryu.html`, `news.html`, `club.html`, `competitions.html`, `mentions-legales.html`, `galerie.html`, `grades.html`
 - galerie.html ✅ — données (structure) sur Supabase, admin via Supabase Auth, photos uploadées sur le bucket public `galerie` (Storage)
-- grades.html ✅ — données sur Supabase (Kyu + Dan), admin via Supabase Auth
+- grades.html ✅ — données sur Supabase (Kyu + Dan), admin via Supabase Auth. (Les 5 concepts ont été transférés vers wadoryu.html).
 - index.html ✅ — section « Informations Pratiques » (horaires/tarifs) éditable, collection `saison` ; cartes disciplines à retournement (flip) ; carrousel d'actus
+- wadoryu.html ✅ — intègre désormais l'histoire, la philosophie, les 5 concepts (Nagasu, Inasu, etc.), la biomécanique et l'encyclopédie des katas.
+- club.html ✅ — fiches des enseignants (Denis et Leshen) mises à jour et épurées de mentions superflues.
 
 **Module Gestion de club** ✅ **fusionné sur `main`** (PR #30, 24/06/2026) : Phases 0 à 4 livrées (`inscription.html`, `membres.html`, `adherent.html`). Restent **Phase 3** (paiement HelloAsso en ligne) et **Phase 5** (validation des grades par l'enseignant) — détail et ordre recommandé dans la section dédiée plus bas.
 
@@ -196,7 +198,8 @@ Déverrouillage (construction.html) : La page de construction contient un formul
 
 
 **TODO restants :**
-- [ ] **Exécuter dans Supabase (SQL Editor)** les migrations du module Gestion encore en attente : `0007` → `0014`. Vérifier au préalable lesquelles ont déjà tourné en base — le repo n'en garde pas la trace. Sans ça, plusieurs écrans du module Gestion échoueront silencieusement (colonne/table manquante).
+- [ ] **Exécuter dans Supabase (SQL Editor)** les migrations du module Gestion encore en attente : `0007` → `0015`. Vérifier au préalable lesquelles ont déjà tourné en base — le repo n'en garde pas la trace. Sans ça, plusieurs écrans du module Gestion échoueront silencieusement (colonne/table manquante). ⚠️ **`0015` est bloquante pour la branche `antigravity/V2.0`** : elle ajoute `'Baby'` au `CHECK` `cours_type` ; sans elle, toute inscription d'un adhérent Baby Karaté échoue (violation de contrainte, pas de rollback transactionnel après le `signUp`).
+- [ ] **Après merge de `antigravity/V2.0` — reconfigurer la saison en mode admin** (accueil → « Informations Pratiques ») : assigner un **type de cours** (`coursType`) à chaque ligne tarif + saisir le **tarif licence FFK (€)**, puis « Enregistrer en ligne ». Tant que ce n'est pas fait, le JSONB `saison` existant n'a ni `coursType` ni `tarifLicence` → l'inscription en ligne ET la création de dossier bureau retombent **silencieusement** sur les prix codés en dur de `DEFAULT_CONFIG` (`tarifs.js`), potentiellement faux.
 - [ ] Tester en local le parcours complet du module Gestion de bout en bout (inscription → validation pièces/règlement par le bureau → espace adhérent → téléchargement attestation/facture) — non vérifié manuellement depuis la fusion sur `main`.
 - [ ] Tester en local la migration `grades` (re-fetch sur login, ordre préservé, `hidden` filtré par RLS) — pas encore vérifié manuellement.
 - [ ] Compléter `CLUB` dans `assets/js/pdf.js` (adresse, email, téléphone, SIRET le cas échéant) — obligatoire avant toute émission réelle de facture (identité de l'émetteur).
