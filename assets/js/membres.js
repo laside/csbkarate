@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'Ceinture Blanche', 'Ceinture Jaune', 'Ceinture Orange', 'Ceinture Verte',
         'Ceinture Bleue', 'Ceinture Marron', '1er Dan', '2e Dan', '3e Dan', '4e Dan', '5e Dan'
     ];
-    const COURS_LABEL = { 'Enfant': 'Enfant', 'Adulte': 'Adulte', 'Self-Defense': 'Self-défense' };
+    const COURS_LABEL = { 'Baby': 'Baby Karaté', 'Enfant': 'Enfant', 'Adulte': 'Adulte', 'Self-Defense': 'Self-défense' };
 
     // --- Éléments ---
     const boot = $('#boot');
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         statsEl.innerHTML = [
             statCard('Adhérents', total,
-                `${byCours('Enfant')} enfants · ${byCours('Adulte')} adultes · ${byCours('Self-Defense')} self`, 'encre'),
+                `${byCours('Baby')} baby · ${byCours('Enfant')} enfants · ${byCours('Adulte')} adultes · ${byCours('Self-Defense')} self`, 'encre'),
             statCard('Dossiers validés', byDossier('Validé'),
                 `${byDossier('En attente paiement')} att. paiement · ${byDossier('En attente justificatifs')} att. justif · ${byDossier('Incomplet')} incomplets`, 'green'),
             statCard('Bureau du club', nbBureau, 'pratiquants · tarif réduit (37 €)', 'corail'),
