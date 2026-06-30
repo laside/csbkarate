@@ -19,6 +19,11 @@
     <!-- Centralisation : Injection du Header et Footer -->
     <script src="./assets/js/main.js" defer></script>
 
+    <!-- Saison active (libellé + nombre de licenciés) en lecture publique -->
+    <script type="module" src="./assets/js/supabase.js"></script>
+    <script src="./assets/js/saisons.js" defer></script>
+    <script src="./assets/js/club.js" defer></script>
+
     <!-- Vercel Web Analytics -->
     <script>
         window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -50,8 +55,8 @@
                     <div class="flex items-center gap-4 bg-white p-4 rounded-xl border border-csb-tatami inline-flex shadow-sm">
                         <div class="text-4xl">👥</div>
                         <div>
-                            <p class="font-condensed uppercase tracking-wider text-gray-500 text-sm font-bold">Saison 2025-2026</p>
-                            <p class="text-2xl font-bold text-csb-encre">105 Licenciés</p>
+                            <p id="club-saison-label" class="font-condensed uppercase tracking-wider text-gray-500 text-sm font-bold">Saison 2026-2027</p>
+                            <p id="club-nb-licencies" class="text-2xl font-bold text-csb-encre">105 Licenciés</p>
                         </div>
                     </div>
                 </div>

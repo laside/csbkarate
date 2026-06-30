@@ -18,6 +18,7 @@
     <!-- Module gestion : parle directement à window.sb (CRUD relationnel + RLS) -->
     <script type="module" src="./assets/js/supabase.js"></script>
     <script src="./assets/js/tarifs.js" defer></script>
+    <script src="./assets/js/saisons.js" defer></script>
     <script src="./assets/js/pdf.js" defer></script>
     <script src="./assets/js/membres.js" defer></script>
 
@@ -74,6 +75,15 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Onglets : Adhérents / Saisons & Cours -->
+                <div class="flex gap-1 mb-8 border-b border-csb-tatami">
+                    <button data-tab="adherents" type="button" class="tab-btn px-5 py-3 font-condensed uppercase tracking-wider text-sm border-b-2 -mb-px text-csb-corail border-csb-corail">Adhérents</button>
+                    <button data-tab="saisons" type="button" class="tab-btn px-5 py-3 font-condensed uppercase tracking-wider text-sm border-b-2 -mb-px text-gray-400 border-transparent hover:text-csb-encre transition">Saisons &amp; Cours</button>
+                </div>
+
+                <!-- ===================== ONGLET : ADHÉRENTS ===================== -->
+                <div id="panel-adherents">
 
                 <!-- Cartes statistiques (injectées par membres.js) -->
                 <div id="stats" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10"></div>
@@ -189,6 +199,25 @@
                         La création et la suppression <em>définitives</em> de comptes nécessiteront une fonction serveur sécurisée (étape ultérieure).
                     </p>
                 </div>
+                </div><!-- /#panel-adherents -->
+
+                <!-- ===================== ONGLET : SAISONS & COURS ===================== -->
+                <div id="panel-saisons" class="hidden">
+                    <div class="flex flex-wrap justify-between items-end gap-4 mb-6">
+                        <div>
+                            <h2 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-1">Saisons &amp; Cours</h2>
+                            <p class="text-gray-500 text-sm max-w-3xl">
+                                Gérez l'historique des saisons et leurs cours (professeur, capacité, horaires, tarif).
+                                La saison <strong>active</strong> alimente l'accueil, la page club et le calcul d'inscription.
+                            </p>
+                        </div>
+                        <button id="btn-new-saison" type="button"
+                                class="px-6 py-3 rounded-full font-condensed uppercase tracking-wider bg-csb-dojo text-white hover:bg-csb-corail transition text-sm whitespace-nowrap">
+                            + Nouvelle saison
+                        </button>
+                    </div>
+                    <div id="saisons-list" class="grid md:grid-cols-2 gap-4"></div>
+                </div>
             </section>
 
             <!-- Chargement initial -->
@@ -216,6 +245,23 @@
             </div>
             <!-- Corps défilant -->
             <div id="detail-body" class="overflow-y-auto p-6 space-y-8"></div>
+        </div>
+    </div>
+
+    <!-- ===================== MODALE : ÉDITION SAISON & COURS ===================== -->
+    <!-- Onglet « Saisons & Cours » : création/édition d'une saison + CRUD de ses
+         cours. Le corps (#saison-modal-body) est entièrement rendu par membres.js. -->
+    <div id="saison-modal" class="hidden fixed inset-0 z-50 flex items-stretch sm:items-center justify-center">
+        <div data-saison-close class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div class="relative w-full sm:max-w-3xl sm:mx-4 bg-csb-washi sm:rounded-2xl shadow-2xl max-h-screen sm:max-h-[90vh] flex flex-col">
+            <div class="shrink-0 bg-csb-dojo text-white px-6 py-4 flex items-start justify-between sm:rounded-t-2xl">
+                <div>
+                    <span class="font-condensed text-csb-tatami uppercase tracking-widest text-xs block">Gestion des saisons</span>
+                    <h2 id="saison-modal-title" class="font-serif text-2xl leading-tight"></h2>
+                </div>
+                <button type="button" data-saison-close class="text-white/80 hover:text-white text-3xl leading-none -mt-1" aria-label="Fermer">&times;</button>
+            </div>
+            <div id="saison-modal-body" class="overflow-y-auto p-6 space-y-8"></div>
         </div>
     </div>
 

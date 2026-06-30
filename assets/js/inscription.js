@@ -17,7 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
     'use strict';
 
     // --- Constantes métier ---
-    const SAISON = '2026-2027';
+    const SAISON = '2026-2027';          // libellé de repli si aucune saison active en base
+    let activeSaisonLabel = SAISON;      // remplacé par le libellé de la saison active
     const ANNEE_RENTREE = 2026;          // âge évalué au 1er sept. de cette année
     const AGE_MIN_SELF = 13;             // self-défense : ≥ 13 ans au 1er sept.
     const AGE_MAJORITE = 18;             // < 18 → autorisation parentale requise
@@ -45,15 +46,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let config = CSBTarifs.DEFAULT_CONFIG; // remplacé par les données saison si dispo
 
     // =========================================================
-    // Chargement de la config tarifaire depuis la collection `saison`
-    // (JSONB singleton id=1). Les tarifs saisis par l'admin dans la
-    // section « Informations Pratiques » de l'accueil pilotent le calcul.
+    // Chargement de la config tarifaire depuis la SAISON ACTIVE
+    // (tables `saisons` + `cours`, migration 0016, via CSBSaisons). Les tarifs
+    // saisis par le bureau dans l'onglet « Saisons & Cours » pilotent le calcul,
+    // et le libellé de la saison active tague le dossier créé.
     // =========================================================
-    sb.from('saison').select('data').eq('id', 1).maybeSingle()
-        .then(({ data: row, error }) => {
-            if (!error && row && row.data) {
+    CSBSaisons.loadActive()
+        .then(res => {
+            if (res && res.saison) {
+                if (res.saison.label) activeSaisonLabel = res.saison.label;
                 // Helper partagé avec membres.js : même prix des deux côtés.
-                const dyn = CSBTarifs.configFromSaison(row.data);
+                const dyn = CSBTarifs.configFromCours(res.cours, res.saison.tarif_licence);
                 if (dyn) config = Object.assign({}, config, dyn);
             }
             recompute();
@@ -428,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const splitWish = Number($('#paiement-split').value) || 1;
             const { error: dosErr } = await sb.from('dossiers').insert({
                 famille_id: familleId,
-                saison: SAISON,
+                saison: activeSaisonLabel,
                 montant_total: detail.total,
                 detail_calcul: { ...detail, souhaitReglement: splitWish, modePaiement: 'au_club' },
                 mode_paiement: 'au_club',

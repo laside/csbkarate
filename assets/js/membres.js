@@ -638,12 +638,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadTarifConfig() {
         if (tarifConfig) return tarifConfig;
-        // Source de vérité : collection `saison` (mêmes prix que l'inscription
-        // en ligne, via le helper partagé). Fallback : table `tarifs` legacy,
-        // puis DEFAULT_CONFIG. Évite que le bureau et le public calculent des
-        // totaux différents pour la même adhésion.
-        const { data: srow } = await sb.from('saison').select('data').eq('id', 1).maybeSingle();
-        const dyn = srow && srow.data ? CSBTarifs.configFromSaison(srow.data) : null;
+        // Source de vérité : saison ACTIVE (tables `saisons` + `cours`, via le
+        // helper partagé avec l'inscription en ligne → mêmes prix des deux côtés).
+        // Fallback : table `tarifs` legacy, puis DEFAULT_CONFIG.
+        const res = await CSBSaisons.loadActive();
+        const dyn = res && res.saison ? CSBTarifs.configFromCours(res.cours, res.saison.tarif_licence) : null;
         if (dyn) {
             tarifConfig = Object.assign({}, CSBTarifs.DEFAULT_CONFIG, dyn);
         } else {
@@ -1129,6 +1128,411 @@ document.addEventListener('DOMContentLoaded', () => {
         detailDirty = true;
         await refreshStatuts();
         renderDetail();
+    }
+
+    // =========================================================
+    // ONGLETS (Adhérents / Saisons & Cours)
+    // =========================================================
+    const tabButtons = document.querySelectorAll('[data-tab]');
+    const panels = { adherents: $('#panel-adherents'), saisons: $('#panel-saisons') };
+    tabButtons.forEach(btn => btn.addEventListener('click', () => activateTab(btn.dataset.tab)));
+
+    function activateTab(name) {
+        Object.entries(panels).forEach(([k, el]) => el && el.classList.toggle('hidden', k !== name));
+        tabButtons.forEach(b => {
+            const on = b.dataset.tab === name;
+            b.classList.toggle('text-csb-corail', on);
+            b.classList.toggle('border-csb-corail', on);
+            b.classList.toggle('text-gray-400', !on);
+            b.classList.toggle('border-transparent', !on);
+        });
+        if (name === 'saisons' && !saisonsLoaded) loadSaisons();
+    }
+
+    // =========================================================
+    // GESTION DES SAISONS & COURS (onglet bureau) — CRUD complet
+    // =========================================================
+    // Modèle relationnel `saisons` + `cours` (migration 0016). Lecture publique,
+    // écriture bureau (RLS). Remplace l'ancien mode admin unique d'index.html.
+    const COURS_TYPE_OPTIONS = [
+        { value: '',             label: '— (affichage seul)' },
+        { value: 'Baby',         label: 'Baby Karaté' },
+        { value: 'Enfant',       label: 'Enfant' },
+        { value: 'Adulte',       label: 'Adulte' },
+        { value: 'Self-Defense', label: 'Self-défense' }
+    ];
+    const ACCENT_OPTIONS = [
+        { value: 'dojo',   label: 'Couleur standard' },
+        { value: 'corail', label: 'Accent corail (mis en avant)' }
+    ];
+
+    const saisonsListEl = $('#saisons-list');
+    const saisonModal = $('#saison-modal');
+    const saisonModalBody = $('#saison-modal-body');
+    const saisonModalTitle = $('#saison-modal-title');
+
+    let saisons = [];
+    let saisonsLoaded = false;
+    let editingSaison = null;   // null = nouvelle saison non encore enregistrée
+    let editingCours = [];      // cours en mémoire (source de vérité pendant l'édition)
+
+    function frDateShort(iso) {
+        if (!iso) return '…';
+        const d = new Date(iso + 'T00:00:00');
+        return isNaN(d) ? '…' : d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    // Capacité : champ libre -> entier >= 0, ou null (= illimité).
+    function parseCapacite(v) {
+        const s = String(v ?? '').trim();
+        if (!s) return null;
+        const n = parseInt(s, 10);
+        return Number.isFinite(n) && n >= 0 ? n : null;
+    }
+
+    // --- Chargement de la liste des saisons (+ compte des cours) ---
+    async function loadSaisons() {
+        if (!saisonsListEl) return;
+        saisonsListEl.innerHTML = '<p class="text-gray-400 text-sm col-span-full py-8 text-center">Chargement…</p>';
+        const [sRes, cRes] = await Promise.all([
+            sb.from('saisons').select('*').order('date_debut', { ascending: false }),
+            sb.from('cours').select('saison_id')
+        ]);
+        if (sRes.error) {
+            console.error(sRes.error);
+            saisonsListEl.innerHTML = `<p class="text-csb-corail text-sm col-span-full py-8 text-center">Erreur de chargement : ${esc(sRes.error.message)}</p>`;
+            return;
+        }
+        const counts = {};
+        (cRes.data || []).forEach(c => { counts[c.saison_id] = (counts[c.saison_id] || 0) + 1; });
+        saisons = (sRes.data || []).map(s => Object.assign({}, s, { _nbCours: counts[s.id] || 0 }));
+        saisonsLoaded = true;
+        renderSaisonsList();
+    }
+
+    function renderSaisonsList() {
+        if (!saisons.length) {
+            saisonsListEl.innerHTML = '<p class="text-gray-400 text-sm col-span-full py-8 text-center">Aucune saison. Créez-en une avec « + Nouvelle saison ».</p>';
+            return;
+        }
+        saisonsListEl.innerHTML = saisons.map(saisonCard).join('');
+    }
+
+    function saisonCard(s) {
+        const dates = (s.date_debut || s.date_fin) ? `${frDateShort(s.date_debut)} → ${frDateShort(s.date_fin)}` : 'Dates non renseignées';
+        const badge = s.active
+            ? '<span class="inline-block text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border bg-green-50 text-green-700 border-green-300">Active</span>'
+            : '<span class="inline-block text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border bg-gray-50 text-gray-500 border-csb-tatami">Archivée</span>';
+        return `
+            <div class="bg-white rounded-2xl border border-csb-tatami border-t-4 ${s.active ? 'border-t-green-600' : 'border-t-csb-tatami'} p-5 shadow-sm" data-saison-id="${s.id}">
+                <div class="flex items-start justify-between gap-2 mb-2">
+                    <div>
+                        <h3 class="font-condensed text-xl uppercase tracking-wider text-csb-encre">${esc(s.label)}</h3>
+                        <p class="text-xs text-gray-400">${esc(dates)}</p>
+                    </div>
+                    ${badge}
+                </div>
+                <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600 mb-4">
+                    <span>🥋 ${s._nbCours} cours</span>
+                    <span>👥 ${s.nb_licencies || 0} licenciés</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" data-edit-saison class="px-4 py-1.5 rounded-full text-xs font-condensed uppercase tracking-wider bg-csb-dojo text-white hover:bg-csb-corail transition">Éditer / Cours</button>
+                    ${s.active ? '' : '<button type="button" data-activate-saison class="px-4 py-1.5 rounded-full text-xs font-condensed uppercase tracking-wider border border-csb-tatami text-csb-encre hover:bg-csb-washi transition">Activer</button>'}
+                    <button type="button" data-delete-saison class="px-4 py-1.5 rounded-full text-xs font-condensed uppercase tracking-wider text-csb-corail hover:underline ml-auto">Supprimer</button>
+                </div>
+            </div>`;
+    }
+
+    // --- Actions sur la liste (délégation) ---
+    const btnNewSaison = $('#btn-new-saison');
+    btnNewSaison && btnNewSaison.addEventListener('click', () => openSaisonEditor(null));
+
+    saisonsListEl && saisonsListEl.addEventListener('click', (e) => {
+        const card = e.target.closest('[data-saison-id]');
+        if (!card) return;
+        const id = Number(card.dataset.saisonId);
+        if (e.target.closest('[data-edit-saison]')) return openSaisonEditor(id);
+        if (e.target.closest('[data-activate-saison]')) return activateSaison(id);
+        if (e.target.closest('[data-delete-saison]')) return deleteSaisonById(id);
+    });
+
+    async function activateSaison(id) {
+        try {
+            // Au plus une active (index partiel unique) : on désactive l'ancienne d'abord.
+            await sb.from('saisons').update({ active: false }).eq('active', true).neq('id', id);
+            const { error } = await sb.from('saisons').update({ active: true }).eq('id', id);
+            if (error) throw error;
+            tarifConfig = null; // les prix de la saison active ont changé
+            await loadSaisons();
+        } catch (err) {
+            console.error(err);
+            alert('Échec de l\'activation : ' + (err.message || err));
+        }
+    }
+
+    async function deleteSaisonById(id) {
+        const s = saisons.find(x => x.id === id);
+        if (!s) return;
+        const msg = s.active
+            ? `Supprimer la saison ACTIVE « ${s.label} » et tous ses cours ?\nLe site n'aura plus de saison active tant que vous n'en activerez pas une autre.\n(Les dossiers d'inscription déjà liés à cette saison ne sont PAS supprimés.)`
+            : `Supprimer la saison « ${s.label} » et tous ses cours ?`;
+        if (!confirm(msg)) return;
+        const { error } = await sb.from('saisons').delete().eq('id', id); // cascade -> cours
+        if (error) { alert('Échec : ' + error.message); return; }
+        await loadSaisons();
+    }
+
+    // --- Modale d'édition (saison + cours) ---
+    function openSaisonModal() { saisonModal.classList.remove('hidden'); document.body.classList.add('overflow-hidden'); }
+    function closeSaisonModal() { saisonModal.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); }
+
+    async function openSaisonEditor(saisonId) {
+        if (saisonId) {
+            editingSaison = saisons.find(s => s.id === saisonId) || null;
+            const { data, error } = await sb.from('cours').select('*').eq('saison_id', saisonId).order('position', { ascending: true });
+            editingCours = error ? [] : (data || []).map(cloneCours);
+        } else {
+            editingSaison = null;
+            editingCours = [];
+        }
+        saisonModalTitle.textContent = editingSaison ? `Saison ${editingSaison.label}` : 'Nouvelle saison';
+        openSaisonModal();
+        renderSaisonEditor();
+    }
+
+    function cloneCours(c) {
+        return {
+            cours_type: c.cours_type || '', libelle: c.libelle || '', professeur: c.professeur || '',
+            capacite_max: c.capacite_max, jours: c.jours || '', heures: c.heures || '',
+            lieu: c.lieu || '', accent: c.accent || 'dojo', prix: c.prix
+        };
+    }
+
+    function renderSaisonEditor() {
+        const s = editingSaison || { label: '', date_debut: '', date_fin: '', active: false, tarif_licence: 3700, nb_licencies: 0, tarifs_note: '', licence_note: '' };
+        const lic = ((s.tarif_licence ?? 3700) / 100);
+        saisonModalBody.innerHTML = `
+            <section class="bg-white rounded-xl border border-csb-tatami p-4">
+                <h3 class="font-condensed text-lg uppercase tracking-wider text-csb-encre mb-3">Informations</h3>
+                <div class="grid sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="lbl" for="s-label">Libellé *</label>
+                        <input id="s-label" class="inp" value="${esc(s.label || '')}" placeholder="2027-2028">
+                    </div>
+                    <label class="flex items-center gap-2 text-sm sm:pt-6 cursor-pointer">
+                        <input type="checkbox" id="s-active" class="chk" ${s.active ? 'checked' : ''}>
+                        <span>Saison active (affichée sur le site public)</span>
+                    </label>
+                    <div>
+                        <label class="lbl" for="s-debut">Début</label>
+                        <input type="date" id="s-debut" class="inp" value="${s.date_debut || ''}">
+                    </div>
+                    <div>
+                        <label class="lbl" for="s-fin">Fin</label>
+                        <input type="date" id="s-fin" class="inp" value="${s.date_fin || ''}">
+                    </div>
+                    <div>
+                        <label class="lbl" for="s-licence">Tarif licence FFK (€)</label>
+                        <input id="s-licence" class="inp" inputmode="decimal" value="${lic}">
+                    </div>
+                    <div>
+                        <label class="lbl" for="s-nb">Nombre de licenciés (page club)</label>
+                        <input id="s-nb" class="inp" inputmode="numeric" value="${s.nb_licencies ?? 0}">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="lbl" for="s-tnote">Note « remises familles »</label>
+                        <textarea id="s-tnote" rows="2" class="inp">${esc(s.tarifs_note || '')}</textarea>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="lbl" for="s-lnote">Note « licence FFK »</label>
+                        <input id="s-lnote" class="inp" value="${esc(s.licence_note || '')}">
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-condensed text-lg uppercase tracking-wider text-csb-encre">Cours (<span id="cours-count">${editingCours.length}</span>)</h3>
+                    <button type="button" id="btn-add-cours" class="px-4 py-1.5 rounded-full text-sm font-condensed uppercase tracking-wider bg-csb-dojo text-white hover:bg-csb-corail transition">+ Ajouter un cours</button>
+                </div>
+                <div id="cours-list" class="space-y-3"></div>
+            </section>
+
+            <div class="flex flex-wrap justify-end gap-3 pt-2">
+                <button type="button" data-saison-close class="px-6 py-2.5 rounded-full font-condensed uppercase tracking-wider bg-gray-200 text-csb-encre hover:bg-gray-300 transition text-sm">Annuler</button>
+                <button type="button" id="btn-save-saison" class="px-6 py-2.5 rounded-full font-condensed uppercase tracking-wider bg-green-600 text-white hover:bg-green-700 transition text-sm shadow-lg">💾 Enregistrer</button>
+            </div>`;
+        renderCoursList();
+    }
+
+    function renderCoursList() {
+        const list = saisonModalBody.querySelector('#cours-list');
+        if (!list) return;
+        list.innerHTML = editingCours.length
+            ? editingCours.map(coursRow).join('')
+            : '<p class="text-sm text-gray-400">Aucun cours. Ajoutez-en un avec « + Ajouter un cours ».</p>';
+    }
+
+    function updateCoursCount() {
+        const c = saisonModalBody.querySelector('#cours-count');
+        if (c) c.textContent = editingCours.length;
+    }
+
+    function coursRow(c, i) {
+        const typeOpts = COURS_TYPE_OPTIONS.map(o => `<option value="${o.value}" ${(c.cours_type || '') === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('');
+        const accentOpts = ACCENT_OPTIONS.map(o => `<option value="${o.value}" ${(c.accent || 'dojo') === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('');
+        const prix = (c.prix != null && c.prix !== '') ? (c.prix / 100) : '';
+        const cap = (c.capacite_max != null && c.capacite_max !== '') ? c.capacite_max : '';
+        return `
+            <div data-cours-row data-i="${i}" class="bg-white rounded-xl border border-csb-tatami p-4 grid sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="lbl">Type (calcul d'inscription)</label>
+                    <select data-k="cours_type" class="inp">${typeOpts}</select>
+                </div>
+                <div>
+                    <label class="lbl">Libellé</label>
+                    <input data-k="libelle" class="inp" value="${esc(c.libelle || '')}" placeholder="ex : Baby Karaté">
+                </div>
+                <div>
+                    <label class="lbl">Professeur</label>
+                    <input data-k="professeur" class="inp" value="${esc(c.professeur || '')}" placeholder="ex : Denis Didier">
+                </div>
+                <div>
+                    <label class="lbl">Capacité max</label>
+                    <input data-k="capacite_max" class="inp" inputmode="numeric" value="${cap}" placeholder="vide = illimité">
+                </div>
+                <div>
+                    <label class="lbl">Jours</label>
+                    <input data-k="jours" class="inp" value="${esc(c.jours || '')}" placeholder="ex : Mardi et Jeudi">
+                </div>
+                <div>
+                    <label class="lbl">Horaire</label>
+                    <input data-k="heures" class="inp" value="${esc(c.heures || '')}" placeholder="ex : 18h30 - 19h30">
+                </div>
+                <div>
+                    <label class="lbl">Lieu</label>
+                    <input data-k="lieu" class="inp" value="${esc(c.lieu || '')}" placeholder="ex : Gymnase Auguste Delaune">
+                </div>
+                <div>
+                    <label class="lbl">Tarif cours (€, hors licence)</label>
+                    <input data-k="prix" class="inp" inputmode="decimal" value="${prix}" placeholder="ex : 183">
+                </div>
+                <div>
+                    <label class="lbl">Mise en avant</label>
+                    <select data-k="accent" class="inp">${accentOpts}</select>
+                </div>
+                <div class="flex items-end justify-end">
+                    <button type="button" data-del-cours class="text-csb-corail text-sm font-bold hover:underline">Supprimer ce cours</button>
+                </div>
+            </div>`;
+    }
+
+    // Lit les champs des cours dans le DOM -> editingCours (avant tout re-render / save).
+    function syncCoursFromDom() {
+        const list = saisonModalBody.querySelector('#cours-list');
+        if (!list) return;
+        editingCours = [...list.querySelectorAll('[data-cours-row]')].map(row => ({
+            cours_type: row.querySelector('[data-k="cours_type"]').value || '',
+            libelle: row.querySelector('[data-k="libelle"]').value.trim(),
+            professeur: row.querySelector('[data-k="professeur"]').value.trim(),
+            capacite_max: parseCapacite(row.querySelector('[data-k="capacite_max"]').value),
+            jours: row.querySelector('[data-k="jours"]').value.trim(),
+            heures: row.querySelector('[data-k="heures"]').value.trim(),
+            lieu: row.querySelector('[data-k="lieu"]').value.trim(),
+            accent: row.querySelector('[data-k="accent"]').value,
+            prix: eurosToCents(row.querySelector('[data-k="prix"]').value) || 0
+        }));
+    }
+
+    // Délégation des clics dans la modale (fermeture, +/− cours, enregistrement).
+    saisonModal && saisonModal.addEventListener('click', (e) => {
+        if (e.target.closest('[data-saison-close]')) return closeSaisonModal();
+        if (e.target.closest('#btn-add-cours')) {
+            syncCoursFromDom(); editingCours.push({ accent: 'dojo' }); renderCoursList(); updateCoursCount(); return;
+        }
+        const del = e.target.closest('[data-del-cours]');
+        if (del) {
+            syncCoursFromDom();
+            editingCours.splice(Number(del.closest('[data-cours-row]').dataset.i), 1);
+            renderCoursList(); updateCoursCount(); return;
+        }
+        if (e.target.closest('#btn-save-saison')) return saveSaison();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && saisonModal && !saisonModal.classList.contains('hidden')) closeSaisonModal();
+    });
+
+    async function saveSaison() {
+        syncCoursFromDom();
+        const q = (sel) => saisonModalBody.querySelector(sel);
+        const label = q('#s-label').value.trim();
+        if (!label) { alert('Le libellé de la saison est obligatoire.'); return; }
+
+        const payload = {
+            label,
+            date_debut: q('#s-debut').value || null,
+            date_fin: q('#s-fin').value || null,
+            tarif_licence: eurosToCents(q('#s-licence').value) ?? 3700,
+            nb_licencies: parseInt(q('#s-nb').value, 10) || 0,
+            tarifs_note: q('#s-tnote').value.trim(),
+            licence_note: q('#s-lnote').value.trim()
+        };
+        const makeActive = q('#s-active').checked;
+
+        const btn = q('#btn-save-saison');
+        if (btn) { btn.disabled = true; btn.textContent = 'Enregistrement…'; }
+        try {
+            // 1) Insert ou update de la saison (sans toucher `active` ici : géré en 2).
+            let saisonId = editingSaison ? editingSaison.id : null;
+            if (saisonId) {
+                const { error } = await sb.from('saisons').update(payload).eq('id', saisonId);
+                if (error) throw error;
+            } else {
+                const { data, error } = await sb.from('saisons').insert(payload).select().single();
+                if (error) throw error;
+                saisonId = data.id;
+            }
+
+            // 2) Flag actif (index partiel unique : au plus une active).
+            if (makeActive) {
+                await sb.from('saisons').update({ active: false }).eq('active', true).neq('id', saisonId);
+                const { error } = await sb.from('saisons').update({ active: true }).eq('id', saisonId);
+                if (error) throw error;
+            } else {
+                await sb.from('saisons').update({ active: false }).eq('id', saisonId);
+            }
+
+            // 3) Cours : remplacement intégral (delete + reinsert). Sûr car aucun FK
+            //    externe ne pointe cours.id (les adhérents référencent cours_type texte).
+            const { error: delErr } = await sb.from('cours').delete().eq('saison_id', saisonId);
+            if (delErr) throw delErr;
+            const rows = editingCours.map((c, i) => ({
+                saison_id: saisonId,
+                cours_type: c.cours_type || null,
+                libelle: c.libelle || '',
+                professeur: c.professeur || '',
+                capacite_max: c.capacite_max ?? null,
+                jours: c.jours || '',
+                heures: c.heures || '',
+                lieu: c.lieu || '',
+                accent: c.accent || 'dojo',
+                prix: c.prix || 0,
+                position: i
+            }));
+            if (rows.length) {
+                const { error: insErr } = await sb.from('cours').insert(rows);
+                if (insErr) throw insErr;
+            }
+
+            tarifConfig = null; // invalide le cache tarifaire (prix éventuellement modifiés)
+            closeSaisonModal();
+            await loadSaisons();
+        } catch (err) {
+            console.error(err);
+            alert('Échec de l\'enregistrement : ' + (err.message || err));
+            if (btn) { btn.disabled = false; btn.textContent = '💾 Enregistrer'; }
+        }
     }
 
     // --- Démarrage ---
