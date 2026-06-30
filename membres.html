@@ -76,9 +76,10 @@
                     </div>
                 </div>
 
-                <!-- Onglets : Adhérents / Saisons & Cours -->
+                <!-- Onglets : Adhérents / Administration / Saisons & Cours -->
                 <div class="flex gap-1 mb-8 border-b border-csb-tatami">
                     <button data-tab="adherents" type="button" class="tab-btn px-5 py-3 font-condensed uppercase tracking-wider text-sm border-b-2 -mb-px text-csb-corail border-csb-corail">Adhérents</button>
+                    <button data-tab="administration" type="button" class="tab-btn px-5 py-3 font-condensed uppercase tracking-wider text-sm border-b-2 -mb-px text-gray-400 border-transparent hover:text-csb-encre transition">Administration</button>
                     <button data-tab="saisons" type="button" class="tab-btn px-5 py-3 font-condensed uppercase tracking-wider text-sm border-b-2 -mb-px text-gray-400 border-transparent hover:text-csb-encre transition">Saisons &amp; Cours</button>
                 </div>
 
@@ -149,8 +150,22 @@
                     Ouvrez « Dossier › » pour valider les pièces et saisir les règlements.
                 </p>
 
-                <!-- ===================== ADMINISTRATEURS DU SITE ===================== -->
-                <div class="mt-14">
+                <!-- ===================== PAGINATION ===================== -->
+                <div id="pagination" class="flex flex-wrap items-center justify-between gap-4 mt-6">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-500" for="rows-per-page">Lignes par page</label>
+                        <select id="rows-per-page" class="text-sm rounded-lg border border-csb-tatami px-2 py-1.5 bg-white cursor-pointer">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50" selected>50</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-1" id="page-controls"></div>
+                </div>
+                </div><!-- /#panel-adherents -->
+
+                <!-- ===================== ONGLET : ADMINISTRATION ===================== -->
+                <div id="panel-administration" class="hidden">
                     <h2 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-1">Administrateurs du site</h2>
                     <p class="text-gray-500 text-sm mb-4 max-w-3xl">
                         Comptes ayant accès à la <strong>gestion du site</strong> — à ne pas confondre avec le
@@ -198,8 +213,7 @@
                         « Retirer l'accès » repasse le compte en simple adhérent (le compte n'est pas supprimé).
                         La création et la suppression <em>définitives</em> de comptes nécessiteront une fonction serveur sécurisée (étape ultérieure).
                     </p>
-                </div>
-                </div><!-- /#panel-adherents -->
+                </div><!-- /#panel-administration -->
 
                 <!-- ===================== ONGLET : SAISONS & COURS ===================== -->
                 <div id="panel-saisons" class="hidden">

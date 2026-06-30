@@ -62,6 +62,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let familleAgg = {};        // famille_id -> { du, encaisse } (centimes)
     let familleStatusMap = {};  // famille_id -> statut dossier combiné (dérivé)
 
+    // --- Pagination ---
+    let currentPage = 1;
+    let rowsPerPage = 50;
+    const pageSizeSelect = $('#rows-per-page');
+    const pageControls = $('#page-controls');
+
     // =========================================================
     // Authentification (gate bureau)
     // =========================================================
@@ -204,7 +210,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================
     // Liste (filtres + rendu)
     // =========================================================
-    [fSearch, fCours, fStatut].forEach(el => el.addEventListener('input', renderRows));
+    [fSearch, fCours, fStatut].forEach(el => el.addEventListener('input', () => { currentPage = 1; renderRows(); }));
+    pageSizeSelect && pageSizeSelect.addEventListener('change', () => {
+        rowsPerPage = parseInt(pageSizeSelect.value, 10) || 50;
+        currentPage = 1;
+        renderRows();
+    });
 
     function filtered() {
         const q = fSearch.value.trim().toLowerCase();
@@ -336,13 +347,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderRows() {
         const list = filtered();
+        const totalPages = Math.max(1, Math.ceil(list.length / rowsPerPage));
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * rowsPerPage;
+        const page = list.slice(start, start + rowsPerPage);
+
         countEl.textContent = `${list.length} membre${list.length > 1 ? 's' : ''}`;
         if (!list.length) {
             rowsEl.innerHTML = '<tr><td colspan="7" class="px-4 py-10 text-center text-gray-400">Aucun membre ne correspond.</td></tr>';
+        } else {
+            rowsEl.innerHTML = page.map(rowHtml).join('');
+        }
+        renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+        if (!pageControls) return;
+        if (totalPages <= 1) {
+            pageControls.innerHTML = '';
             return;
         }
-        rowsEl.innerHTML = list.map(rowHtml).join('');
+        let html = '';
+        // Bouton précédent
+        html += `<button type="button" data-page="${currentPage - 1}" class="px-3 py-1.5 rounded-lg text-sm font-condensed uppercase tracking-wider border border-csb-tatami text-csb-encre hover:bg-white transition disabled:opacity-30 disabled:cursor-not-allowed" ${currentPage <= 1 ? 'disabled' : ''}>‹ Préc.</button>`;
+        // Pages numérotées (fenêtre glissante autour de currentPage)
+        const windowSize = 5;
+        let winStart = Math.max(1, currentPage - Math.floor(windowSize / 2));
+        let winEnd = Math.min(totalPages, winStart + windowSize - 1);
+        if (winEnd - winStart + 1 < windowSize) winStart = Math.max(1, winEnd - windowSize + 1);
+        if (winStart > 1) html += `<span class="px-2 text-gray-400">…</span>`;
+        for (let p = winStart; p <= winEnd; p++) {
+            const active = p === currentPage;
+            html += `<button type="button" data-page="${p}" class="px-3 py-1.5 rounded-lg text-sm font-condensed font-bold uppercase tracking-wider transition ${active ? 'bg-csb-corail text-white' : 'border border-csb-tatami text-csb-encre hover:bg-white'}">${p}</button>`;
+        }
+        if (winEnd < totalPages) html += `<span class="px-2 text-gray-400">…</span>`;
+        // Bouton suivant
+        html += `<button type="button" data-page="${currentPage + 1}" class="px-3 py-1.5 rounded-lg text-sm font-condensed uppercase tracking-wider border border-csb-tatami text-csb-encre hover:bg-white transition disabled:opacity-30 disabled:cursor-not-allowed" ${currentPage >= totalPages ? 'disabled' : ''}>Suiv. ›</button>`;
+        pageControls.innerHTML = html;
     }
+
+    // Délégation clics pagination
+    pageControls && pageControls.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-page]');
+        if (!btn || btn.disabled) return;
+        const target = parseInt(btn.dataset.page, 10);
+        if (!isNaN(target) && target >= 1 && target <= Math.ceil(filtered().length / rowsPerPage)) {
+            currentPage = target;
+            renderRows();
+        }
+    });
 
     function rowHtml(a) {
         const age = ageOf(a.date_naissance);
@@ -1134,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ONGLETS (Adhérents / Saisons & Cours)
     // =========================================================
     const tabButtons = document.querySelectorAll('[data-tab]');
-    const panels = { adherents: $('#panel-adherents'), saisons: $('#panel-saisons') };
+    const panels = { adherents: $('#panel-adherents'), administration: $('#panel-administration'), saisons: $('#panel-saisons') };
     tabButtons.forEach(btn => btn.addEventListener('click', () => activateTab(btn.dataset.tab)));
 
     function activateTab(name) {
