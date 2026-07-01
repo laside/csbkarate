@@ -44,9 +44,15 @@
     }
 
     // Valide type + taille brute. Lève une Error (message FR) si invalide.
-    function validate(file) {
+    // opts.imageOnly = true : refuse les PDF (galerie/news = images seulement).
+    function validate(file, opts) {
+        const imageOnly = !!(opts && opts.imageOnly);
         if (!file) throw new Error('Aucun fichier sélectionné.');
-        if (!isImage(file) && !isPdf(file)) {
+        if (imageOnly) {
+            if (!isImage(file)) {
+                throw new Error('Format non accepté. Formats autorisés : JPG, PNG ou WebP.');
+            }
+        } else if (!isImage(file) && !isPdf(file)) {
             throw new Error('Format non accepté. Formats autorisés : JPG, PNG, WebP ou PDF.');
         }
         if (isImage(file)) {
@@ -90,7 +96,7 @@
 
     // Valide puis compresse. Vérifie le poids final. À appeler avant tout upload.
     async function prepare(file, opts) {
-        validate(file);
+        validate(file, opts);
         const out = await compressImage(file, opts);
         if (out.size > MAX_FINAL) {
             throw new Error(`Fichier trop lourd (${humanMB(out.size)}) même après optimisation. Maximum ${humanMB(MAX_FINAL)}.`);

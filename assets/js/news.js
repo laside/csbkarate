@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const file = inputPhotoFile.files[0];
                 // Validation type/taille + compression (redimension <= 1600 px + WebP)
                 // avant upload dans le bucket public `news` (CSBFiles, cf. files.js).
-                const prepared = await CSBFiles.prepare(file, { maxDim: 1600 });
+                const prepared = await CSBFiles.prepare(file, { maxDim: 1600, imageOnly: true });
                 const base = (file.name.replace(/\.[^.]+$/, '') || 'news').replace(/[^a-zA-Z0-9.\-]/g, '_');
                 const safeName = `${Date.now()}_${base}.${CSBFiles.extOf(prepared)}`;
 

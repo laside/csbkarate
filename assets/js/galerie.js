@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // (évite les uploads partiels si un fichier est refusé). CSBFiles est
             // chargé via files.js (cf. galerie.html).
             for (let i = 0; i < files.length; i++) {
-                try { CSBFiles.validate(files[i]); }
+                try { CSBFiles.validate(files[i], { imageOnly: true }); }
                 catch (e) { alert(`« ${files[i].name} » : ${e.message}`); return; }
             }
 
@@ -364,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 for (let i = 0; i < files.length; i++) {
                     // Compression (redimension <= 1600 px + WebP) : les images de
                     // galerie sont vues en grand → maxDim plus large que les pièces.
-                    const prepared = await CSBFiles.prepare(files[i], { maxDim: 1600 });
+                    const prepared = await CSBFiles.prepare(files[i], { maxDim: 1600, imageOnly: true });
                     const base = (files[i].name.replace(/\.[^.]+$/, '') || 'photo').replace(/[^a-zA-Z0-9.\-]/g, '_');
                     const safeName = `${Date.now()}_${base}.${CSBFiles.extOf(prepared)}`;
                     const filePath = `${folderPath}/${safeName}`;

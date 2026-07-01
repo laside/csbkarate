@@ -1648,6 +1648,22 @@ create policy "profiles_insert_own" on public.profiles for insert to authenticat
     with check (user_id = auth.uid() and role = 'adherent');
 
 
+-- -----------------------------------------------------------------------------
+-- >>> migration 0020_espace_famille
+-- -----------------------------------------------------------------------------
+-- Espace Famille : validation bureau (statut_validation) + badge « Nouveau »
+-- (is_new) + pièces jointes multiples (documents_files) + motif de refus
+-- (validation_note). Colonnes portées par les policies RLS de la migration 0006.
+alter table public.adherents
+    add column if not exists statut_validation text not null default 'en_attente'
+        check (statut_validation in ('en_attente', 'accepte', 'refuse')),
+    add column if not exists is_new          boolean not null default false,
+    add column if not exists documents_files jsonb   not null default '{}'::jsonb,
+    add column if not exists validation_note text    not null default '';
+
+update public.adherents set is_new = false where is_new is null;
+
+
 -- =============================================================================
 -- SECTION 2 — SEED SAISON ACTIVE (tables `saisons` + `cours`, migration 0016)
 -- =============================================================================
