@@ -30,13 +30,13 @@
     const JSON_INDENT = 4;
 
     // Collections migrées vers Supabase (CMS).
-    const SUPABASE_COLLECTIONS = new Set(['news', 'competitions', 'galerie', 'grades', 'saison']);
+    // NB : la saison/cours ne passe plus par store.js : elle a un modèle
+    // relationnel propre (tables `saisons` + `cours`, migration 0016) lu via
+    // window.CSBSaisons (assets/js/saisons.js) et édité dans l'Espace Bureau.
+    const SUPABASE_COLLECTIONS = new Set(['news', 'competitions', 'galerie', 'grades']);
 
     // Structure vide de la galerie (sécurité si la ligne est absente).
     const EMPTY_GALERIE = { sections: { club: [], competitions: [], entrainement: [], stages: [] } };
-
-    // Structure vide de la saison (sécurité si la ligne est absente).
-    const EMPTY_SAISON = { label: '', debut: '', fin: '', horaires: [], tarifs: [], tarifsNote: '', licenceNote: '', tarifLicence: 3700 };
 
     // Récupère le client Supabase ou échoue clairement s'il manque.
     function sb() {
@@ -100,16 +100,6 @@
             if (error) throw error;
             return (data && data.data) || EMPTY_GALERIE;
         }
-        if (name === 'saison') {
-            // Document JSONB unique (ligne id = 1) : on renvoie l'objet tel quel.
-            const { data, error } = await sb()
-                .from('saison')
-                .select('data')
-                .eq('id', 1)
-                .maybeSingle();
-            if (error) throw error;
-            return (data && data.data) || EMPTY_SAISON;
-        }
         if (name === 'grades') {
             // Tri par `position` (PAS par id) : grades.js n'a jamais trié les
             // données, l'ordre affiché est l'ordre du tableau JSON d'origine
@@ -165,12 +155,6 @@
         if (name === 'galerie') {
             // Document JSONB unique : on écrase la ligne id = 1 avec tout l'objet.
             const { error } = await sb().from('galerie').upsert({ id: 1, data });
-            if (error) throw error;
-            return;
-        }
-        if (name === 'saison') {
-            // Document JSONB unique : on écrase la ligne id = 1 avec tout l'objet.
-            const { error } = await sb().from('saison').upsert({ id: 1, data });
             if (error) throw error;
             return;
         }

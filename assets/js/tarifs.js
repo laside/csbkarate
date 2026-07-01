@@ -173,11 +173,10 @@
     }
 
     // ---- Config dynamique depuis un document `saison` (JSONB) ------------
-    // Construit { cotisations, tarif_licence } à partir des lignes tarifs de
-    // la saison qui portent un `coursType`. Renvoie null si aucune ligne n'est
-    // mappée (le caller garde alors sa config DEFAULT/legacy). Factorise la
-    // logique partagée entre inscription.js (public) et membres.js (bureau)
-    // pour que les deux parcours produisent le MÊME total.
+    // LEGACY (ancien modèle JSONB singleton, migration 0005). Conservé pour
+    // compatibilité ; le site utilise désormais configFromCours (modèle
+    // relationnel 0016). Construit { cotisations, tarif_licence } à partir des
+    // lignes tarifs portant un `coursType`. Renvoie null si rien n'est mappé.
     function configFromSaison(saison) {
         if (!saison || typeof saison !== 'object') return null;
         const cotisations = {};
@@ -193,12 +192,34 @@
         };
     }
 
+    // ---- Config dynamique depuis le modèle relationnel (tables saisons + cours) ----
+    // Construit { cotisations, tarif_licence } à partir des lignes `cours` de la
+    // saison active (chacune porte un `cours_type` et un `prix` DÉJÀ en centimes).
+    // Si plusieurs cours partagent un type, on garde le 1er prix rencontré (ordre
+    // d'affichage). Renvoie null si aucun cours n'est typé (le caller garde alors
+    // sa config DEFAULT/legacy). Factorise la logique partagée entre inscription.js
+    // (public) et membres.js (bureau) → MÊME total des deux côtés.
+    function configFromCours(coursRows, tarifLicenceCents) {
+        const cotisations = {};
+        (coursRows || []).forEach(c => {
+            if (c && c.cours_type && c.prix != null && cotisations[c.cours_type] === undefined) {
+                cotisations[c.cours_type] = c.prix;
+            }
+        });
+        if (!Object.keys(cotisations).length) return null;
+        return {
+            cotisations,
+            tarif_licence: tarifLicenceCents || DEFAULT_CONFIG.tarif_licence
+        };
+    }
+
     global.CSBTarifs = {
         DEFAULT_CONFIG,
         computeTarif,
         formatEuros,
         parsePrixText,
         configFromSaison,
+        configFromCours,
         // exposés pour tests unitaires éventuels
         cotisationBase,
         remiseFamille

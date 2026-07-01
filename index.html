@@ -22,8 +22,9 @@
     <script type="module" src="./assets/js/supabase.js"></script>
     <!-- Couche d'accès aux données (routage Supabase / JSON + export) -->
     <script src="./assets/js/store.js" defer></script>
-    <!-- Mode admin (login + modales) + édition de la saison (horaires/tarifs) -->
-    <script src="./assets/js/admin.js" defer></script>
+    <!-- Saisons & cours (lecture publique) : rendu de « Informations Pratiques ».
+         L'édition a migré vers l'Espace Bureau (membres.html). -->
+    <script src="./assets/js/saisons.js" defer></script>
     <script src="./assets/js/saison.js" defer></script>
 
     <!-- Vercel Web Analytics -->
@@ -235,9 +236,6 @@
         <!-- SECTION 4 : INFORMATIONS PRATIQUES (Fond Bleu Dojo) -->
         <section id="infos" class="py-24 bg-csb-dojo text-white border-t border-csb-encre">
             <div class="max-w-7xl mx-auto px-6 relative">
-                <!-- Bouton Admin discret (édition horaires & tarifs) -->
-                <button id="btn-open-login" class="absolute top-0 right-6 bg-white/10 text-gray-300 hover:bg-csb-corail hover:text-white px-3 py-1 rounded text-xs font-bold transition">Admin</button>
-
                 <div class="text-center mb-16">
                     <h2 class="text-5xl font-condensed uppercase tracking-wider mb-4">02. Informations Pratiques</h2>
                     <p class="text-gray-300 max-w-2xl mx-auto font-sans">Lieux, horaires d'entraînements, tarifs et modalités d'inscription pour la saison <span id="saison-infos-label">2026/2027</span>.</p>
@@ -384,90 +382,8 @@
                 </div>
             </div>
         </section>
-        <!-- ============================================== -->
-        <!-- MODALES D'ADMINISTRATION (Cachées par défaut)  -->
-        <!-- ============================================== -->
-
-        <!-- 1. Modale de Connexion -->
-        <div id="modal-login" class="fixed inset-0 bg-csb-encre/90 z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
-            <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full relative">
-                <button id="btn-close-login" class="absolute top-4 right-4 text-gray-400 hover:text-csb-corail">✕</button>
-                <h3 class="font-condensed text-2xl uppercase tracking-wider mb-4">Accès Bureau</h3>
-                <input type="password" id="admin-password" placeholder="Mot de passe" class="w-full border border-csb-tatami rounded p-3 mb-4 font-sans focus:outline-none focus:border-csb-dojo">
-                <button id="btn-login" class="w-full bg-csb-dojo text-white font-bold py-3 rounded hover:bg-csb-corail transition">Se connecter</button>
-                <p id="login-error" class="text-csb-corail text-sm mt-2 hidden">Mot de passe incorrect.</p>
-                <a href="#" id="btn-forgot-password" class="text-sm text-gray-500 hover:text-csb-corail block text-center mt-4">Mot de passe oublié ?</a>
-            </div>
-        </div>
-
-        <!-- 2. Modale Dashboard Admin — Édition de la saison -->
-        <div id="modal-admin" class="fixed inset-0 bg-csb-washi z-50 overflow-y-auto hidden opacity-0 transition-opacity text-csb-encre">
-            <div class="max-w-4xl mx-auto p-6 pt-20">
-                <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
-                    <h2 class="font-serif text-4xl text-csb-encre">Gestion de la Saison</h2>
-                    <div class="flex gap-4">
-                        <button id="btn-export" class="bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700 transition shadow-lg">💾 Enregistrer en ligne</button>
-                        <button id="btn-close-admin" class="bg-gray-200 text-csb-encre px-6 py-2 rounded font-bold hover:bg-gray-300 transition">Fermer</button>
-                    </div>
-                </div>
-
-                <p class="text-sm text-gray-500 mb-8 max-w-3xl">
-                    Modifiez le libellé de la saison, sa plage de dates, les horaires et les tarifs,
-                    puis cliquez sur <strong>Enregistrer en ligne</strong> (sauvegarde directe en base).
-                    Le statut « Saison active / Saison terminée » est calculé automatiquement à partir de la date de fin.
-                </p>
-
-                <div class="space-y-8">
-
-                    <!-- Bloc 1 : La saison -->
-                    <section class="bg-white p-6 rounded-xl border border-csb-tatami shadow-sm">
-                        <h3 class="font-condensed text-xl uppercase tracking-wider mb-4 text-csb-dojo">La saison</h3>
-                        <div class="grid md:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 mb-1">Libellé (ex : 2026/2027)</label>
-                                <input type="text" id="saison-input-label" placeholder="2026/2027" class="w-full border border-csb-tatami rounded p-2 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 mb-1">Début de saison</label>
-                                <input type="date" id="saison-input-debut" class="w-full border border-csb-tatami rounded p-2 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 mb-1">Fin de saison</label>
-                                <input type="date" id="saison-input-fin" class="w-full border border-csb-tatami rounded p-2 text-sm">
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Bloc 2 : Horaires -->
-                    <section class="bg-csb-washi p-6 rounded-xl border border-csb-tatami">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-condensed text-xl uppercase tracking-wider text-csb-dojo">Horaires</h3>
-                            <button id="btn-add-horaire" type="button" class="bg-csb-dojo text-white px-4 py-1.5 rounded text-sm font-bold hover:bg-csb-corail transition">+ Ajouter un créneau</button>
-                        </div>
-                        <div id="admin-horaires-list" class="space-y-4"></div>
-                    </section>
-
-                    <!-- Bloc 3 : Tarifs -->
-                    <section class="bg-csb-washi p-6 rounded-xl border border-csb-tatami">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-condensed text-xl uppercase tracking-wider text-csb-dojo">Tarifs</h3>
-                            <button id="btn-add-tarif" type="button" class="bg-csb-dojo text-white px-4 py-1.5 rounded text-sm font-bold hover:bg-csb-corail transition">+ Ajouter un tarif</button>
-                        </div>
-                        <div id="admin-tarifs-list" class="space-y-3 mb-6"></div>
-
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Note « remises familles »</label>
-                        <textarea id="saison-input-tarifs-note" rows="2" placeholder="Des remises familles sont appliquées…" class="w-full border border-csb-tatami rounded p-2 mb-4 text-sm"></textarea>
-
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Note « licence FFK »</label>
-                        <input type="text" id="saison-input-licence-note" placeholder="* Prévoir 37€ supplémentaires pour la licence FFK." class="w-full border border-csb-tatami rounded p-2 mb-4 text-sm">
-
-                        <label class="block text-xs font-bold text-csb-corail mb-1">Tarif licence FFK (€) — utilisé pour le calcul d'inscription</label>
-                        <input type="number" id="saison-input-licence-tarif" min="0" step="1" placeholder="37" class="w-full border border-csb-tatami rounded p-2 text-sm">
-                    </section>
-
-                </div>
-            </div>
-        </div>
+        <!-- (L'ancien mode admin d'édition de la saison a été retiré : la gestion
+             des saisons/cours/tarifs se fait désormais dans l'Espace Bureau.) -->
     </main>
 
     <!-- C'est ici que le JS va injecter components/footer.html -->
