@@ -44,6 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- État ---
     let currentStep = 1;
     let config = CSBTarifs.DEFAULT_CONFIG; // remplacé par les données saison si dispo
+    let existingSession = false;           // true si l'utilisateur est déjà connecté
+    let existingFamilleId = null;          // famille_id si déjà existant → on saute l'étape 1
 
     // =========================================================
     // Chargement de la config tarifaire depuis la SAISON ACTIVE
@@ -51,17 +53,61 @@ document.addEventListener('DOMContentLoaded', () => {
     // saisis par le bureau dans l'onglet « Saisons & Cours » pilotent le calcul,
     // et le libellé de la saison active tague le dossier créé.
     // =========================================================
-    CSBSaisons.loadActive()
-        .then(res => {
+    async function initInscription() {
+        // 1) Config tarifaire
+        try {
+            const res = await CSBSaisons.loadActive();
             if (res && res.saison) {
                 if (res.saison.label) activeSaisonLabel = res.saison.label;
-                // Helper partagé avec membres.js : même prix des deux côtés.
                 const dyn = CSBTarifs.configFromCours(res.cours, res.saison.tarif_licence);
                 if (dyn) config = Object.assign({}, config, dyn);
             }
-            recompute();
-        })
-        .catch(() => recompute()); // en cas d'échec : on garde DEFAULT_CONFIG
+        } catch (_) { /* garde DEFAULT_CONFIG */ }
+
+        // 2) Détection session existante → skip étape 1
+        try {
+            const { data: { session } } = await sb.auth.getSession();
+            if (session) {
+                const { data: { user } } = await sb.auth.getUser();
+                if (user) {
+                    const { data: fam } = await sb.from('familles')
+                        .select('id, nom_referent, email, telephone_urgence, adresse, code_postal, ville')
+                        .eq('referent_user_id', user.id).maybeSingle();
+                    if (fam) {
+                        existingSession = true;
+                        existingFamilleId = fam.id;
+                        // Pré-remplir l'étape 1 (cache) et la masquer
+                        const step1 = form.querySelector('[data-step="1"]');
+                        if (step1) step1.classList.add('hidden');
+                        // Bannière info
+                        const banner = document.createElement('div');
+                        banner.className = 'bg-green-50 border border-green-300 rounded-2xl p-4 mb-6 text-sm text-green-800';
+                        banner.innerHTML = `<strong>Connecté en tant que ${esc(user.email)}</strong> — vous ajoutez des adhérents à votre dossier famille existant (<em>${esc(fam.nom_referent || '—')}</em>). <button type="button" id="btn-switch-account" class="text-csb-corail font-bold hover:underline ml-2">Changer de compte</button>`;
+                        form.insertBefore(banner, form.firstChild);
+                        $('#btn-switch-account').addEventListener('click', async () => {
+                            await sb.auth.signOut();
+                            location.reload();
+                        });
+                        // Sauter à l'étape 2
+                        currentStep = 2;
+                        addAdherent();
+                    }
+                }
+            }
+        } catch (_) { /* utilisateur non connecté, parcours normal */ }
+
+        recompute();
+        showStep(currentStep); // 2 si famille existante, 1 sinon
+        // Corriger le stepper visuel si on a sauté l'étape 1
+        if (currentStep > 1) {
+            document.querySelectorAll('[data-step-indicator]').forEach((li) => {
+                const s = Number(li.dataset.stepIndicator);
+                if (s === 1) li.classList.add('is-done');
+            });
+        }
+    }
+
+    initInscription();
 
     // =========================================================
     // Cartes adhérents
@@ -246,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
             li.classList.toggle('is-done', s < n);
         });
         // Boutons
-        btnPrev.classList.toggle('invisible', n === 1);
+        btnPrev.classList.toggle('invisible', n === 1 || (existingSession && n === 2));
         btnNext.classList.toggle('hidden', n === 4);
 
         if (n === 3) renderParental();
@@ -290,6 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function validateStep(n) {
         if (n === 1) {
+            if (existingSession) return null; // déjà connecté → skip
             const get = (f) => $(`[data-field="${f}"]`).value.trim();
             if (!get('nomReferent')) return 'Indiquez le nom du référent.';
             const email = get('email');
@@ -354,46 +401,59 @@ document.addEventListener('DOMContentLoaded', () => {
         setStatus('info', 'Création de votre compte et de votre dossier…');
 
         try {
-            const famille = {
-                nomReferent: $('[data-field="nomReferent"]').value.trim(),
-                email: $('[data-field="email"]').value.trim(),
-                password: $('[data-field="password"]').value,
-                telephone: $('[data-field="telephone"]').value.trim(),
-                adresse: $('[data-field="adresse"]').value.trim(),
-                codePostal: $('[data-field="codePostal"]').value.trim(),
-                ville: $('[data-field="ville"]').value.trim()
-            };
+            // Si l'utilisateur est déjà connecté avec une famille, on saute
+            // la création du compte Auth et de la famille. On insère juste
+            // les adhérents et on met à jour / crée le dossier.
+            let uid, familleId, familleEmail;
+
+            if (existingSession && existingFamilleId) {
+                const { data: { user } } = await sb.auth.getUser();
+                if (!user) throw new Error('Session expirée, reconnectez-vous.');
+                uid = user.id;
+                familleId = existingFamilleId;
+                // Récupérer l'email de la famille existante
+                const { data: famData } = await sb.from('familles')
+                    .select('email').eq('id', familleId).maybeSingle();
+                familleEmail = (famData && famData.email) ? famData.email : (user.email || '');
+            } else {
+                const famille = {
+                    nomReferent: $('[data-field="nomReferent"]').value.trim(),
+                    email: $('[data-field="email"]').value.trim(),
+                    password: $('[data-field="password"]').value,
+                    telephone: $('[data-field="telephone"]').value.trim(),
+                    adresse: $('[data-field="adresse"]').value.trim(),
+                    codePostal: $('[data-field="codePostal"]').value.trim(),
+                    ville: $('[data-field="ville"]').value.trim()
+                };
+                const { data: signup, error: authErr } = await sb.auth.signUp({
+                    email: famille.email,
+                    password: famille.password,
+                    options: { data: { nom_referent: famille.nomReferent } }
+                });
+                if (authErr) throw new Error(traduireAuthErreur(authErr.message));
+                if (!signup.session) {
+                    throw new Error('Compte créé : confirmez votre email puis revenez finaliser l\'inscription.');
+                }
+                uid = signup.user.id;
+                familleEmail = famille.email;
+
+                const { data: famRow, error: famErr } = await sb.from('familles')
+                    .upsert({
+                        referent_user_id: uid,
+                        nom_referent: famille.nomReferent,
+                        email: famille.email,
+                        telephone_urgence: famille.telephone,
+                        adresse: famille.adresse,
+                        code_postal: famille.codePostal,
+                        ville: famille.ville
+                    }, { onConflict: 'referent_user_id' })
+                    .select('id').single();
+                if (famErr) throw famErr;
+                familleId = famRow.id;
+            }
+
             const adherents = readAllAdherents();
             const detail = CSBTarifs.computeTarif(adherents, config);
-
-            // 1) Compte référent (Auth). « Confirm email » désactivé => session directe.
-            const { data: signup, error: authErr } = await sb.auth.signUp({
-                email: famille.email,
-                password: famille.password,
-                options: { data: { nom_referent: famille.nomReferent } }
-            });
-            if (authErr) throw new Error(traduireAuthErreur(authErr.message));
-            if (!signup.session) {
-                throw new Error('Compte créé : confirmez votre email puis revenez finaliser l\'inscription.');
-            }
-            const uid = signup.user.id;
-
-            // 2) Famille (upsert : ré-essai possible sans doublon).
-            const { data: famRow, error: famErr } = await sb.from('familles')
-                .upsert({
-                    referent_user_id: uid,
-                    nom_referent: famille.nomReferent,
-                    email: famille.email,
-                    telephone_urgence: famille.telephone,
-                    adresse: famille.adresse,
-                    code_postal: famille.codePostal,
-                    ville: famille.ville
-                }, { onConflict: 'referent_user_id' })
-                .select('id').single();
-            if (famErr) throw famErr;
-            const familleId = famRow.id;
-
-            // 3) Photos (bucket privé) puis adhérents.
             const rows = [];
             for (let i = 0; i < adherents.length; i++) {
                 const a = adherents[i];
@@ -412,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     prenom: a.prenom,
                     date_naissance: a.dateNaissance || null,
                     genre: a.genre || null,
-                    email: famille.email,
+                    email: familleEmail,
                     cours_type: a.coursType || null,
                     membre_bureau: a.membreBureau,
                     passeport_sportif: !!a.numeroPasseport,
@@ -422,7 +482,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     droit_image: a.droitImage,
                     photo_path: photoPath,
                     grade_actuel: a.grade,
-                    statut_dossier: 'Incomplet' // statut combiné dérivé ensuite par le bureau (pièces × règlement)
+                    statut_dossier: 'Incomplet', // statut combiné dérivé ensuite par le bureau (pièces × règlement)
+                    statut_validation: 'en_attente', // le bureau accepte/refuse explicitement
+                    is_new: true // badge « Nouveau » côté Espace Bureau (effacé à la 1re ouverture)
                 });
             }
             const { error: adhErr } = await sb.from('adherents').insert(rows);
@@ -439,6 +501,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 statut: 'Incomplet'
             });
             if (dosErr) throw dosErr;
+
+            // 4bis) Notifie le bureau du nouveau dossier famille (email, non bloquant).
+            try { await sb.functions.invoke('notify', { body: { type: 'new_member', famille_id: familleId } }); }
+            catch (notifErr) { console.warn('[notify] non envoyé :', notifErr && notifErr.message); }
 
             // 5) Succès.
             form.querySelectorAll('[data-step]').forEach((s) => s.classList.add('hidden'));
@@ -465,7 +531,5 @@ document.addEventListener('DOMContentLoaded', () => {
         return msg;
     }
 
-    // --- Initialisation ---
-    addAdherent();   // une première carte
-    showStep(1);
+    // --- Initialisation (addAdherent est appelé dans initInscription) ---
 });

@@ -21,6 +21,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const fmt = (c) => CSBTarifs.formatEuros(c);
     const COURS_LABEL = { 'Baby': 'Baby Karaté', 'Enfant': 'Enfant', 'Adulte': 'Adulte', 'Self-Defense': 'Self-défense' };
 
+    // Catalogue des pièces justificatives téléversables par la famille.
+    // `field: 'photo'` → stocké dans adherents.photo_path (compat bureau) ;
+    // sinon → adherents.documents_files[key]. `minorOnly` = mineurs uniquement.
+    // La VALIDATION (coche) reste au bureau (jsonb adherents.documents, 0009).
+    const PIECES = [
+        { key: 'photo',                  label: "Photo d'identité",                          field: 'photo' },
+        { key: 'certificat_medical',     label: 'Certificat médical / questionnaire santé' },
+        { key: 'autorisation_parentale', label: 'Autorisation parentale', minorOnly: true },
+        { key: 'reglement_interieur',    label: 'Règlement intérieur signé' }
+    ];
+
+    // Badge de validation bureau (axe explicite, distinct du statut règlement/pièces).
+    const VALIDATION_BADGE = {
+        accepte:    ['✅ Accepté',   'bg-green-50 text-green-700 border-green-300'],
+        refuse:     ['⛔ Refusé',    'bg-red-50 text-red-700 border-red-300'],
+        en_attente: ['⏳ En attente', 'bg-amber-50 text-amber-700 border-amber-300']
+    };
+
+    // Notification email non bloquante (Edge Function `notify`). Un échec
+    // (fonction non déployée, quota…) ne doit JAMAIS casser le parcours famille.
+    async function notify(body) {
+        try { await sb.functions.invoke('notify', { body }); }
+        catch (err) { console.warn('[notify] non envoyé :', err && err.message); }
+    }
+
+    // Config tarifaire de la saison active (mêmes prix que l'inscription en ligne).
+    let tarifConfig = null;
+    async function loadTarifConfig() {
+        if (tarifConfig) return tarifConfig;
+        try {
+            const res = await CSBSaisons.loadActive();
+            const dyn = res && res.saison ? CSBTarifs.configFromCours(res.cours, res.saison.tarif_licence) : null;
+            tarifConfig = dyn ? Object.assign({}, CSBTarifs.DEFAULT_CONFIG, dyn) : CSBTarifs.DEFAULT_CONFIG;
+        } catch (_) {
+            tarifConfig = CSBTarifs.DEFAULT_CONFIG;
+        }
+        return tarifConfig;
+    }
+
     // --- Éléments ---
     const boot = $('#boot');
     const gate = $('#gate');
@@ -197,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!famille) {
             adherents = []; dossiers = []; paiements = []; factures = [];
-            renderFamille(); renderAdherents(); renderDossiers();
+            renderFamille(); renderAdherents(); renderDossiers(); renderFamilleTotal();
             return;
         }
         const fid = famille.id;
@@ -223,6 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderFamille();
         renderAdherents();
         renderDossiers();
+        renderFamilleTotal();
     }
 
     // =========================================================
@@ -424,24 +464,517 @@ document.addEventListener('DOMContentLoaded', () => {
         return age;
     }
 
+    // Âge au 1er septembre de l'année de rentrée (pour la règle Self-Défense ≥ 13 ans).
+    const ANNEE_RENTREE = 2026;
+    function ageSept(dateStr) {
+        if (!dateStr) return null;
+        const d = new Date(dateStr);
+        if (isNaN(d)) return null;
+        const ref = new Date(ANNEE_RENTREE, 8, 1); // 1er septembre
+        let age = ref.getFullYear() - d.getFullYear();
+        if (ref.getMonth() < d.getMonth() || (ref.getMonth() === d.getMonth() && ref.getDate() < d.getDate())) age--;
+        return age;
+    }
+
+    // Ids des adhérents dont le panneau « pièces jointes » est déplié
+    // (mémorisé pour survivre aux re-render après upload/suppression).
+    const expandedPieces = new Set();
+
     function renderAdherents() {
         const grid = $('#adherents-grid');
+        const btn = $('#btn-add-adherent');
+        if (btn) btn.disabled = !famille;
         if (!adherents.length) {
-            grid.innerHTML = '<p class="text-gray-500">Aucun adhérent enregistré.</p>';
+            grid.innerHTML = '<p class="text-gray-500">Aucun adhérent enregistré pour le moment.</p>';
             return;
         }
-        grid.innerHTML = adherents.map((a) => {
-            const age = ageOf(a.date_naissance);
-            const meta = [COURS_LABEL[a.cours_type] || '', age === null ? '' : `${age} ans`].filter(Boolean).join(' · ');
+        grid.innerHTML = adherents.map(adherentCardHtml).join('');
+    }
+
+    // Pièces applicables à un adhérent (les pièces `minorOnly` ne concernent
+    // que les mineurs).
+    function piecesFor(a) {
+        const age = ageOf(a.date_naissance);
+        const isMinor = age !== null && age < 18;
+        return PIECES.filter(p => !p.minorOnly || isMinor);
+    }
+    // Chemin Storage du fichier d'une pièce (photo -> photo_path, sinon documents_files).
+    function pieceFilePath(a, piece) {
+        if (piece.field === 'photo') return a.photo_path || '';
+        const files = (a.documents_files && typeof a.documents_files === 'object') ? a.documents_files : {};
+        return files[piece.key] || '';
+    }
+    // Nombre de pièces fournies (fichier présent) / applicables.
+    function piecesStats(a) {
+        const applicable = piecesFor(a);
+        const fournies = applicable.filter(p => pieceFilePath(a, p)).length;
+        return { fournies, total: applicable.length };
+    }
+
+    function adherentCardHtml(a) {
+        const age = ageOf(a.date_naissance);
+        const meta = [COURS_LABEL[a.cours_type] || '', age === null ? '' : `${age} ans`].filter(Boolean).join(' · ');
+        const [vTxt, vCls] = VALIDATION_BADGE[a.statut_validation] || VALIDATION_BADGE.en_attente;
+        const { fournies, total } = piecesStats(a);
+        const open = expandedPieces.has(a.id);
+
+        return `
+            <div class="bg-white rounded-2xl border border-csb-tatami p-5" data-adherent="${a.id}">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <p class="text-lg font-bold text-csb-encre">${esc(a.prenom)} ${esc(a.nom)}</p>
+                        <p class="text-sm text-gray-400">${esc(meta)}</p>
+                        <span class="inline-block mt-2 text-xs font-condensed uppercase tracking-wider bg-csb-washi border border-csb-tatami rounded-full px-3 py-1 text-csb-dojo">
+                            ${esc(a.grade_actuel || 'Ceinture Blanche')}
+                        </span>
+                    </div>
+                    <span class="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${vCls}">${vTxt}</span>
+                </div>
+
+                ${a.statut_validation === 'refuse' && a.validation_note ? `
+                    <p class="mt-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">Motif du bureau : ${esc(a.validation_note)}</p>` : ''}
+
+                <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-csb-tatami">
+                    <button type="button" data-toggle-pieces="${a.id}"
+                            class="px-4 py-1.5 rounded-full text-xs font-condensed uppercase tracking-wider bg-csb-dojo text-white hover:bg-csb-corail transition">
+                        📎 Pièces (${fournies}/${total})
+                    </button>
+                    <button type="button" data-edit-adherent="${a.id}"
+                            class="px-4 py-1.5 rounded-full text-xs font-condensed uppercase tracking-wider border border-csb-tatami text-csb-encre hover:bg-csb-washi transition">
+                        ✏️ Modifier
+                    </button>
+                    <button type="button" data-delete-adherent="${a.id}"
+                            class="px-4 py-1.5 rounded-full text-xs font-condensed uppercase tracking-wider text-csb-corail hover:underline ml-auto">
+                        Retirer
+                    </button>
+                </div>
+
+                <div data-pieces-panel="${a.id}" class="${open ? '' : 'hidden'} mt-4 pt-4 border-t border-csb-tatami space-y-3">
+                    ${piecesPanelHtml(a)}
+                </div>
+                <div data-edit-panel="${a.id}" class="hidden mt-4 pt-4 border-t border-csb-tatami"></div>
+                <p data-adherent-fb="${a.id}" class="text-sm mt-2"></p>
+            </div>`;
+    }
+
+    function piecesPanelHtml(a) {
+        return piecesFor(a).map(p => {
+            const path = pieceFilePath(a, p);
+            const docs = (a.documents && typeof a.documents === 'object') ? a.documents : {};
+            const valide = !!docs[p.key]; // coche posée par le bureau (0009)
+            const etat = valide
+                ? '<span class="text-xs font-bold text-green-700">✔ Validé par le bureau</span>'
+                : (path
+                    ? '<span class="text-xs text-amber-700">⏳ En attente de validation</span>'
+                    : '<span class="text-xs text-gray-400">À fournir</span>');
             return `
-                <div class="bg-white rounded-2xl border border-csb-tatami p-5">
-                    <p class="text-lg font-bold text-csb-encre">${esc(a.prenom)} ${esc(a.nom)}</p>
-                    <p class="text-sm text-gray-400 mb-3">${esc(meta)}</p>
-                    <span class="inline-block text-xs font-condensed uppercase tracking-wider bg-csb-washi border border-csb-tatami rounded-full px-3 py-1 text-csb-dojo">
-                        ${esc(a.grade_actuel || 'Ceinture Blanche')}
-                    </span>
+                <div class="flex flex-wrap items-center gap-3 justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-csb-encre">${esc(p.label)}</p>
+                        ${etat}
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${path ? `<button type="button" data-view-file="${esc(path)}" class="text-xs text-csb-dojo hover:text-csb-corail underline">Voir</button>` : ''}
+                        <label class="px-3 py-1.5 rounded-full text-xs font-condensed uppercase tracking-wider border border-csb-tatami text-csb-encre hover:bg-csb-washi transition cursor-pointer">
+                            ${path ? 'Remplacer' : 'Téléverser'}
+                            <input type="file" class="hidden" accept="image/*,.pdf" data-upload-piece="${a.id}" data-piece-key="${p.key}">
+                        </label>
+                        ${path ? `<button type="button" data-remove-piece="${a.id}" data-piece-key="${p.key}" class="text-xs text-csb-corail hover:underline">Retirer</button>` : ''}
+                    </div>
                 </div>`;
         }).join('');
+    }
+
+    // =========================================================
+    // Récapitulatif tarifaire FAMILLE (calcul dynamique, lecture seule)
+    // =========================================================
+    // Somme due pour TOUS les adhérents du foyer, calculée en direct avec le
+    // MÊME moteur que l'inscription (CSBTarifs) et les prix de la saison active.
+    // C'est une estimation d'aide à la décision : le montant qui fait foi reste
+    // celui du/des dossier(s) créés par le bureau (bloc « Règlement » ci-dessous).
+    async function renderFamilleTotal() {
+        const el = $('#famille-total');
+        if (!el) return;
+        if (!famille || !adherents.length) { el.innerHTML = ''; return; }
+
+        const cfg = await loadTarifConfig();
+        const liste = adherents.map(a => ({
+            prenom: a.prenom, coursType: a.cours_type,
+            membreBureau: a.membre_bureau, passSport: a.pass_sport
+        }));
+        const d = CSBTarifs.computeTarif(liste, cfg);
+
+        const lignes = d.lignes.map(l => `
+            <div class="flex justify-between text-sm py-1">
+                <span class="text-gray-600">${esc(l.nom)} <span class="text-gray-400">· ${esc(l.label)}</span></span>
+                <span class="text-csb-encre font-medium">${fmt(l.montant)}</span>
+            </div>`).join('');
+
+        const remises = [];
+        if (d.remiseFamille) remises.push(`<div class="flex justify-between text-sm py-1"><span class="text-green-700">Remise famille (${d.nbInscrits} inscrits)</span><span class="text-green-700 font-medium">− ${fmt(d.remiseFamille)}</span></div>`);
+        if (d.remisePassSport) remises.push(`<div class="flex justify-between text-sm py-1"><span class="text-green-700">Pass'Sport (${d.nbPassSport})</span><span class="text-green-700 font-medium">− ${fmt(d.remisePassSport)}</span></div>`);
+
+        el.innerHTML = `
+            <div class="bg-white rounded-2xl border border-csb-tatami border-t-4 border-t-csb-dojo p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="font-condensed text-xl uppercase tracking-wider text-csb-encre">Montant famille (estimation)</h2>
+                    <span class="text-2xl font-bold text-csb-encre">${fmt(d.total)}</span>
+                </div>
+                <div class="border-t border-csb-tatami/60 pt-2">
+                    ${lignes}
+                    ${remises.join('')}
+                </div>
+                <p class="text-xs text-gray-400 mt-3">Calcul indicatif pour l'ensemble du foyer (licence FFK incluse). Le montant définitif figure dans « Règlement &amp; documents » une fois le dossier créé par le bureau.</p>
+            </div>`;
+    }
+
+    // =========================================================
+    // Interactions sur les cartes adhérents (délégation)
+    // =========================================================
+    const adherentsGrid = $('#adherents-grid');
+    adherentsGrid && adherentsGrid.addEventListener('click', (e) => {
+        const toggle = e.target.closest('[data-toggle-pieces]');
+        if (toggle) return togglePieces(Number(toggle.dataset.togglePieces));
+        const edit = e.target.closest('[data-edit-adherent]');
+        if (edit) return openEditAdherent(Number(edit.dataset.editAdherent));
+        const del = e.target.closest('[data-delete-adherent]');
+        if (del) return deleteAdherent(Number(del.dataset.deleteAdherent));
+        const view = e.target.closest('[data-view-file]');
+        if (view) return viewFile(view.dataset.viewFile);
+        const removePc = e.target.closest('[data-remove-piece]');
+        if (removePc) return removePiece(Number(removePc.dataset.removePiece), removePc.dataset.pieceKey);
+    });
+    adherentsGrid && adherentsGrid.addEventListener('change', (e) => {
+        const up = e.target.closest('[data-upload-piece]');
+        if (up && up.files && up.files[0]) uploadPiece(Number(up.dataset.uploadPiece), up.dataset.pieceKey, up.files[0]);
+    });
+
+    function togglePieces(id) {
+        if (expandedPieces.has(id)) expandedPieces.delete(id); else expandedPieces.add(id);
+        const panel = adherentsGrid.querySelector(`[data-pieces-panel="${id}"]`);
+        if (panel) panel.classList.toggle('hidden', !expandedPieces.has(id));
+    }
+
+    function adherentFb(id) { return adherentsGrid.querySelector(`[data-adherent-fb="${id}"]`); }
+
+    async function viewFile(path) {
+        try {
+            const { data, error } = await sb.storage.from('dossiers').createSignedUrl(path, 3600);
+            if (error) throw error;
+            window.open(data.signedUrl, '_blank', 'noopener');
+        } catch (err) { toast('Impossible d\'ouvrir le fichier : ' + (err.message || ''), 'error'); }
+    }
+
+    // --- Téléversement d'une pièce dans le bucket privé `dossiers` ---
+    async function uploadPiece(id, key, file) {
+        const a = adherents.find(x => x.id === id);
+        const piece = PIECES.find(p => p.key === key);
+        if (!a || !piece) return;
+        const fb = adherentFb(id);
+        if (fb) { fb.textContent = 'Envoi du fichier…'; fb.className = 'text-sm mt-2 text-gray-400'; }
+        try {
+            const { data: { user } } = await sb.auth.getUser();
+            const uid = user ? user.id : 'unknown';
+            const ext = (file.name.split('.').pop() || 'dat').toLowerCase();
+            const path = `${uid}/${id}-${key}-${Date.now()}.${ext}`;
+            const { error: upErr } = await sb.storage.from('dossiers').upload(path, file, { upsert: true });
+            if (upErr) throw upErr;
+
+            // Ancien fichier à nettoyer (best-effort, ne bloque pas).
+            const old = pieceFilePath(a, piece);
+
+            if (piece.field === 'photo') {
+                const { error } = await sb.from('adherents').update({ photo_path: path }).eq('id', id);
+                if (error) throw error;
+                a.photo_path = path;
+            } else {
+                const files = Object.assign({}, a.documents_files || {}, { [key]: path });
+                const { error } = await sb.from('adherents').update({ documents_files: files }).eq('id', id);
+                if (error) throw error;
+                a.documents_files = files;
+            }
+            if (old && old !== path) { sb.storage.from('dossiers').remove([old]).catch(() => {}); }
+
+            if (fb) fb.textContent = '';
+            toast('Pièce enregistrée.');
+            renderAdherents();
+        } catch (err) {
+            console.error(err);
+            if (fb) { fb.textContent = '⚠ ' + (err.message || 'Échec de l\'envoi'); fb.className = 'text-sm mt-2 text-csb-corail font-bold'; }
+        }
+    }
+
+    async function removePiece(id, key) {
+        const a = adherents.find(x => x.id === id);
+        const piece = PIECES.find(p => p.key === key);
+        if (!a || !piece) return;
+        if (!confirm('Retirer ce fichier ?')) return;
+        const old = pieceFilePath(a, piece);
+        try {
+            if (piece.field === 'photo') {
+                const { error } = await sb.from('adherents').update({ photo_path: '' }).eq('id', id);
+                if (error) throw error;
+                a.photo_path = '';
+            } else {
+                const files = Object.assign({}, a.documents_files || {});
+                delete files[key];
+                const { error } = await sb.from('adherents').update({ documents_files: files }).eq('id', id);
+                if (error) throw error;
+                a.documents_files = files;
+            }
+            if (old) { sb.storage.from('dossiers').remove([old]).catch(() => {}); }
+            toast('Fichier retiré.');
+            renderAdherents();
+        } catch (err) {
+            console.error(err);
+            toast('Échec : ' + (err.message || ''), 'error');
+        }
+    }
+
+    // --- Édition d'un adhérent (panneau inline) ---
+    const GRADES_LIST = [
+        'Ceinture Blanche', 'Ceinture Jaune', 'Ceinture Orange', 'Ceinture Verte',
+        'Ceinture Bleue', 'Ceinture Marron', '1er Dan', '2e Dan', '3e Dan'
+    ];
+    function openEditAdherent(id) {
+        const a = adherents.find(x => x.id === id);
+        const panel = adherentsGrid.querySelector(`[data-edit-panel="${id}"]`);
+        if (!a || !panel) return;
+        if (!panel.classList.contains('hidden')) { panel.classList.add('hidden'); panel.innerHTML = ''; return; }
+        const coursOpts = COURS_OPTIONS.map(o => `<option value="${o.value}" ${o.value === a.cours_type ? 'selected' : ''}>${esc(o.label)}</option>`).join('');
+        const gradeOpts = GRADES_LIST.map(g => `<option ${g === a.grade_actuel ? 'selected' : ''}>${esc(g)}</option>`).join('');
+        panel.innerHTML = `
+            <div class="grid sm:grid-cols-2 gap-3">
+                <div><label class="lbl">Prénom</label><input data-e="prenom" class="inp" value="${esc(a.prenom || '')}"></div>
+                <div><label class="lbl">Nom</label><input data-e="nom" class="inp" value="${esc(a.nom || '')}"></div>
+                <div><label class="lbl">Date de naissance</label><input type="date" data-e="date_naissance" class="inp" value="${esc(a.date_naissance || '')}"></div>
+                <div><label class="lbl">Cours</label><select data-e="cours_type" class="inp">${coursOpts}</select></div>
+                <div><label class="lbl">Grade</label><select data-e="grade_actuel" class="inp">${gradeOpts}</select></div>
+            </div>
+            <div class="flex gap-3 mt-4">
+                <button type="button" data-save-edit="${id}" class="px-5 py-2 rounded-full font-condensed uppercase tracking-wider bg-green-600 text-white hover:bg-green-700 transition text-sm">💾 Enregistrer</button>
+                <button type="button" data-cancel-edit="${id}" class="px-5 py-2 rounded-full font-condensed uppercase tracking-wider bg-gray-200 text-csb-encre hover:bg-gray-300 transition text-sm">Annuler</button>
+            </div>`;
+        panel.classList.remove('hidden');
+        panel.querySelector(`[data-save-edit="${id}"]`).addEventListener('click', () => saveEditAdherent(id, panel));
+        panel.querySelector(`[data-cancel-edit="${id}"]`).addEventListener('click', () => { panel.classList.add('hidden'); panel.innerHTML = ''; });
+    }
+
+    async function saveEditAdherent(id, panel) {
+        const a = adherents.find(x => x.id === id);
+        if (!a) return;
+        const val = (k) => panel.querySelector(`[data-e="${k}"]`).value;
+        const coursType = val('cours_type');
+        const naissance = val('date_naissance');
+        if (coursType === 'Self-Defense') {
+            const age = ageSept(naissance);
+            if (age !== null && age < 13) { toast('La self-défense est réservée aux 13 ans et plus.', 'error'); return; }
+        }
+        const patch = {
+            prenom: val('prenom').trim(), nom: val('nom').trim(),
+            date_naissance: naissance || null, cours_type: coursType || null,
+            grade_actuel: val('grade_actuel')
+        };
+        try {
+            const { error } = await sb.from('adherents').update(patch).eq('id', id);
+            if (error) throw error;
+            Object.assign(a, patch);
+            panel.classList.add('hidden'); panel.innerHTML = '';
+            toast('Adhérent mis à jour.');
+            renderAdherents();
+            renderFamilleTotal();
+        } catch (err) {
+            console.error(err);
+            toast('Échec : ' + (err.message || ''), 'error');
+        }
+    }
+
+    async function deleteAdherent(id) {
+        const a = adherents.find(x => x.id === id);
+        if (!a) return;
+        if (!confirm(`Retirer ${a.prenom} ${a.nom} du dossier famille ?\nSes pièces et son grade seront perdus (le règlement de la famille n'est pas modifié).`)) return;
+        try {
+            const { error } = await sb.from('adherents').delete().eq('id', id);
+            if (error) throw error;
+            adherents = adherents.filter(x => x.id !== id);
+            expandedPieces.delete(id);
+            toast('Adhérent retiré.');
+            renderAdherents();
+            renderFamilleTotal();
+        } catch (err) {
+            console.error(err);
+            toast('Échec : ' + (err.message || ''), 'error');
+        }
+    }
+
+    // =========================================================
+    // AJOUT D'ADHÉRENT (depuis l'Espace Adhérent, famille existante)
+    // =========================================================
+    const addFormContainer = $('#add-adherent-form');
+    const btnAddAdherent = $('#btn-add-adherent');
+
+    const COURS_OPTIONS = [
+        { value: '', label: '— Choisir —' },
+        { value: 'Baby', label: 'Baby Karaté' },
+        { value: 'Enfant', label: 'Enfant' },
+        { value: 'Adulte', label: 'Adulte' },
+        { value: 'Self-Defense', label: 'Self-défense' }
+    ];
+
+    btnAddAdherent && btnAddAdherent.addEventListener('click', () => {
+        if (!famille) return;
+        const hidden = addFormContainer.classList.contains('hidden');
+        if (hidden) showAddForm();
+        else addFormContainer.classList.add('hidden');
+    });
+
+    function showAddForm() {
+        if (!addFormContainer) return;
+        const opts = COURS_OPTIONS.map(o => `<option value="${o.value}">${esc(o.label)}</option>`).join('');
+        addFormContainer.innerHTML = `
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-condensed text-lg uppercase tracking-wider text-csb-encre">Nouvel adhérent</h3>
+                <button type="button" id="btn-cancel-add" class="text-gray-400 hover:text-csb-corail text-xl leading-none">&times;</button>
+            </div>
+            <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="lbl" for="add-prenom">Prénom *</label>
+                    <input id="add-prenom" class="inp" required>
+                </div>
+                <div>
+                    <label class="lbl" for="add-nom">Nom *</label>
+                    <input id="add-nom" class="inp" required>
+                </div>
+                <div>
+                    <label class="lbl" for="add-naissance">Date de naissance *</label>
+                    <input id="add-naissance" type="date" class="inp" required>
+                </div>
+                <div>
+                    <label class="lbl" for="add-genre">Genre</label>
+                    <select id="add-genre" class="inp">
+                        <option value="">—</option>
+                        <option value="M">Masculin</option>
+                        <option value="F">Féminin</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="lbl" for="add-cours">Cours *</label>
+                    <select id="add-cours" class="inp">${opts}</select>
+                </div>
+                <div>
+                    <label class="lbl" for="add-grade">Grade</label>
+                    <select id="add-grade" class="inp">
+                        <option>Ceinture Blanche</option><option>Ceinture Jaune</option><option>Ceinture Orange</option>
+                        <option>Ceinture Verte</option><option>Ceinture Bleue</option><option>Ceinture Marron</option>
+                        <option>1er Dan</option><option>2e Dan</option><option>3e Dan</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="lbl" for="add-photo">Photo d'identité</label>
+                    <input id="add-photo" type="file" accept="image/*" class="inp">
+                </div>
+                <div>
+                    <label class="lbl" for="add-pass-sport">Code Pass'Sport</label>
+                    <input id="add-pass-sport" class="inp" placeholder="(si éligible)">
+                </div>
+            </div>
+            <div class="flex gap-3 mt-5 pt-4 border-t border-csb-tatami">
+                <button id="btn-submit-add" type="button"
+                        class="px-6 py-2.5 rounded-full font-condensed uppercase tracking-wider bg-green-600 text-white hover:bg-green-700 transition text-sm shadow">
+                    💾 Enregistrer l'adhérent
+                </button>
+                <button id="btn-cancel-add-2" type="button"
+                        class="px-6 py-2.5 rounded-full font-condensed uppercase tracking-wider bg-gray-200 text-csb-encre hover:bg-gray-300 transition text-sm">
+                    Annuler
+                </button>
+            </div>
+            <p id="add-feedback" class="text-sm mt-3"></p>`;
+        addFormContainer.classList.remove('hidden');
+        window.scrollTo({ top: addFormContainer.offsetTop - 120, behavior: 'smooth' });
+
+        $('#btn-cancel-add') && $('#btn-cancel-add').addEventListener('click', () => addFormContainer.classList.add('hidden'));
+        $('#btn-cancel-add-2') && $('#btn-cancel-add-2').addEventListener('click', () => addFormContainer.classList.add('hidden'));
+        $('#btn-submit-add') && $('#btn-submit-add').addEventListener('click', submitAddAdherent);
+    }
+
+    async function submitAddAdherent() {
+        const fb = $('#add-feedback');
+        const btn = $('#btn-submit-add');
+        const prenom = $('#add-prenom').value.trim();
+        const nom = $('#add-nom').value.trim();
+        const naissance = $('#add-naissance').value;
+        const genre = $('#add-genre').value;
+        const coursType = $('#add-cours').value;
+        const grade = $('#add-grade').value;
+        const passSportCode = $('#add-pass-sport').value.trim();
+        const photoInput = $('#add-photo');
+        const photoFile = photoInput && photoInput.files && photoInput.files[0] ? photoInput.files[0] : null;
+
+        if (!prenom || !nom) { fb.textContent = 'Prénom et nom requis.'; fb.className = 'text-sm text-csb-corail font-bold'; return; }
+        if (!naissance) { fb.textContent = 'Date de naissance requise.'; fb.className = 'text-sm text-csb-corail font-bold'; return; }
+        if (!coursType) { fb.textContent = 'Choisissez un type de cours.'; fb.className = 'text-sm text-csb-corail font-bold'; return; }
+
+        const age = ageSept(naissance);
+        if (coursType === 'Self-Defense' && age !== null && age < 13) {
+            fb.textContent = 'La self-défense est réservée aux 13 ans et plus.'; fb.className = 'text-sm text-csb-corail font-bold'; return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Enregistrement…';
+        fb.textContent = '';
+        fb.className = 'text-sm text-gray-400';
+
+        try {
+            // Photo
+            let photoPath = '';
+            if (photoFile) {
+                const { data: { user } } = await sb.auth.getUser();
+                const uid = user ? user.id : 'unknown';
+                const ext = (photoFile.name.split('.').pop() || 'jpg').toLowerCase();
+                const path = `${uid}/${Date.now()}-add.${ext}`;
+                const { error: upErr } = await sb.storage.from('dossiers').upload(path, photoFile, { upsert: true });
+                if (upErr) console.warn('Photo non envoyée :', upErr.message);
+                else photoPath = path;
+            }
+
+            // Adhérent — is_new + statut_validation 'en_attente' : le bureau verra
+            // le badge « Nouveau » et devra accepter/refuser explicitement.
+            const { data: newRow, error: adhErr } = await sb.from('adherents').insert({
+                famille_id: famille.id,
+                prenom, nom,
+                date_naissance: naissance || null,
+                genre: genre || null,
+                email: famille.email || '',
+                cours_type: coursType,
+                grade_actuel: grade || 'Ceinture Blanche',
+                pass_sport: !!passSportCode,
+                pass_sport_code: passSportCode,
+                droit_image: true,
+                photo_path: photoPath,
+                statut_dossier: 'Incomplet',
+                statut_validation: 'en_attente',
+                is_new: true
+            }).select().single();
+            if (adhErr) throw adhErr;
+
+            // Recharger les adhérents
+            const { data: newAdh } = await sb.from('adherents').select('*').eq('famille_id', famille.id).order('id', { ascending: true });
+            adherents = newAdh || [];
+            renderAdherents();
+            renderFamilleTotal();
+            addFormContainer.classList.add('hidden');
+            toast('Adhérent ajouté avec succès. Le bureau validera les pièces justificatives.');
+
+            // Notifie le bureau (email) — non bloquant.
+            if (newRow && newRow.id) notify({ type: 'new_member', adherent_id: newRow.id });
+        } catch (err) {
+            console.error(err);
+            fb.textContent = '⚠ ' + (err.message || 'Échec');
+            fb.className = 'text-sm text-csb-corail font-bold';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '💾 Enregistrer l\'adhérent';
+        }
     }
 
     // =========================================================
