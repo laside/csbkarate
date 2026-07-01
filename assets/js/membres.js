@@ -244,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rowsEl.innerHTML = '<tr><td colspan="8" class="px-4 py-10 text-center text-gray-400">Chargement…</td></tr>';
         const [aRes, dRes, pRes, prRes] = await Promise.all([
             sb.from('adherents')
-                .select('id, prenom, nom, date_naissance, genre, cours_type, grade_actuel, statut_dossier, membre_bureau, documents, famille_id, familles(nom_referent, ville)')
+                .select('id, prenom, nom, date_naissance, genre, cours_type, grade_actuel, statut_dossier, membre_bureau, documents, famille_id, familles(nom_referent, ville, email)')
                 .order('nom', { ascending: true }),
             sb.from('dossiers').select('id, famille_id, montant_total, statut'),
             sb.from('paiements').select('dossier_id, montant, encaisse'),

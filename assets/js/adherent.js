@@ -265,11 +265,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 </button>
             </div>
             <div id="profil-view" class="text-sm text-gray-500 space-y-1">
+                ${famille.email ? `<p>✉️ ${esc(famille.email)}</p>` : ''}
                 ${famille.adresse ? `<p>${esc(famille.adresse)}</p>` : ''}
                 ${famille.code_postal || famille.ville ? `<p>${esc([famille.code_postal, famille.ville].filter(Boolean).join(' '))}</p>` : ''}
                 ${famille.telephone_urgence ? `<p>Tél. urgence : ${esc(famille.telephone_urgence)}</p>` : ''}
             </div>
             <div id="profil-edit" class="hidden space-y-3 mt-2">
+                <p class="text-sm text-gray-400">✉️ L'email de connexion (<strong>${esc(famille.email || '—')}</strong>) ne peut pas être modifié ici. Utilisez « Mot de passe oublié » ou contactez le bureau.</p>
                 <div>
                     <label class="lbl" for="edit-nom">Nom du référent</label>
                     <input id="edit-nom" class="inp" value="${esc(famille.nom_referent || '')}">
