@@ -196,7 +196,7 @@ Le site n'étant pas encore prêt pour le grand public, un système de restricti
 
 Comment fonctionne le blocage :
 
-Vérification Globale (assets/js/main.js) : Au tout début du chargement de chaque page, le script vérifie la présence de la variable csb_access_granted dans le sessionStorage du navigateur.
+Vérification Globale (assets/js/main.js) : Au tout début du chargement de chaque page, le script vérifie la présence de la variable csb_access_granted dans le sessionStorage du navigateur. Si absente, l'utilisateur est redirigé vers `construction.html` (avec préservation du hash `#...` pour les liens Supabase). La page d'origine est sauvegardée dans `sessionStorage.csb_redirect_after_unlock` pour que `construction.html` puisse y renvoyer l'utilisateur après déverrouillage.
 
 Redirection Forcée : Si l'utilisateur n'a pas cette autorisation et tente d'accéder à une page autre que construction.html, il est instantanément redirigé vers construction.html.
 

@@ -249,8 +249,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderFamille() {
         const card = $('#famille-card');
         if (!famille) {
-            card.innerHTML = `<p class="text-gray-500">Aucun dossier rattaché à ce compte.
-                <a href="./inscription.html" class="text-csb-corail font-bold hover:underline">Démarrer une inscription</a>.</p>`;
+            card.innerHTML = `
+                <div class="text-center py-6">
+                    <p class="text-gray-500 mb-2">Aucun dossier famille rattaché à ce compte.</p>
+                    <p class="text-xs text-gray-400 mb-5">Votre compte existe mais vous n'avez pas encore créé votre foyer. Vous pouvez le faire ici sans repasser par l'inscription.</p>
+                    <button id="btn-create-famille" type="button"
+                            class="px-6 py-3 rounded-full font-condensed uppercase tracking-wider bg-csb-dojo text-white hover:bg-csb-corail transition text-sm shadow-lg">
+                        + Créer mon dossier famille
+                    </button>
+                    <p id="create-famille-feedback" class="text-sm mt-3"></p>
+                </div>`;
+            $('#btn-create-famille').addEventListener('click', createFamille);
             return;
         }
         card.innerHTML = `
@@ -358,6 +367,46 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             btn.disabled = false;
             btn.textContent = '💾 Enregistrer';
+        }
+    }
+
+    // Création d'un dossier famille pour un compte déjà existant (sans
+    // repasser par l'inscription qui tenterait un signUp en doublon).
+    async function createFamille() {
+        const btn = $('#btn-create-famille');
+        const fb = $('#create-famille-feedback');
+        if (!btn) return;
+        btn.disabled = true;
+        btn.textContent = 'Création…';
+        fb.textContent = '';
+        try {
+            const { data: { user } } = await sb.auth.getUser();
+            if (!user) throw new Error('Session expirée, reconnectez-vous.');
+            // Récupère l'email depuis profiles (table lisible par l'utilisateur lui-même)
+            const { data: prof } = await sb.from('profiles')
+                .select('email').eq('user_id', user.id).maybeSingle();
+            const email = (prof && prof.email) ? prof.email : (user.email || '');
+            const { data: famRow, error: famErr } = await sb.from('familles')
+                .insert({
+                    referent_user_id: user.id,
+                    nom_referent: '',
+                    email: email,
+                    telephone_urgence: '',
+                    adresse: '',
+                    code_postal: '',
+                    ville: ''
+                })
+                .select('id').single();
+            if (famErr) throw famErr;
+            famille = { id: famRow.id, nom_referent: '', email, telephone_urgence: '', adresse: '', code_postal: '', ville: '' };
+            toast('Dossier famille créé. Vous pouvez maintenant le compléter.');
+            renderFamille();
+        } catch (err) {
+            console.error(err);
+            fb.textContent = '⚠ ' + (err.message || 'Échec');
+            fb.className = 'text-sm text-csb-corail font-bold';
+            btn.disabled = false;
+            btn.textContent = '+ Créer mon dossier famille';
         }
     }
 
