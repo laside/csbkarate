@@ -395,6 +395,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (err) { showStep(n); alert(err); return; }
         }
 
+        // Pré-validation des photos (type/taille) AVANT toute création de compte :
+        // évite un compte Auth orphelin si un fichier est refusé.
+        const preAdherents = readAllAdherents();
+        for (let i = 0; i < preAdherents.length; i++) {
+            const pf = preAdherents[i].photoFile;
+            if (!pf) continue;
+            try { CSBFiles.validate(pf); }
+            catch (e) { showStep(2); alert(`Photo de « ${preAdherents[i].prenom || ('adhérent ' + (i + 1))} » : ${e.message}`); return; }
+        }
+
         btnSubmit.disabled = true;
         const labelInitial = btnSubmit.textContent;
         btnSubmit.textContent = 'Enregistrement…';
@@ -459,12 +469,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const a = adherents[i];
                 let photoPath = '';
                 if (a.photoFile) {
-                    const ext = (a.photoFile.name.split('.').pop() || 'jpg').toLowerCase();
-                    const path = `${uid}/${Date.now()}-${i}.${ext}`;
-                    const { error: upErr } = await sb.storage.from('dossiers')
-                        .upload(path, a.photoFile, { upsert: true });
-                    if (upErr) console.warn('Photo non envoyée :', upErr.message);
-                    else photoPath = path;
+                    try {
+                        const prepared = await CSBFiles.prepare(a.photoFile); // validation + compression
+                        const ext = CSBFiles.extOf(prepared);
+                        const path = `${uid}/${Date.now()}-${i}.${ext}`;
+                        const { error: upErr } = await sb.storage.from('dossiers')
+                            .upload(path, prepared, { upsert: true, contentType: prepared.type || undefined });
+                        if (upErr) console.warn('Photo non envoyée :', upErr.message);
+                        else photoPath = path;
+                    } catch (e) { console.warn('Photo ignorée :', e.message); }
                 }
                 rows.push({
                     famille_id: familleId,

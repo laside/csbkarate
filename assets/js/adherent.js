@@ -671,13 +671,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const piece = PIECES.find(p => p.key === key);
         if (!a || !piece) return;
         const fb = adherentFb(id);
-        if (fb) { fb.textContent = 'Envoi du fichier…'; fb.className = 'text-sm mt-2 text-gray-400'; }
         try {
+            // Validation (type/taille) + compression image → tient dans le plan gratuit.
+            if (fb) { fb.textContent = 'Vérification du fichier…'; fb.className = 'text-sm mt-2 text-gray-400'; }
+            const prepared = await CSBFiles.prepare(file);
+            if (fb) fb.textContent = 'Envoi du fichier…';
             const { data: { user } } = await sb.auth.getUser();
             const uid = user ? user.id : 'unknown';
-            const ext = (file.name.split('.').pop() || 'dat').toLowerCase();
+            const ext = CSBFiles.extOf(prepared);
             const path = `${uid}/${id}-${key}-${Date.now()}.${ext}`;
-            const { error: upErr } = await sb.storage.from('dossiers').upload(path, file, { upsert: true });
+            const { error: upErr } = await sb.storage.from('dossiers').upload(path, prepared, { upsert: true, contentType: prepared.type || undefined });
             if (upErr) throw upErr;
 
             // Ancien fichier à nettoyer (best-effort, ne bloque pas).
@@ -794,8 +797,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!a) return;
         if (!confirm(`Retirer ${a.prenom} ${a.nom} du dossier famille ?\nSes pièces et son grade seront perdus (le règlement de la famille n'est pas modifié).`)) return;
         try {
+            const paths = CSBFiles.pathsOf(a); // photo + pièces à purger du Storage
             const { error } = await sb.from('adherents').delete().eq('id', id);
             if (error) throw error;
+            if (paths.length) { sb.storage.from('dossiers').remove(paths).catch(() => {}); } // best-effort
             adherents = adherents.filter(x => x.id !== id);
             expandedPieces.delete(id);
             toast('Adhérent retiré.');
@@ -919,20 +924,28 @@ document.addEventListener('DOMContentLoaded', () => {
             fb.textContent = 'La self-défense est réservée aux 13 ans et plus.'; fb.className = 'text-sm text-csb-corail font-bold'; return;
         }
 
+        // Validation + compression de la photo AVANT de désactiver le bouton
+        // (message clair si le fichier est trop lourd ou d'un format non accepté).
+        let preparedPhoto = null;
+        if (photoFile) {
+            try { preparedPhoto = await CSBFiles.prepare(photoFile); }
+            catch (e) { fb.textContent = e.message; fb.className = 'text-sm text-csb-corail font-bold'; return; }
+        }
+
         btn.disabled = true;
         btn.textContent = 'Enregistrement…';
         fb.textContent = '';
         fb.className = 'text-sm text-gray-400';
 
         try {
-            // Photo
+            // Photo (déjà validée + compressée en amont)
             let photoPath = '';
-            if (photoFile) {
+            if (preparedPhoto) {
                 const { data: { user } } = await sb.auth.getUser();
                 const uid = user ? user.id : 'unknown';
-                const ext = (photoFile.name.split('.').pop() || 'jpg').toLowerCase();
+                const ext = CSBFiles.extOf(preparedPhoto);
                 const path = `${uid}/${Date.now()}-add.${ext}`;
-                const { error: upErr } = await sb.storage.from('dossiers').upload(path, photoFile, { upsert: true });
+                const { error: upErr } = await sb.storage.from('dossiers').upload(path, preparedPhoto, { upsert: true, contentType: preparedPhoto.type || undefined });
                 if (upErr) console.warn('Photo non envoyée :', upErr.message);
                 else photoPath = path;
             }

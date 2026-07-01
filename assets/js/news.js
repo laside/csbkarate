@@ -172,11 +172,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // Gestion de l'upload de la nouvelle image si présente
             if (inputPhotoFile.files.length > 0) {
                 const file = inputPhotoFile.files[0];
-                const safeName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-]/g, '_')}`;
-                
-                const { error } = await window.sb.storage.from('news').upload(safeName, file);
+                // Validation type/taille + compression (redimension <= 1600 px + WebP)
+                // avant upload dans le bucket public `news` (CSBFiles, cf. files.js).
+                const prepared = await CSBFiles.prepare(file, { maxDim: 1600, imageOnly: true });
+                const base = (file.name.replace(/\.[^.]+$/, '') || 'news').replace(/[^a-zA-Z0-9.\-]/g, '_');
+                const safeName = `${Date.now()}_${base}.${CSBFiles.extOf(prepared)}`;
+
+                const { error } = await window.sb.storage.from('news')
+                    .upload(safeName, prepared, { contentType: prepared.type || undefined });
                 if (error) throw error;
-                
+
                 const { data: publicUrlData } = window.sb.storage.from('news').getPublicUrl(safeName);
                 finalImageUrl = publicUrlData.publicUrl;
             }
