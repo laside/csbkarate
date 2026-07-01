@@ -21,6 +21,24 @@ document.addEventListener('DOMContentLoaded', () => {
     ));
     const fmt = (c) => CSBTarifs.formatEuros(c);
 
+    // Notification email non bloquante (Edge Function `notify`).
+    async function notify(body) {
+        try { await sb.functions.invoke('notify', { body }); }
+        catch (err) { console.warn('[notify] non envoyé :', err && err.message); }
+    }
+
+    // Validation bureau (axe explicite : décision d'acceptation par adhérent,
+    // distinct du statut combiné pièces × règlement).
+    const VALIDATION_BADGE = {
+        accepte:    ['Accepté',    'bg-green-50 text-green-700 border-green-300'],
+        refuse:     ['Refusé',     'bg-red-50 text-red-700 border-red-300'],
+        en_attente: ['En attente', 'bg-amber-50 text-amber-700 border-amber-300']
+    };
+    function badgeValidation(v) {
+        const [txt, cls] = VALIDATION_BADGE[v] || VALIDATION_BADGE.en_attente;
+        return `<span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${cls}">${txt}</span>`;
+    }
+
     // --- Listes de référence ---
     // Le statut de dossier (Incomplet / En attente paiement / En attente
     // justificatifs / Validé — migration 0010) n'est PAS une liste éditable :
@@ -274,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rowsEl.innerHTML = '<tr><td colspan="8" class="px-4 py-10 text-center text-gray-400">Chargement…</td></tr>';
         const [aRes, dRes, pRes, prRes] = await Promise.all([
             sb.from('adherents')
-                .select('id, prenom, nom, date_naissance, genre, cours_type, grade_actuel, statut_dossier, membre_bureau, documents, famille_id, familles(nom_referent, ville, email)')
+                .select('id, prenom, nom, date_naissance, genre, cours_type, grade_actuel, statut_dossier, statut_validation, is_new, membre_bureau, documents, famille_id, familles(nom_referent, ville, email)')
                 .order('nom', { ascending: true }),
             sb.from('dossiers').select('id, famille_id, montant_total, statut'),
             sb.from('paiements').select('dossier_id, montant, encaisse'),
@@ -633,8 +651,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="checkbox" data-select-row class="chk" ${selected ? 'checked' : ''}>
                 </td>
                 <td class="px-4 py-3">
-                    <div class="font-semibold text-csb-encre">${esc(a.prenom)} ${esc(a.nom)}</div>
-                    <div class="text-xs text-gray-400">${esc(meta)}</div>
+                    <div class="font-semibold text-csb-encre flex items-center gap-2 flex-wrap">
+                        ${esc(a.prenom)} ${esc(a.nom)}
+                        ${a.is_new ? '<span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-csb-corail text-white">Nouveau</span>' : ''}
+                    </div>
+                    <div class="text-xs text-gray-400 flex items-center gap-2 flex-wrap mt-0.5">
+                        <span>${esc(meta)}</span>
+                        ${badgeValidation(a.statut_validation)}
+                    </div>
                 </td>
                 <td class="px-4 py-3">
                     <div class="text-csb-encre">${esc(ref)}</div>
@@ -982,17 +1006,42 @@ document.addEventListener('DOMContentLoaded', () => {
             detailFactures = [];
         }
 
-        // Pré-chargement des URLs signées pour les photos des adhérents de la famille
+        // Pré-chargement des URLs signées (1h) : photo d'identité + pièces
+        // téléversées par la famille (documents_files) → liens « Voir » du bureau.
         for (const a of detailAdherents) {
             if (a.photo_path) {
-                const { data, error } = await sb.storage.from('dossiers').createSignedUrl(a.photo_path, 3600); // Valide 1h
-                if (!error && data) {
-                    a._photo_url = data.signedUrl;
-                }
+                const { data, error } = await sb.storage.from('dossiers').createSignedUrl(a.photo_path, 3600);
+                if (!error && data) a._photo_url = data.signedUrl;
+            }
+            a._file_urls = {};
+            const files = (a.documents_files && typeof a.documents_files === 'object') ? a.documents_files : {};
+            for (const key of Object.keys(files)) {
+                if (!files[key]) continue;
+                const { data, error } = await sb.storage.from('dossiers').createSignedUrl(files[key], 3600);
+                if (!error && data) a._file_urls[key] = data.signedUrl;
             }
         }
 
+        // Le dossier est « consulté » → on efface le badge « Nouveau » de ses
+        // adhérents (mission : disparition automatique à la 1re ouverture bureau).
+        await clearIsNew(familleId);
+
         renderDetail();
+    }
+
+    // Passe is_new à false pour les adhérents de la famille + met à jour la liste.
+    async function clearIsNew(familleId) {
+        const news = detailAdherents.filter(a => a.is_new);
+        if (!news.length) return;
+        const { error } = await sb.from('adherents')
+            .update({ is_new: false }).eq('famille_id', familleId).eq('is_new', true);
+        if (error) { console.warn('[clearIsNew]', error.message); return; }
+        news.forEach(a => {
+            a.is_new = false;
+            const cached = adherents.find(x => x.id === a.id);
+            if (cached) cached.is_new = false;
+        });
+        detailDirty = true; // rafraîchit le tableau (badge retiré) à la fermeture
     }
 
     // =========================================================
@@ -1052,11 +1101,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const pieceOk = applicable.length > 0 && nbOk === applicable.length;
         const pieceBadge = `<span class="inline-block text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${pieceOk ? 'bg-green-50 text-green-700 border-green-300' : 'bg-gray-50 text-gray-500 border-csb-tatami'}">${pieceOk ? 'Pièces OK' : 'Pièces incomplètes'}</span>`;
 
-        const checks = applicable.map(d => `
+        // URL signée du fichier fourni par la famille (photo -> _photo_url ;
+        // autres pièces -> _file_urls[key]), pré-calculée dans openDetail.
+        const fileUrlFor = (key) => key === 'photo' ? a._photo_url : (a._file_urls && a._file_urls[key]);
+        const checks = applicable.map(d => {
+            const url = fileUrlFor(d.key);
+            return `
             <label class="flex items-center gap-2 text-sm cursor-pointer">
                 <input type="checkbox" class="chk" data-doc-key="${d.key}" data-adherent-id="${a.id}" ${docs[d.key] ? 'checked' : ''}>
                 <span>${esc(d.label)}</span>
-            </label>`).join('');
+                ${url ? `<a href="${esc(url)}" target="_blank" rel="noopener" class="text-xs text-csb-dojo hover:text-csb-corail underline shrink-0">voir</a>` : '<span class="text-[11px] text-gray-300 shrink-0">(non fourni)</span>'}
+            </label>`;
+        }).join('');
 
         // Consentements / Pass'Sport saisis à l'inscription — lecture seule.
         const infos = [
@@ -1084,11 +1140,21 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="font-semibold text-csb-encre text-lg">${esc(a.prenom)} ${esc(a.nom)}</span>
                             <span class="text-xs text-gray-400 ml-2">${esc(COURS_LABEL[a.cours_type] || '—')}${age !== null ? ' · ' + age + ' ans' : ''}</span>
                         </div>
-                        ${pieceBadge}
+                        <div class="flex items-center gap-2 flex-wrap justify-end">
+                            ${a.is_new ? '<span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-csb-corail text-white">Nouveau</span>' : ''}
+                            ${badgeValidation(a.statut_validation)}
+                            ${pieceBadge}
+                        </div>
                     </div>
                     <div class="grid sm:grid-cols-2 gap-x-6 gap-y-2 mb-3">${checks}</div>
                     <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-csb-tatami/60">
                         <span class="text-xs text-gray-500" data-docs-summary="${a.id}">${nbOk}/${applicable.length} pièce${applicable.length > 1 ? 's' : ''} validée${nbOk > 1 ? 's' : ''}</span>
+                        <div class="flex gap-2">
+                            <button type="button" data-validate="${a.id}" data-decision="accepte"
+                                    class="px-3 py-1 rounded-full text-xs font-condensed uppercase tracking-wider bg-green-600 text-white hover:bg-green-700 transition ${a.statut_validation === 'accepte' ? 'opacity-50' : ''}">Accepter</button>
+                            <button type="button" data-validate="${a.id}" data-decision="refuse"
+                                    class="px-3 py-1 rounded-full text-xs font-condensed uppercase tracking-wider bg-csb-corail text-white hover:bg-red-700 transition ${a.statut_validation === 'refuse' ? 'opacity-50' : ''}">Refuser</button>
+                        </div>
                     </div>
                     ${infos.length ? `<p class="text-[11px] text-gray-400 mt-2">${infos.join(' · ')}</p>` : ''}
                 </div>
@@ -1228,7 +1294,44 @@ document.addEventListener('DOMContentLoaded', () => {
         if (createBtn) return createDossier(createBtn);
         const facBtn = e.target.closest('[data-facture-btn]');
         if (facBtn) return factureAction(facBtn);
+        const valBtn = e.target.closest('[data-validate]');
+        if (valBtn) return setValidation(valBtn);
     });
+
+    // --- Acceptation / refus d'un adhérent par le bureau (axe validation) ---
+    // Met à jour statut_validation puis prévient la famille par email (notify).
+    async function setValidation(btn) {
+        const id = Number(btn.dataset.validate);
+        const decision = btn.dataset.decision; // 'accepte' | 'refuse'
+        const a = detailAdherents.find(x => x.id === id);
+        if (!a || a.statut_validation === decision) return;
+
+        let note = a.validation_note || '';
+        if (decision === 'refuse') {
+            const saisie = prompt('Motif du refus (optionnel, communiqué à la famille) :', note);
+            if (saisie === null) return; // annulé
+            note = saisie.trim();
+        } else {
+            note = ''; // on nettoie tout ancien motif à l'acceptation
+        }
+
+        btn.disabled = true;
+        const { error } = await sb.from('adherents')
+            .update({ statut_validation: decision, validation_note: note }).eq('id', id);
+        btn.disabled = false;
+        if (error) { console.error(error); alert('Échec : ' + error.message); return; }
+
+        a.statut_validation = decision;
+        a.validation_note = note;
+        const cached = adherents.find(x => x.id === id); // garde le tableau principal cohérent
+        if (cached) { cached.statut_validation = decision; }
+        detailDirty = true;
+        renderDetail();
+        toast(decision === 'accepte' ? 'Adhérent accepté.' : 'Adhérent refusé.');
+
+        // Email à la famille (non bloquant).
+        notify({ type: 'validation', adherent_id: id });
+    }
 
     // --- Facture (document fiscal numéroté) : émission OU téléchargement si déjà émise ---
     // L'émission passe par la RPC `emettre_facture` (SECURITY DEFINER, bureau-only,
