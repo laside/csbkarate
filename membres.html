@@ -145,6 +145,10 @@
                     </div>
                     <div class="ml-auto flex items-center gap-4 pb-1">
                         <span id="count" class="text-sm text-gray-500 font-condensed uppercase tracking-wider"></span>
+                        <button id="btn-delete-selected" type="button" class="hidden text-sm border border-csb-corail text-csb-corail px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            <span id="btn-delete-label">Supprimer</span>
+                        </button>
                         <button id="btn-export" class="text-sm border border-csb-tatami px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                             CSV
@@ -158,6 +162,7 @@
                         <table class="w-full text-sm">
                             <thead>
                                 <tr class="text-left font-condensed uppercase tracking-wider text-[11px] text-gray-400 border-b border-csb-tatami bg-csb-washi/60">
+                                    <th class="px-4 py-3 w-10"><input type="checkbox" id="select-all" class="chk" title="Tout sélectionner (page courante)"></th>
                                     <th class="px-4 py-3 font-semibold">Adhérent</th>
                                     <th class="px-4 py-3 font-semibold">Famille</th>
                                     <th class="px-4 py-3 font-semibold">Cours</th>

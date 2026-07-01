@@ -55,6 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const fCours = $('#f-cours');
     const fStatut = $('#f-statut');
     const btnExport = $('#btn-export');
+    const btnDeleteSelected = $('#btn-delete-selected');
+    const btnDeleteLabel = $('#btn-delete-label');
+    const selectAllChk = $('#select-all');
     const rolesRowsEl = $('#roles-rows');
 
     // --- Rôles (alignés sur le CHECK de la migration 0006) ---
@@ -75,6 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let rowsPerPage = 50;
     const pageSizeSelect = $('#rows-per-page');
     const pageControls = $('#page-controls');
+
+    // --- Sélection multiple ---
+    let selectedIds = new Set();
 
     // =========================================================
     // Authentification (gate bureau)
@@ -235,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Chargement des données (le bureau voit tout via RLS)
     // =========================================================
     async function loadAll() {
-        rowsEl.innerHTML = '<tr><td colspan="7" class="px-4 py-10 text-center text-gray-400">Chargement…</td></tr>';
+        rowsEl.innerHTML = '<tr><td colspan="8" class="px-4 py-10 text-center text-gray-400">Chargement…</td></tr>';
         const [aRes, dRes, pRes, prRes] = await Promise.all([
             sb.from('adherents')
                 .select('id, prenom, nom, date_naissance, genre, cours_type, grade_actuel, statut_dossier, membre_bureau, documents, famille_id, familles(nom_referent, ville)')
@@ -247,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (aRes.error) {
             console.error(aRes.error);
-            rowsEl.innerHTML = `<tr><td colspan="7" class="px-4 py-10 text-center text-csb-corail">Erreur de chargement : ${esc(aRes.error.message)}</td></tr>`;
+            rowsEl.innerHTML = `<tr><td colspan="8" class="px-4 py-10 text-center text-csb-corail">Erreur de chargement : ${esc(aRes.error.message)}</td></tr>`;
             return;
         }
         adherents = aRes.data || [];
@@ -441,13 +447,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentPage > totalPages) currentPage = totalPages;
         const start = (currentPage - 1) * rowsPerPage;
         const page = list.slice(start, start + rowsPerPage);
+        // IDs visibles sur cette page (pour le select-all)
+        const pageIds = new Set(page.map(a => a.id));
 
         countEl.textContent = `${list.length} membre${list.length > 1 ? 's' : ''}`;
         if (!list.length) {
-            rowsEl.innerHTML = '<tr><td colspan="7" class="px-4 py-10 text-center text-gray-400">Aucun membre ne correspond.</td></tr>';
+            rowsEl.innerHTML = '<tr><td colspan="8" class="px-4 py-10 text-center text-gray-400">Aucun membre ne correspond.</td></tr>';
         } else {
-            rowsEl.innerHTML = page.map(rowHtml).join('');
+            rowsEl.innerHTML = page.map(a => rowHtml(a, selectedIds.has(a.id))).join('');
         }
+        // Synchro checkbox « tout sélectionner »
+        if (selectAllChk) {
+            const pageSelected = page.filter(a => selectedIds.has(a.id));
+            selectAllChk.checked = page.length > 0 && pageSelected.length === page.length;
+            selectAllChk.indeterminate = pageSelected.length > 0 && pageSelected.length < page.length;
+        }
+        updateDeleteButton();
         renderPagination(totalPages);
     }
 
@@ -487,7 +502,92 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function rowHtml(a) {
+    // =========================================================
+    // Sélection multiple (checkboxes)
+    // =========================================================
+    // Clic sur une checkbox de ligne
+    rowsEl.addEventListener('click', (e) => {
+        const chk = e.target.closest('[data-select-row]');
+        if (!chk) return;
+        const tr = chk.closest('tr');
+        if (!tr) return;
+        const id = Number(tr.dataset.id);
+        if (chk.checked) selectedIds.add(id);
+        else selectedIds.delete(id);
+        // Re-sync select-all sans re-render complet
+        const page = rowsEl.querySelectorAll('tr[data-id]');
+        const pageSelected = [...page].filter(r => selectedIds.has(Number(r.dataset.id)));
+        if (selectAllChk) {
+            selectAllChk.checked = page.length > 0 && pageSelected.length === page.length;
+            selectAllChk.indeterminate = pageSelected.length > 0 && pageSelected.length < page.length;
+        }
+        // Highlight visuel
+        tr.classList.toggle('bg-csb-washi/60', chk.checked);
+        updateDeleteButton();
+    });
+
+    // « Tout sélectionner » (page courante uniquement)
+    selectAllChk && selectAllChk.addEventListener('change', () => {
+        const page = rowsEl.querySelectorAll('tr[data-id]');
+        page.forEach(tr => {
+            const id = Number(tr.dataset.id);
+            const chk = tr.querySelector('[data-select-row]');
+            if (chk) {
+                chk.checked = selectAllChk.checked;
+                tr.classList.toggle('bg-csb-washi/60', selectAllChk.checked);
+                if (selectAllChk.checked) selectedIds.add(id);
+                else selectedIds.delete(id);
+            }
+        });
+        updateDeleteButton();
+    });
+
+    function updateDeleteButton() {
+        if (!btnDeleteSelected) return;
+        const count = selectedIds.size;
+        if (count > 0) {
+            btnDeleteSelected.classList.remove('hidden');
+            btnDeleteLabel.textContent = `Supprimer (${count})`;
+        } else {
+            btnDeleteSelected.classList.add('hidden');
+        }
+    }
+
+    // =========================================================
+    // Suppression des adhérents sélectionnés
+    // =========================================================
+    btnDeleteSelected && btnDeleteSelected.addEventListener('click', async () => {
+        const count = selectedIds.size;
+        if (!count) return;
+        if (!confirm(`Supprimer définitivement ${count} adhérent${count > 1 ? 's' : ''} ?\n\n⚠️ Cette action est irréversible. Les données (grade, pièces, photo) seront perdues. Le dossier famille et les règlements ne sont PAS supprimés.`)) return;
+
+        btnDeleteSelected.disabled = true;
+        btnDeleteLabel.textContent = 'Suppression…';
+        const ids = [...selectedIds];
+        let failed = 0;
+        try {
+            // Supression par lots (Supabase accepte les tableaux avec .in())
+            const { error } = await sb.from('adherents').delete().in('id', ids);
+            if (error) throw error;
+
+            // Mise à jour du cache local
+            adherents = adherents.filter(a => !selectedIds.has(a.id));
+            selectedIds.clear();
+            updateDeleteButton();
+            buildFamilleIndex();
+            renderStats();
+            renderRows();
+            toast(`${ids.length - failed} adhérent${ids.length - failed > 1 ? 's' : ''} supprimé${ids.length - failed > 1 ? 's' : ''}.`);
+        } catch (err) {
+            console.error(err);
+            toast('Échec de la suppression : ' + (err.message || 'Erreur inconnue'), 'error');
+        } finally {
+            btnDeleteSelected.disabled = false;
+            btnDeleteLabel.textContent = 'Supprimer';
+        }
+    });
+
+    function rowHtml(a, selected = false) {
         const age = ageOf(a.date_naissance);
         const ageTxt = age === null ? '' : `${age} ans`;
         const genre = a.genre === 'M' ? 'H' : (a.genre === 'F' ? 'F' : '');
@@ -498,7 +598,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const gradeOpts = GRADES.map(g => `<option ${g === a.grade_actuel ? 'selected' : ''}>${esc(g)}</option>`).join('');
 
         return `
-            <tr data-id="${a.id}" class="border-t border-csb-tatami/60 hover:bg-csb-washi/40 transition">
+            <tr data-id="${a.id}" class="border-t border-csb-tatami/60 hover:bg-csb-washi/40 transition ${selected ? 'bg-csb-washi/60' : ''}">
+                <td class="px-4 py-3">
+                    <input type="checkbox" data-select-row class="chk" ${selected ? 'checked' : ''}>
+                </td>
                 <td class="px-4 py-3">
                     <div class="font-semibold text-csb-encre">${esc(a.prenom)} ${esc(a.nom)}</div>
                     <div class="text-xs text-gray-400">${esc(meta)}</div>
