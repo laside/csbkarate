@@ -614,9 +614,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const ids = [...selectedIds];
         let failed = 0;
         try {
+            // Récupère les chemins Storage AVANT suppression (photo + pièces) pour
+            // purger les fichiers : la cascade SQL supprime les lignes, PAS les
+            // objets du bucket → sinon fichiers orphelins (quota plan gratuit).
+            const paths = [];
+            const { data: rows } = await sb.from('adherents').select('photo_path, documents_files').in('id', ids);
+            (rows || []).forEach(r => {
+                if (r.photo_path) paths.push(r.photo_path);
+                if (r.documents_files && typeof r.documents_files === 'object') {
+                    Object.values(r.documents_files).forEach(v => { if (v) paths.push(v); });
+                }
+            });
+
             // Supression par lots (Supabase accepte les tableaux avec .in())
             const { error } = await sb.from('adherents').delete().in('id', ids);
             if (error) throw error;
+            if (paths.length) { sb.storage.from('dossiers').remove(paths).catch(() => {}); } // best-effort
 
             // Mise à jour du cache local
             adherents = adherents.filter(a => !selectedIds.has(a.id));
