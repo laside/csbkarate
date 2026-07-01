@@ -86,12 +86,42 @@ document.addEventListener('DOMContentLoaded', () => {
     // Authentification (gate bureau)
     // =========================================================
     async function isBureau() {
-        const { data: { user } } = await sb.auth.getUser();
-        if (!user) return false;
-        currentUserId = user.id; // mémorisé pour marquer « vous » + garde anti-blocage
+        try {
+            // Valider/rafraîchir le token avant de requêter profiles
+            // (indispensable après une promotion de rôle par un autre admin).
+            await sb.auth.getSession();
+        } catch (_) { /* session expirée, on continue pour avoir un message clair */ }
+        const { data: { user }, error: userErr } = await sb.auth.getUser();
+        if (userErr || !user) {
+            if (userErr) console.error('[isBureau] getUser error:', userErr);
+            return false;
+        }
+        currentUserId = user.id;
+        // Vérification du rôle via la table profiles (source de vérité).
+        // Le RLS « profiles_select » autorise la lecture de sa propre ligne
+        // (user_id = auth.uid()), donc même un adhérent peut lire son rôle.
         const { data, error } = await sb.from('profiles')
             .select('role').eq('user_id', user.id).maybeSingle();
-        return !error && data && data.role === 'bureau';
+        if (error) {
+            console.error('[isBureau] profiles query error:', error);
+            return false;
+        }
+        if (!data) {
+            console.warn('[isBureau] aucun profil trouvé pour user_id=', user.id, '→ tentative création automatique');
+            // Le compte Auth existe mais le trigger handle_new_user n'a jamais
+            // créé la ligne profiles (migration 0006/0008 installée après coup).
+            // On appelle la RPC SECURITY DEFINER ensure_profile() qui crée la
+            // ligne avec role='adherent' si elle n'existe pas encore.
+            const { data: rpcRole, error: rpcErr } = await sb.rpc('ensure_profile');
+            if (rpcErr) {
+                console.error('[isBureau] ensure_profile RPC error:', rpcErr);
+                return false;
+            }
+            console.log('[isBureau] profil créé automatiquement, role=', rpcRole);
+            return rpcRole === 'bureau';
+        }
+        console.log('[isBureau] role=', data.role, 'pour', user.email);
+        return data.role === 'bureau';
     }
 
     async function boot_init() {
@@ -135,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (error) throw error;
             if (!await isBureau()) {
                 await sb.auth.signOut();
-                throw new Error("Ce compte n'a pas les droits « administrateur ».");
+                throw new Error("Ce compte n'a pas les droits « Administrateur ». Si votre rôle vient d'être modifié, déconnectez-vous puis reconnectez-vous.");
             }
             gatePwd.value = '';
             await showDashboard();
