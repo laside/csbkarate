@@ -10,6 +10,10 @@ const hasAccess = sessionStorage.getItem('csb_access_granted') === 'true';
 // récupération de mot de passe Supabase (#access_token=...&type=recovery), qui
 // seraient sinon perdus dans ce rebond avant même que supabase.js ne les lise.
 if (!isOnConstructionPage && !hasAccess) {
+    // Mémorise la page d'origine pour que construction.html puisse
+    // y renvoyer l'utilisateur après déverrouillage (indispensable
+    // pour les liens de récupération de mot de passe Supabase).
+    sessionStorage.setItem('csb_redirect_after_unlock', window.location.pathname);
     window.location.href = 'construction.html' + window.location.hash;
 }
 // Ce script s'exécute dès que la page HTML a fini de charger

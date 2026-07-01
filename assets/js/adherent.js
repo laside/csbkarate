@@ -30,6 +30,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const gateBtn = $('#gate-btn');
     const gateError = $('#gate-error');
     const gateInfo = $('#gate-info');
+    const resetPwdSection = $('#reset-pwd-section');
+    const resetPwd = $('#reset-pwd');
+    const resetPwdConfirm = $('#reset-pwd-confirm');
+    const resetPwdBtn = $('#reset-pwd-btn');
+    const resetPwdError = $('#reset-pwd-error');
+    const resetPwdSuccess = $('#reset-pwd-success');
 
     // --- État ---
     let famille = null;
@@ -42,6 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Authentification (n'importe quel compte adhérent)
     // =========================================================
     async function boot_init() {
+        // Priorité 1 : flux de réinitialisation de mot de passe
+        if (await checkRecoveryFlow()) return;
         try {
             const { data: { session } } = await sb.auth.getSession();
             if (session) return showDashboard();
@@ -49,6 +57,17 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(err);
         }
         showGate();
+    }
+
+    async function checkRecoveryFlow() {
+        const hash = window.location.hash;
+        if (!hash || !hash.includes('type=recovery')) return false;
+        boot.classList.add('hidden');
+        gate.classList.add('hidden');
+        dashboard.classList.add('hidden');
+        resetPwdSection.classList.remove('hidden');
+        resetPwd.focus();
+        return true;
     }
 
     function showGate() {
@@ -69,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gateError.classList.add('hidden');
         gateInfo.classList.add('hidden');
         gateBtn.disabled = true;
+        gateBtn.textContent = 'Connexion…';
         try {
             const { error } = await sb.auth.signInWithPassword({
                 email: gateEmail.value.trim(),
@@ -85,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gateError.classList.remove('hidden');
         } finally {
             gateBtn.disabled = false;
+            gateBtn.textContent = 'Se connecter';
         }
     }
 
@@ -92,23 +113,67 @@ document.addEventListener('DOMContentLoaded', () => {
     gatePwd.addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
 
     // Mot de passe oublié (même mécanique que admin.js : redirectTo dynamique).
-    $('#gate-forgot').addEventListener('click', async () => {
+    const gateForgot = $('#gate-forgot');
+    gateForgot && gateForgot.addEventListener('click', async () => {
         const email = gateEmail.value.trim();
         gateError.classList.add('hidden');
         gateInfo.classList.add('hidden');
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            gateError.textContent = 'Saisissez d\'abord votre email ci-dessus.';
+            gateError.textContent = "Saisissez d'abord votre email ci-dessus.";
             gateError.classList.remove('hidden');
             return;
         }
-        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+        gateForgot.disabled = true;
+        const { error } = await sb.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + window.location.pathname
+        });
+        gateForgot.disabled = false;
         if (error) {
             gateError.textContent = error.message;
             gateError.classList.remove('hidden');
             return;
         }
-        gateInfo.textContent = 'Un email de réinitialisation vous a été envoyé.';
+        gateInfo.textContent = 'Un email de réinitialisation vous a été envoyé. Vérifiez vos spams.';
         gateInfo.classList.remove('hidden');
+    });
+
+    // --- Réinitialisation du mot de passe (après clic lien email) ---
+    resetPwdBtn && resetPwdBtn.addEventListener('click', async () => {
+        resetPwdError.classList.add('hidden');
+        resetPwdSuccess.classList.add('hidden');
+        const pwd = resetPwd.value;
+        if (pwd.length < 8) {
+            resetPwdError.textContent = 'Le mot de passe doit contenir au moins 8 caractères.';
+            resetPwdError.classList.remove('hidden');
+            return;
+        }
+        if (pwd !== resetPwdConfirm.value) {
+            resetPwdError.textContent = 'Les deux mots de passe ne correspondent pas.';
+            resetPwdError.classList.remove('hidden');
+            return;
+        }
+        resetPwdBtn.disabled = true;
+        resetPwdBtn.textContent = 'Enregistrement…';
+        try {
+            const { error } = await sb.auth.updateUser({ password: pwd });
+            if (error) throw error;
+            resetPwdSuccess.textContent = 'Mot de passe modifié avec succès. Redirection…';
+            resetPwdSuccess.classList.remove('hidden');
+            resetPwdSection.classList.add('hidden');
+            window.location.hash = '';
+            setTimeout(() => showDashboard(), 1500);
+        } catch (err) {
+            console.error(err);
+            resetPwdError.textContent = err.message || 'Échec de la mise à jour. Le lien a peut-être expiré.';
+            resetPwdError.classList.remove('hidden');
+        } finally {
+            resetPwdBtn.disabled = false;
+            resetPwdBtn.textContent = 'Enregistrer le mot de passe';
+        }
+    });
+
+    resetPwdConfirm && resetPwdConfirm.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') resetPwdBtn.click();
     });
 
     $('#btn-logout').addEventListener('click', async () => {
@@ -161,7 +226,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // Rendu : coordonnées de la famille
+    // TOAST — notification temporaire (succès / erreur)
+    // =========================================================
+    function toast(message, type = 'success') {
+        const container = $('#toast-container');
+        if (!container) return;
+        const bg = type === 'error' ? 'bg-csb-corail' : 'bg-green-600';
+        const el = document.createElement('div');
+        el.className = `${bg} text-white text-sm px-5 py-3 rounded-xl shadow-lg font-medium transition-all duration-300 opacity-0 translate-y-2`;
+        el.textContent = message;
+        container.appendChild(el);
+        requestAnimationFrame(() => { el.classList.remove('opacity-0', 'translate-y-2'); });
+        setTimeout(() => {
+            el.classList.add('opacity-0', 'translate-y-2');
+            setTimeout(() => el.remove(), 300);
+        }, 4000);
+    }
+
+    // =========================================================
+    // Rendu : coordonnées de la famille (édition inline)
     // =========================================================
     function renderFamille() {
         const card = $('#famille-card');
@@ -170,15 +253,112 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a href="./inscription.html" class="text-csb-corail font-bold hover:underline">Démarrer une inscription</a>.</p>`;
             return;
         }
-        const ligneAdresse = [famille.adresse, [famille.code_postal, famille.ville].filter(Boolean).join(' ')]
-            .filter(Boolean).join(' · ');
         card.innerHTML = `
-            <p class="font-condensed uppercase tracking-wider text-[11px] text-gray-400 mb-1">Référent du dossier</p>
-            <p class="text-2xl font-bold text-csb-encre">${esc(famille.nom_referent || '—')}</p>
-            <div class="text-sm text-gray-500 mt-2 space-y-0.5">
-                ${ligneAdresse ? `<p>${esc(ligneAdresse)}</p>` : ''}
+            <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+                <div>
+                    <p class="font-condensed uppercase tracking-wider text-[11px] text-gray-400 mb-1">Mes informations</p>
+                    <p class="text-2xl font-bold text-csb-encre">${esc(famille.nom_referent || '—')}</p>
+                </div>
+                <button id="btn-edit-profil" type="button"
+                        class="px-4 py-1.5 rounded-full text-xs font-condensed uppercase tracking-wider border border-csb-tatami text-csb-encre hover:bg-white transition">
+                    ✏️ Modifier
+                </button>
+            </div>
+            <div id="profil-view" class="text-sm text-gray-500 space-y-1">
+                ${famille.email ? `<p>✉️ ${esc(famille.email)}</p>` : ''}
+                ${famille.adresse ? `<p>${esc(famille.adresse)}</p>` : ''}
+                ${famille.code_postal || famille.ville ? `<p>${esc([famille.code_postal, famille.ville].filter(Boolean).join(' '))}</p>` : ''}
                 ${famille.telephone_urgence ? `<p>Tél. urgence : ${esc(famille.telephone_urgence)}</p>` : ''}
+            </div>
+            <div id="profil-edit" class="hidden space-y-3 mt-2">
+                <p class="text-sm text-gray-400">✉️ L'email de connexion (<strong>${esc(famille.email || '—')}</strong>) ne peut pas être modifié ici. Utilisez « Mot de passe oublié » ou contactez le bureau.</p>
+                <div>
+                    <label class="lbl" for="edit-nom">Nom du référent</label>
+                    <input id="edit-nom" class="inp" value="${esc(famille.nom_referent || '')}">
+                </div>
+                <div>
+                    <label class="lbl" for="edit-adresse">Adresse</label>
+                    <input id="edit-adresse" class="inp" value="${esc(famille.adresse || '')}">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="lbl" for="edit-cp">Code postal</label>
+                        <input id="edit-cp" class="inp" value="${esc(famille.code_postal || '')}">
+                    </div>
+                    <div>
+                        <label class="lbl" for="edit-ville">Ville</label>
+                        <input id="edit-ville" class="inp" value="${esc(famille.ville || '')}">
+                    </div>
+                </div>
+                <div>
+                    <label class="lbl" for="edit-tel">Téléphone d'urgence</label>
+                    <input id="edit-tel" type="tel" class="inp" value="${esc(famille.telephone_urgence || '')}">
+                </div>
+                <div class="flex gap-3 pt-1">
+                    <button id="btn-save-profil" type="button"
+                            class="px-5 py-2 rounded-full font-condensed uppercase tracking-wider bg-green-600 text-white hover:bg-green-700 transition text-sm">
+                        💾 Enregistrer
+                    </button>
+                    <button id="btn-cancel-profil" type="button"
+                            class="px-5 py-2 rounded-full font-condensed uppercase tracking-wider bg-gray-200 text-csb-encre hover:bg-gray-300 transition text-sm">
+                        Annuler
+                    </button>
+                </div>
+                <p id="profil-feedback" class="text-sm"></p>
             </div>`;
+
+        // Bascule vue / édition
+        $('#btn-edit-profil').addEventListener('click', () => {
+            $('#profil-view').classList.add('hidden');
+            $('#profil-edit').classList.remove('hidden');
+        });
+        $('#btn-cancel-profil').addEventListener('click', () => {
+            $('#profil-edit').classList.add('hidden');
+            $('#profil-view').classList.remove('hidden');
+        });
+        $('#btn-save-profil').addEventListener('click', saveProfil);
+    }
+
+    async function saveProfil() {
+        const btn = $('#btn-save-profil');
+        const fb = $('#profil-feedback');
+        btn.disabled = true;
+        btn.textContent = 'Enregistrement…';
+        fb.textContent = '';
+        const nom_referent = $('#edit-nom').value.trim();
+        const adresse = $('#edit-adresse').value.trim();
+        const code_postal = $('#edit-cp').value.trim();
+        const ville = $('#edit-ville').value.trim();
+        const telephone_urgence = $('#edit-tel').value.trim();
+
+        try {
+            const { error } = await sb.from('familles').update({
+                nom_referent, adresse, code_postal, ville, telephone_urgence
+            }).eq('id', famille.id);
+            if (error) throw error;
+            // Synchro profiles (migration 0017) pour le nom/téléphone
+            const { data: { user } } = await sb.auth.getUser();
+            if (user) {
+                await sb.from('profiles').update({
+                    nom: nom_referent, telephone: telephone_urgence
+                }).eq('user_id', user.id);
+            }
+            famille.nom_referent = nom_referent;
+            famille.adresse = adresse;
+            famille.code_postal = code_postal;
+            famille.ville = ville;
+            famille.telephone_urgence = telephone_urgence;
+            toast('Profil mis à jour avec succès.');
+            renderFamille();
+        } catch (err) {
+            console.error(err);
+            fb.textContent = '⚠ ' + (err.message || 'Échec');
+            fb.className = 'text-sm text-csb-corail font-bold';
+            toast('Échec : ' + (err.message || 'Erreur inconnue'), 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '💾 Enregistrer';
+        }
     }
 
     // =========================================================

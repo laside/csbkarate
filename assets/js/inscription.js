@@ -383,6 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .upsert({
                     referent_user_id: uid,
                     nom_referent: famille.nomReferent,
+                    email: famille.email,
                     telephone_urgence: famille.telephone,
                     adresse: famille.adresse,
                     code_postal: famille.codePostal,
