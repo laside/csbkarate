@@ -53,6 +53,33 @@
                         Se connecter
                     </button>
                     <p id="gate-error" class="hidden text-csb-corail text-sm mt-3"></p>
+                    <p id="gate-info" class="hidden text-csb-dojo text-sm mt-3"></p>
+
+                    <div class="mt-5 pt-4 border-t border-csb-tatami text-center text-sm">
+                        <button id="gate-forgot" type="button" class="text-csb-dojo hover:text-csb-corail transition">Mot de passe oublié ?</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===================== RÉINITIALISATION MOT DE PASSE ===================== -->
+            <section id="reset-pwd-section" class="hidden max-w-sm mx-auto mt-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-csb-tatami p-8">
+                    <span class="font-condensed text-csb-corail uppercase tracking-widest text-xs block mb-2">Sécurité</span>
+                    <h1 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-1">Nouveau mot de passe</h1>
+                    <p class="text-gray-500 text-sm mb-6">Choisissez un mot de passe d'au moins 8 caractères.</p>
+
+                    <label class="lbl" for="reset-pwd">Nouveau mot de passe</label>
+                    <input id="reset-pwd" type="password" autocomplete="new-password" class="inp mb-4">
+
+                    <label class="lbl" for="reset-pwd-confirm">Confirmer le mot de passe</label>
+                    <input id="reset-pwd-confirm" type="password" autocomplete="new-password" class="inp mb-5">
+
+                    <button id="reset-pwd-btn" type="button"
+                            class="w-full bg-csb-dojo text-white font-condensed uppercase tracking-wider py-3 rounded-full hover:bg-csb-corail transition shadow-lg">
+                        Enregistrer le mot de passe
+                    </button>
+                    <p id="reset-pwd-error" class="hidden text-csb-corail text-sm mt-3"></p>
+                    <p id="reset-pwd-success" class="hidden text-green-600 text-sm mt-3"></p>
                 </div>
             </section>
 
@@ -76,11 +103,12 @@
                     </div>
                 </div>
 
-                <!-- Onglets : Adhérents / Administration / Saisons & Cours -->
+                <!-- Onglets : Adhérents / Administration / Saisons & Cours / Profil -->
                 <div class="flex gap-1 mb-8 border-b border-csb-tatami">
                     <button data-tab="adherents" type="button" class="tab-btn px-5 py-3 font-condensed uppercase tracking-wider text-sm border-b-2 -mb-px text-csb-corail border-csb-corail">Adhérents</button>
                     <button data-tab="administration" type="button" class="tab-btn px-5 py-3 font-condensed uppercase tracking-wider text-sm border-b-2 -mb-px text-gray-400 border-transparent hover:text-csb-encre transition">Administration</button>
                     <button data-tab="saisons" type="button" class="tab-btn px-5 py-3 font-condensed uppercase tracking-wider text-sm border-b-2 -mb-px text-gray-400 border-transparent hover:text-csb-encre transition">Saisons &amp; Cours</button>
+                    <button data-tab="profil" type="button" class="tab-btn px-5 py-3 font-condensed uppercase tracking-wider text-sm border-b-2 -mb-px text-gray-400 border-transparent hover:text-csb-encre transition">Mon Profil</button>
                 </div>
 
                 <!-- ===================== ONGLET : ADHÉRENTS ===================== -->
@@ -232,10 +260,21 @@
                     </div>
                     <div id="saisons-list" class="grid md:grid-cols-2 gap-4"></div>
                 </div>
+
+                <!-- ===================== ONGLET : PROFIL ===================== -->
+                <div id="panel-profil" class="hidden">
+                    <h2 class="font-condensed text-2xl uppercase tracking-wider text-csb-encre mb-1">Mon Profil</h2>
+                    <p class="text-gray-500 text-sm mb-6 max-w-3xl">Consultez et modifiez vos informations personnelles.</p>
+
+                    <div id="profil-card" class="bg-white rounded-2xl border border-csb-tatami p-6 max-w-lg"></div>
+                </div>
             </section>
 
             <!-- Chargement initial -->
             <p id="boot" class="text-center text-gray-400 font-condensed uppercase tracking-wider py-20">Chargement…</p>
+
+            <!-- Toast notifications -->
+            <div id="toast-container" class="fixed bottom-6 right-6 z-[70] flex flex-col gap-2"></div>
 
         </div>
     </main>

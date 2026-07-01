@@ -40,6 +40,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const gatePwd = $('#gate-pwd');
     const gateBtn = $('#gate-btn');
     const gateError = $('#gate-error');
+    const gateInfo = $('#gate-info');
+    const gateForgot = $('#gate-forgot');
+    const resetPwdSection = $('#reset-pwd-section');
+    const resetPwd = $('#reset-pwd');
+    const resetPwdConfirm = $('#reset-pwd-confirm');
+    const resetPwdBtn = $('#reset-pwd-btn');
+    const resetPwdError = $('#reset-pwd-error');
+    const resetPwdSuccess = $('#reset-pwd-success');
     const statsEl = $('#stats');
     const rowsEl = $('#rows');
     const countEl = $('#count');
@@ -81,6 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function boot_init() {
+        // Priorité 1 : flux de réinitialisation de mot de passe
+        if (await checkRecoveryFlow()) return;
         try {
             const { data: { session } } = await sb.auth.getSession();
             if (session && await isBureau()) return showDashboard();
@@ -108,7 +118,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function login() {
         gateError.classList.add('hidden');
+        gateInfo.classList.add('hidden');
         gateBtn.disabled = true;
+        gateBtn.textContent = 'Connexion…';
         try {
             const { error } = await sb.auth.signInWithPassword({
                 email: gateEmail.value.trim(),
@@ -129,11 +141,89 @@ document.addEventListener('DOMContentLoaded', () => {
             gateError.classList.remove('hidden');
         } finally {
             gateBtn.disabled = false;
+            gateBtn.textContent = 'Se connecter';
         }
     }
 
     gateBtn.addEventListener('click', login);
     gatePwd.addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+
+    // --- Mot de passe oublié ---
+    gateForgot && gateForgot.addEventListener('click', async () => {
+        const email = gateEmail.value.trim();
+        gateError.classList.add('hidden');
+        gateInfo.classList.add('hidden');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            gateError.textContent = "Saisissez d'abord votre email ci-dessus.";
+            gateError.classList.remove('hidden');
+            return;
+        }
+        gateForgot.disabled = true;
+        const { error } = await sb.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + window.location.pathname
+        });
+        gateForgot.disabled = false;
+        if (error) {
+            gateError.textContent = error.message;
+            gateError.classList.remove('hidden');
+            return;
+        }
+        gateInfo.textContent = 'Un email de réinitialisation vous a été envoyé. Vérifiez vos spams.';
+        gateInfo.classList.remove('hidden');
+    });
+
+    // --- Réinitialisation du mot de passe (après clic lien email) ---
+    async function checkRecoveryFlow() {
+        const hash = window.location.hash;
+        if (!hash || !hash.includes('type=recovery')) return false;
+        // Supabase JS a déjà consommé le hash → la session est prête
+        boot.classList.add('hidden');
+        gate.classList.add('hidden');
+        dashboard.classList.add('hidden');
+        resetPwdSection.classList.remove('hidden');
+        resetPwd.focus();
+        return true;
+    }
+
+    resetPwdBtn && resetPwdBtn.addEventListener('click', async () => {
+        resetPwdError.classList.add('hidden');
+        resetPwdSuccess.classList.add('hidden');
+        const pwd = resetPwd.value;
+        if (pwd.length < 8) {
+            resetPwdError.textContent = 'Le mot de passe doit contenir au moins 8 caractères.';
+            resetPwdError.classList.remove('hidden');
+            return;
+        }
+        if (pwd !== resetPwdConfirm.value) {
+            resetPwdError.textContent = 'Les deux mots de passe ne correspondent pas.';
+            resetPwdError.classList.remove('hidden');
+            return;
+        }
+        resetPwdBtn.disabled = true;
+        resetPwdBtn.textContent = 'Enregistrement…';
+        try {
+            const { error } = await sb.auth.updateUser({ password: pwd });
+            if (error) throw error;
+            resetPwdSuccess.textContent = 'Mot de passe modifié avec succès. Redirection…';
+            resetPwdSuccess.classList.remove('hidden');
+            resetPwdSection.classList.add('hidden');
+            window.location.hash = '';
+            setTimeout(async () => {
+                if (await isBureau()) showDashboard(); else showGate();
+            }, 1500);
+        } catch (err) {
+            console.error(err);
+            resetPwdError.textContent = err.message || 'Échec de la mise à jour. Le lien a peut-être expiré.';
+            resetPwdError.classList.remove('hidden');
+        } finally {
+            resetPwdBtn.disabled = false;
+            resetPwdBtn.textContent = 'Enregistrer le mot de passe';
+        }
+    });
+
+    resetPwdConfirm && resetPwdConfirm.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') resetPwdBtn.click();
+    });
 
     $('#btn-logout').addEventListener('click', async () => {
         await sb.auth.signOut();
@@ -1187,7 +1277,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ONGLETS (Adhérents / Saisons & Cours)
     // =========================================================
     const tabButtons = document.querySelectorAll('[data-tab]');
-    const panels = { adherents: $('#panel-adherents'), administration: $('#panel-administration'), saisons: $('#panel-saisons') };
+    const panels = { adherents: $('#panel-adherents'), administration: $('#panel-administration'), saisons: $('#panel-saisons'), profil: $('#panel-profil') };
     tabButtons.forEach(btn => btn.addEventListener('click', () => activateTab(btn.dataset.tab)));
 
     function activateTab(name) {
@@ -1200,6 +1290,112 @@ document.addEventListener('DOMContentLoaded', () => {
             b.classList.toggle('border-transparent', !on);
         });
         if (name === 'saisons' && !saisonsLoaded) loadSaisons();
+        if (name === 'profil') renderProfil();
+    }
+
+    // =========================================================
+    // TOAST — notification temporaire (succès / erreur)
+    // =========================================================
+    function toast(message, type = 'success') {
+        const container = $('#toast-container');
+        if (!container) return;
+        const bg = type === 'error' ? 'bg-csb-corail' : 'bg-green-600';
+        const el = document.createElement('div');
+        el.className = `${bg} text-white text-sm px-5 py-3 rounded-xl shadow-lg font-medium transition-all duration-300 opacity-0 translate-y-2`;
+        el.textContent = message;
+        container.appendChild(el);
+        requestAnimationFrame(() => { el.classList.remove('opacity-0', 'translate-y-2'); });
+        setTimeout(() => {
+            el.classList.add('opacity-0', 'translate-y-2');
+            setTimeout(() => el.remove(), 300);
+        }, 4000);
+    }
+
+    // =========================================================
+    // PROFIL (onglet « Mon Profil »)
+    // =========================================================
+    const profilCard = $('#profil-card');
+    let profilData = null;
+
+    async function loadProfil() {
+        const { data: { user } } = await sb.auth.getUser();
+        if (!user) return null;
+        const { data, error } = await sb.from('profiles')
+            .select('prenom, nom, telephone, email').eq('user_id', user.id).maybeSingle();
+        if (error || !data) return { prenom: '', nom: '', telephone: '', email: user.email || '' };
+        return { prenom: data.prenom || '', nom: data.nom || '', telephone: data.telephone || '', email: data.email || user.email || '' };
+    }
+
+    async function renderProfil() {
+        if (!profilCard) return;
+        profilCard.innerHTML = '<p class="text-gray-400 text-sm py-4">Chargement…</p>';
+        profilData = await loadProfil();
+        if (!profilData) {
+            profilCard.innerHTML = '<p class="text-csb-corail text-sm py-4">Impossible de charger votre profil.</p>';
+            return;
+        }
+        profilCard.innerHTML = `
+            <div class="space-y-4">
+                <div>
+                    <label class="lbl" for="profil-email">Email (identifiant de connexion)</label>
+                    <input id="profil-email" class="inp bg-gray-50 text-gray-500 cursor-not-allowed" value="${esc(profilData.email)}" disabled>
+                    <p class="text-[11px] text-gray-400 mt-1">L'email ne peut pas être modifié ici. Contactez le bureau pour un changement.</p>
+                </div>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="lbl" for="profil-prenom">Prénom</label>
+                        <input id="profil-prenom" class="inp" value="${esc(profilData.prenom)}">
+                    </div>
+                    <div>
+                        <label class="lbl" for="profil-nom">Nom</label>
+                        <input id="profil-nom" class="inp" value="${esc(profilData.nom)}">
+                    </div>
+                </div>
+                <div>
+                    <label class="lbl" for="profil-tel">Téléphone</label>
+                    <input id="profil-tel" type="tel" class="inp" value="${esc(profilData.telephone)}">
+                </div>
+                <div class="pt-3">
+                    <button id="profil-save-btn" type="button"
+                            class="px-6 py-2.5 rounded-full font-condensed uppercase tracking-wider bg-green-600 text-white hover:bg-green-700 transition text-sm shadow-lg">
+                        💾 Enregistrer
+                    </button>
+                    <span id="profil-feedback" class="ml-3 text-sm"></span>
+                </div>
+            </div>`;
+
+        $('#profil-save-btn').addEventListener('click', saveProfil);
+    }
+
+    async function saveProfil() {
+        const btn = $('#profil-save-btn');
+        const fb = $('#profil-feedback');
+        if (!btn) return;
+        const { data: { user } } = await sb.auth.getUser();
+        if (!user) { toast('Session expirée.', 'error'); return; }
+        const prenom = $('#profil-prenom').value.trim();
+        const nom = $('#profil-nom').value.trim();
+        const telephone = $('#profil-tel').value.trim();
+        btn.disabled = true;
+        btn.textContent = 'Enregistrement…';
+        fb.textContent = '';
+        try {
+            const { error } = await sb.from('profiles').update({ prenom, nom, telephone }).eq('user_id', user.id);
+            if (error) throw error;
+            profilData = { ...profilData, prenom, nom, telephone };
+            fb.textContent = '✓ Profil enregistré';
+            fb.className = 'ml-3 text-sm text-green-600 font-bold';
+            toast('Profil mis à jour avec succès.');
+            setTimeout(() => { fb.textContent = ''; }, 3000);
+        } catch (err) {
+            console.error(err);
+            fb.textContent = '⚠ ' + (err.message || 'Échec');
+            fb.className = 'ml-3 text-sm text-csb-corail font-bold';
+            toast('Échec de la mise à jour : ' + (err.message || 'Erreur inconnue'), 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '💾 Enregistrer';
+        }
     }
 
     // =========================================================
